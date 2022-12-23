@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  check-registry:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Rules
+        uses: actions/checkout@v3
+
+      - name: Setup Golang
+        uses: actions/setup-go@v3
+        with:
+          go-version: '^1.19'
+
+      - name: Build registry artifact tool
+        working-directory: build/registry
+        run: go build -o rules-registry ./...
+
+      - name: Check Registry validity
+        run: build/registry/rules-registry check registry.yaml

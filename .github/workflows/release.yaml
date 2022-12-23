@@ -1,0 +1,35 @@
+name: Release Rulesfile
+
+on:
+  push:
+    tags:
+      # potential semver
+      - '[a-z]*[0-9]+.[0-9]+.[0-9]+*'
+
+jobs:
+  release-rulesfile:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Rules
+        uses: actions/checkout@v3
+
+      - name: Setup Golang
+        uses: actions/setup-go@v3
+        with:
+          go-version: '^1.19'
+
+      - name: Build registry artifact tool
+        working-directory: build/registry
+        run: go build -o rules-registry ./...
+
+      - name: Get lowercase OCI repo prefix
+        run: |
+          echo "OCI_REPO_PREFIX=ghcr.io/${GITHUB_REPOSITORY,,}" >>${GITHUB_ENV}
+
+      - name: Upload OCI artifacts to GitHub packages
+        env:
+          REGISTRY_USER: ${{ github.repository_owner }}
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPO_URL: ${{ github.server_url }}/${{ github.repository }}.git
+        run: build/registry/rules-registry push-to-oci registry.yaml ${{github.ref_name}}
