@@ -1,0 +1,35 @@
+- name: cloudtrail
+  type: plugin
+  registry: ghcr.io
+  repository: falcosecurity/plugins/plugin/cloudtrail
+  description: Reads Cloudtrail JSON logs from files/S3 and injects as events
+  home: https://github.com/falcosecurity/plugins/tree/master/plugins/cloudtrail
+  keywords:
+    - audit
+    - user-activity
+    - api-usage
+    - aws
+  license: Apache-2.0
+  maintainers:
+    - email: cncf-falco-dev@lists.cncf.io
+      name: The Falco Authors
+  sources:
+    - https://github.com/falcosecurity/plugins/tree/master/plugins/cloudtrail
+- name: cloudtrail-rules
+  type: rulesfile
+  registry: ghcr.io
+  repository: falcosecurity/plugins/ruleset/cloudtrail
+  description: Reads Cloudtrail JSON logs from files/S3 and injects as events
+  home: https://github.com/falcosecurity/plugins/tree/master/plugins/cloudtrail
+  keywords:
+    - audit
+    - user-activity
+    - api-usage
+    - aws
+    - cloudtrail-rules
+  license: Apache-2.0
+  maintainers:
+    - email: cncf-falco-dev@lists.cncf.io
+      name: The Falco Authors
+  sources:
+    - https://github.com/falcosecurity/plugins/tree/master/plugins/cloudtrail/rules
