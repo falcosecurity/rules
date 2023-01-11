@@ -16,7 +16,7 @@
 #
 
 rulesfiles:
-  - name: falco
+  - name: falco-rules
     description: Falco rules that are loaded by default
     authors: The Falco Authors
     contact: https://falco.org/community
@@ -26,7 +26,7 @@ rulesfiles:
     path: rules/falco_rules.yaml
     license: apache-2.0
     url: https://github.com/falcosecurity/rules/blob/main/rules/falco_rules.yaml
-  - name: applications
+  - name: application-rules
     description: Application rules
     authors: The Falco Authors
     contact: https://falco.org/community
