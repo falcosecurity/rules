@@ -15,6 +15,7 @@
 # limitations under the License.
 #
 
+
 rulesfiles:
   - name: falco-rules
     description: Falco rules that are loaded by default
