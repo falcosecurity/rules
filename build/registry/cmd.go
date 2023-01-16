@@ -25,11 +25,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/falcosecurity/falcoctl/pkg/oci"
+	"github.com/falcosecurity/falcoctl/pkg/oci/repository"
+
 	"github.com/falcosecurity/falcoctl/pkg/oci/authn"
 	"github.com/spf13/cobra"
 	"oras.land/oras-go/v2/errdef"
-	"oras.land/oras-go/v2/registry/remote"
 	"oras.land/oras-go/v2/registry/remote/auth"
 )
 
@@ -73,12 +73,12 @@ func doPushToOCI(registryFilename, gitTag string) error {
 		return err
 	}
 
-	cred := auth.Credential{
+	cred := &auth.Credential{
 		Username: user,
 		Password: token,
 	}
 
-	client := authn.NewClient(cred)
+	client := authn.NewClient(authn.WithCredentials(cred))
 	ociRepoRef := fmt.Sprintf("%s/%s", ociRepoPrefix, pt.Name)
 
 	reg, err := loadRegistryFromFile(registryFilename)
@@ -91,7 +91,13 @@ func doPushToOCI(registryFilename, gitTag string) error {
 		return fmt.Errorf("could not find rulesfile %s in registry", pt.Name)
 	}
 
-	existingTags, _ := oci.Tags(context.Background(), ociRepoRef, client)
+	// Create the repository object for the ref.
+	var repo *repository.Repository
+	if repo, err = repository.NewRepository(ociRepoRef, repository.WithClient(client)); err != nil {
+		return fmt.Errorf("unable to create repository for ref %q: %w", ociRepoRef, err)
+	}
+
+	existingTags, _ := repo.Tags(context.Background())
 	// note that the call above can generate an error if the repository does not exist yet, so we can proceed
 
 	tagsToUpdate := ociTagsToUpdate(pt.Version(), existingTags)
@@ -108,7 +114,11 @@ func doPushToOCI(registryFilename, gitTag string) error {
 	}
 	defer os.RemoveAll(tgzFile)
 
-	if err = pushCompressedRulesfile(client, tgzFile, ociRepoRef, repoGit, tagsToUpdate); err != nil {
+	config, err := rulesfileConfig(rulesfileInfo.Name, pt.Version(), rulesfileInfo.Path)
+	if err != nil {
+		return fmt.Errorf("could not generate configuration layer for rulesfiles %q: %w", rulesfileInfo.Path, err)
+	}
+	if err = pushCompressedRulesfile(client, tgzFile, ociRepoRef, repoGit, tagsToUpdate, config); err != nil {
 		return fmt.Errorf("could not push %s to %s with source %s and tags %v: %w", tgzFile, ociRepoRef, repoGit, tagsToUpdate, err)
 	}
 
@@ -116,16 +126,16 @@ func doPushToOCI(registryFilename, gitTag string) error {
 }
 
 func rulesOciRepos(registryEntries *Registry, ociRepoPrefix string) (map[string]string, error) {
-	ociClient := authn.NewClient(auth.EmptyCredential)
+	var repo *repository.Repository
+	var err error
+	ociClient := authn.NewClient(authn.WithCredentials(&auth.EmptyCredential))
 	ociEntries := make(map[string]string)
 
 	for _, entry := range registryEntries.Rulesfiles {
 		ref := ociRepoPrefix + "/" + entry.Name
-		repo, err := remote.NewRepository(ref)
-		if err != nil {
-			return nil, fmt.Errorf("unable to create repo for ref %q: %w", ref, err)
+		if repo, err = repository.NewRepository(ref, repository.WithClient(ociClient)); err != nil {
+			return nil, fmt.Errorf("unable to create repository for ref %q: %w", ref, err)
 		}
-		repo.Client = ociClient
 
 		_, _, err = repo.FetchReference(context.Background(), ref+":latest")
 		if err != nil && (errors.Is(err, errdef.ErrNotFound) || strings.Contains(err.Error(), "requested access to the resource is denied")) {
