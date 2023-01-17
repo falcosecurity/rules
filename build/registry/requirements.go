@@ -30,7 +30,7 @@ import (
 
 const (
 	rulesEngineAnchor = "- required_engine_version"
-	engineVersionKey  = "required_engine_version"
+	engineVersionKey  = "engine_version"
 )
 
 // ErrReqNotFound error when the requirements are not found in the rulesfile.
