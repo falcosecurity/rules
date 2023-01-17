@@ -79,17 +79,26 @@ func isLatestSemverForMinor(newSemver semver.Version, existingSemvers []semver.V
 	return true
 }
 
+func isLatestSemverForMajor(newSemver semver.Version, existingSemvers []semver.Version) bool {
+	for _, esv := range existingSemvers {
+		if esv.Major == newSemver.Major && esv.GT(newSemver) {
+			return false
+		}
+	}
+
+	return true
+}
+
 // ociTagsToUpdate returns the MAJOR.MINOR tag to update if any, the latest tag if any and the new tag to update
 // in OCI registry given a new (already semver) tag and a list of existing tags in the OCI repo
 func ociTagsToUpdate(newTag string, existingTags []string) []string {
 	newSemver := semver.MustParse(newTag)
+	tagsToUpdate := []string{newSemver.String()}
 
 	if len(newSemver.Pre) > 0 {
-		// pre-release version, do not update
-		return nil
+		// pre-release version, do not update anything else
+		return tagsToUpdate
 	}
-
-	tagsToUpdate := []string{newSemver.String()}
 
 	var existingSemvers []semver.Version
 	for _, tag := range existingTags {
@@ -100,6 +109,10 @@ func ociTagsToUpdate(newTag string, existingTags []string) []string {
 
 	if isLatestSemverForMinor(newSemver, existingSemvers) {
 		tagsToUpdate = append(tagsToUpdate, fmt.Sprintf("%d.%d", newSemver.Major, newSemver.Minor))
+	}
+
+	if isLatestSemverForMajor(newSemver, existingSemvers) {
+		tagsToUpdate = append(tagsToUpdate, fmt.Sprintf("%d", newSemver.Major))
 	}
 
 	if isLatestSemver(newSemver, existingSemvers) {
