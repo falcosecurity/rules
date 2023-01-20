@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/blang/semver v3.5.1+incompatible
-	github.com/falcosecurity/falcoctl v0.2.0-rc1.0.20230103133910-a8cf20acc6aa
+	github.com/falcosecurity/falcoctl v0.3.0-rc2
 	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.7.2
 	gopkg.in/yaml.v2 v2.4.0
