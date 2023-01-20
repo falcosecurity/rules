@@ -157,8 +157,8 @@ github.com/evanphx/json-patch v4.12.0+incompatible h1:4onqiflcdA9EOZ4RxV643DvftH
 github.com/evanphx/json-patch v4.12.0+incompatible/go.mod h1:50XU6AFN0ol/bzJsmQLiYLvXMP4fmwYFNcr97nuDLSk=
 github.com/exponent-io/jsonpath v0.0.0-20151013193312-d6023ce2651d h1:105gxyaGwCFad8crR9dcMQWvV9Hvulu6hwUh4tWPJnM=
 github.com/exponent-io/jsonpath v0.0.0-20151013193312-d6023ce2651d/go.mod h1:ZZMPRZwes7CROmyNKgQzC3XPs6L/G2EJLHddWejkmf4=
-github.com/falcosecurity/falcoctl v0.2.0-rc1.0.20230103133910-a8cf20acc6aa h1:nvVuSwL36H7hFglXhBy3ig+eZwRyfeIMh7eI56gMJAU=
-github.com/falcosecurity/falcoctl v0.2.0-rc1.0.20230103133910-a8cf20acc6aa/go.mod h1:gfYo0lLyEYkA0D1v8pBbELIxQRRvCbnaziF8S3Ltu3A=
+github.com/falcosecurity/falcoctl v0.3.0-rc2 h1:BtpTnD48ZG41fShwNc/97IS4sqrOlaiaTxxyb1TG3J4=
+github.com/falcosecurity/falcoctl v0.3.0-rc2/go.mod h1:wusqDBDAEQFDG3w3s9eIxzZRm7ZAkFOaiM+Kp3aLI/w=
 github.com/fatih/camelcase v1.0.0/go.mod h1:yN2Sb0lFhZJUdVvtELVWefmrXpuZESvPmqwoZc+/fpc=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
 github.com/felixge/httpsnoop v1.0.1 h1:lvB5Jl89CsZtGIWuTcDM1E/vkVs49/Ml7JJe07l8SPQ=
