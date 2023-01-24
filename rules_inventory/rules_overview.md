@@ -8,11 +8,13 @@
 
 
 
-This document is auto-generated. Last Updated: 2022-11-17.
+This document is auto-generated. Last Updated: 2023-01-23.
 
 
-The Falco project ships with 75 [default rules](https://github.com/falcosecurity/falco/blob/master/rules/falco_rules.yaml) contributed by the community. The intended outcome of this document is to provide a comprehensive overview of the default rules, provide additional resources and help drive future improvements.
+The Falco project ships with [78 default rules](https://github.com/falcosecurity/rules/blob/main/rules/falco_rules.yaml) around Linux syscalls and container events that were contributed by the community.
 
+
+The intended outcome of this document is to provide a comprehensive overview of the default rules, provide additional resources and help drive future improvements.
 
 
 
@@ -24,9 +26,9 @@ Falco default rules per workload type:
 
 | workload        |   rule_count | percentage   |
 |:----------------|-------------:|:-------------|
-| container       |           27 | 36.0%        |
-| container, host |           47 | 62.67%       |
-| host            |            1 | 1.33%        |
+| container       |           27 | 34.62%       |
+| container, host |           50 | 64.1%        |
+| host            |            1 | 1.28%        |
 
 
 
@@ -36,16 +38,16 @@ Falco default rules per [Falco tag](https://falco.org/docs/rules/#tags):
 
 | extra_tag     |   rule_count | percentage   |
 |:--------------|-------------:|:-------------|
-| aws           |            1 | 1.0%         |
-| cis           |            5 | 5.0%         |
-| database      |            1 | 1.0%         |
-| filesystem    |           30 | 30.0%        |
-| k8s           |            2 | 2.0%         |
-| network       |           22 | 22.0%        |
-| process       |           26 | 26.0%        |
-| shell         |            2 | 2.0%         |
-| software_mgmt |            3 | 3.0%         |
-| users         |            8 | 8.0%         |
+| aws           |            2 | 1.94%        |
+| cis           |            5 | 4.85%        |
+| database      |            1 | 0.97%        |
+| filesystem    |           30 | 29.13%       |
+| k8s           |            2 | 1.94%        |
+| network       |           22 | 21.36%       |
+| process       |           28 | 27.18%       |
+| shell         |            2 | 1.94%        |
+| software_mgmt |            3 | 2.91%        |
+| users         |            8 | 7.77%        |
 
 
 
@@ -55,24 +57,26 @@ Falco default rules per [Mitre Attack](https://attack.mitre.org/) phase:
 
 | mitre_phase                | rules                                                                  | percentage   |
 |:---------------------------|:-----------------------------------------------------------------------|:-------------|
-| mitre_command_and_control  | Disallowed SSH Connection                                              | 8.0%         |
+| mitre_command_and_control  | Disallowed SSH Connection                                              | 7.69%        |
 |                            | Launch Ingress Remote File Copy Tools in Container                     |              |
 |                            | Outbound Connection to C2 Servers                                      |              |
 |                            | Program run with disallowed http proxy env                             |              |
 |                            | Unexpected inbound connection source                                   |              |
 |                            | Unexpected outbound connection destination                             |              |
-| mitre_credential_access    | Create Hardlink Over Sensitive Files                                   | 9.33%        |
+| mitre_credential_access    | Create Hardlink Over Sensitive Files                                   | 10.26%       |
 |                            | Create Symlink Over Sensitive Files                                    |              |
 |                            | Directory traversal monitored file read                                |              |
+|                            | Find AWS Credentials                                                   |              |
 |                            | Read environment variable from /proc files                             |              |
 |                            | Read sensitive file trusted after startup                              |              |
 |                            | Read sensitive file untrusted                                          |              |
 |                            | Search Private Keys or Passwords                                       |              |
-| mitre_defense_evasion      | Clear Log Activities                                                   | 5.33%        |
+| mitre_defense_evasion      | Clear Log Activities                                                   | 6.41%        |
 |                            | Delete Bash History                                                    |              |
 |                            | Delete or rename shell history                                         |              |
+|                            | Execution from /dev/shm                                                |              |
 |                            | Unprivileged Delegation of Page Faults Handling to a Userspace Process |              |
-| mitre_discovery            | Contact EC2 Instance Metadata Service From Container                   | 18.67%       |
+| mitre_discovery            | Contact EC2 Instance Metadata Service From Container                   | 17.95%       |
 |                            | Contact K8S API Server From Container                                  |              |
 |                            | Contact cloud metadata service from container                          |              |
 |                            | Directory traversal monitored file read                                |              |
@@ -86,21 +90,23 @@ Falco default rules per [Mitre Attack](https://attack.mitre.org/) phase:
 |                            | Read sensitive file untrusted                                          |              |
 |                            | Read ssh information                                                   |              |
 |                            | Redirect STDOUT/STDIN to Network Connection in Container               |              |
-| mitre_execution            | Container Drift Detected (chmod)                                       | 18.67%       |
+| mitre_execution            | Container Drift Detected (chmod)                                       | 20.51%       |
 |                            | Container Drift Detected (open+create)                                 |              |
 |                            | Container Run as Root User                                             |              |
 |                            | DB program spawned process                                             |              |
 |                            | Debugfs Launched in Privileged Container                               |              |
 |                            | Detect crypto miners using the Stratum protocol                        |              |
 |                            | Detect outbound connections to common miner pool ports                 |              |
+|                            | Execution from /dev/shm                                                |              |
 |                            | Linux Kernel Module Injection Detected                                 |              |
 |                            | Netcat Remote Code Execution in Container                              |              |
+|                            | PTRACE attached to process                                             |              |
 |                            | Redirect STDOUT/STDIN to Network Connection in Container               |              |
 |                            | Run shell untrusted                                                    |              |
 |                            | System user interactive                                                |              |
 |                            | Terminal shell in container                                            |              |
 |                            | The docker client is executed in a container                           |              |
-| mitre_exfiltration         | Create Hardlink Over Sensitive Files                                   | 13.33%       |
+| mitre_exfiltration         | Create Hardlink Over Sensitive Files                                   | 12.82%       |
 |                            | Create Symlink Over Sensitive Files                                    |              |
 |                            | Directory traversal monitored file read                                |              |
 |                            | Interpreted procs inbound network activity                             |              |
@@ -110,9 +116,9 @@ Falco default rules per [Mitre Attack](https://attack.mitre.org/) phase:
 |                            | Launch Suspicious Network Tool on Host                                 |              |
 |                            | System procs network activity                                          |              |
 |                            | Unexpected UDP Traffic                                                 |              |
-| mitre_initial_access       | Java Process Class File Download                                       | 2.67%        |
+| mitre_initial_access       | Java Process Class File Download                                       | 2.56%        |
 |                            | Modify Container Entrypoint                                            |              |
-| mitre_lateral_movement     | Change thread namespace                                                | 13.33%       |
+| mitre_lateral_movement     | Change thread namespace                                                | 12.82%       |
 |                            | Debugfs Launched in Privileged Container                               |              |
 |                            | Detect release_agent File Container Escapes                            |              |
 |                            | Disallowed SSH Connection                                              |              |
@@ -122,7 +128,7 @@ Falco default rules per [Mitre Attack](https://attack.mitre.org/) phase:
 |                            | Launch Remote File Copy Tools in Container                             |              |
 |                            | Launch Sensitive Mount Container                                       |              |
 |                            | Mount Launched in Privileged Container                                 |              |
-| mitre_persistence          | Create Hidden Files or Directories                                     | 24.0%        |
+| mitre_persistence          | Create Hidden Files or Directories                                     | 23.08%       |
 |                            | Create files below dev                                                 |              |
 |                            | Launch Package Management Process in Container                         |              |
 |                            | Linux Kernel Module Injection Detected                                 |              |
@@ -140,11 +146,12 @@ Falco default rules per [Mitre Attack](https://attack.mitre.org/) phase:
 |                            | Write below monitored dir                                              |              |
 |                            | Write below root                                                       |              |
 |                            | Write below rpm database                                               |              |
-| mitre_privilege_escalation | Change thread namespace                                                | 9.33%        |
+| mitre_privilege_escalation | Change thread namespace                                                | 10.26%       |
 |                            | Detect release_agent File Container Escapes                            |              |
 |                            | Launch Excessively Capable Container                                   |              |
 |                            | Launch Privileged Container                                            |              |
 |                            | Non sudo setuid                                                        |              |
+|                            | PTRACE attached to process                                             |              |
 |                            | Polkit Local Privilege Escalation Vulnerability (CVE-2021-4034)        |              |
 |                            | Sudo Potential Privilege Escalation                                    |              |
 
@@ -156,7 +163,7 @@ Falco default rules per [Mitre Attack](https://attack.mitre.org/) phase:
 
 
 
-54 Falco rules (72.00% of rules) are enabled by default:
+57 Falco rules (73.08% of rules) are enabled by default:
 
 
 | rule                                                                   | desc                                                                                                                                                                                                                                                                                                                                                                             | workload        | mitre_phase                                                  | mitre_ttp                                                                                                                                                                                                                                                          | extra_tags                |
@@ -190,13 +197,16 @@ Falco default rules per [Mitre Attack](https://attack.mitre.org/) phase:
 | Delete or rename shell history                                         | Detect shell history deletion                                                                                                                                                                                                                                                                                                                                                    | container, host | mitre_defense_evasion                                        | [T1070](https://attack.mitre.org/techniques/T1070)                                                                                                                                                                                                                 | process, filesystem       |
 | Detect crypto miners using the Stratum protocol                        | Miners typically specify the mining pool to connect to with a URI that begins with 'stratum+tcp'                                                                                                                                                                                                                                                                                 | container, host | mitre_execution                                              | [T1496](https://attack.mitre.org/techniques/T1496)                                                                                                                                                                                                                 | process                   |
 | Directory traversal monitored file read                                | Web applications can be vulnerable to directory traversal attacks that allow accessing files outside of the web app's root directory (e.g. Arbitrary File Read bugs). System directories like /etc are typically accessed via absolute paths. Access patterns outside of this (here path traversal) can be regarded as suspicious. This rule includes failed file open attempts. | container, host | mitre_credential_access, mitre_discovery, mitre_exfiltration | [T1020](https://attack.mitre.org/techniques/T1020), [T1083](https://attack.mitre.org/techniques/T1083), [T1212](https://attack.mitre.org/techniques/T1212), [T1552](https://attack.mitre.org/techniques/T1552), [T1555](https://attack.mitre.org/techniques/T1555) | filesystem                |
+| Execution from /dev/shm                                                | This rule detects file execution from the /dev/shm directory, a common tactic for threat actors to stash their readable+writable+(sometimes)executable files.                                                                                                                                                                                                                    | container, host | mitre_defense_evasion, mitre_execution                       | [T1036.005](https://attack.mitre.org/techniques/T1036/005), [T1059.004](https://attack.mitre.org/techniques/T1059/004)                                                                                                                                             |                           |
+| Find AWS Credentials                                                   | Find or grep AWS credentials                                                                                                                                                                                                                                                                                                                                                     | container, host | mitre_credential_access                                      | [T1552](https://attack.mitre.org/techniques/T1552)                                                                                                                                                                                                                 | process, aws              |
 | Java Process Class File Download                                       | Detected Java process downloading a class file which could indicate a successful exploit of the log4shell Log4j vulnerability (CVE-2021-44228)                                                                                                                                                                                                                                   | container, host | mitre_initial_access                                         | [T1190](https://attack.mitre.org/techniques/T1190)                                                                                                                                                                                                                 | process                   |
 | Linux Kernel Module Injection Detected                                 | Detect kernel module was injected (from container).                                                                                                                                                                                                                                                                                                                              | container, host | mitre_execution, mitre_persistence                           | [TA0002](https://attack.mitre.org/tactics/TA0002)                                                                                                                                                                                                                  | process                   |
 | Mkdir binary dirs                                                      | an attempt to create a directory below a set of binary directories.                                                                                                                                                                                                                                                                                                              | container, host | mitre_persistence                                            | [T1222.002](https://attack.mitre.org/techniques/T1222/002)                                                                                                                                                                                                         | filesystem                |
 | Modify Shell Configuration File                                        | Detect attempt to modify shell configuration files                                                                                                                                                                                                                                                                                                                               | container, host | mitre_persistence                                            | [T1546.004](https://attack.mitre.org/techniques/T1546/004)                                                                                                                                                                                                         | filesystem                |
 | Modify binary dirs                                                     | an attempt to modify any file below a set of binary directories.                                                                                                                                                                                                                                                                                                                 | container, host | mitre_persistence                                            | [T1222.002](https://attack.mitre.org/techniques/T1222/002)                                                                                                                                                                                                         | filesystem                |
 | Non sudo setuid                                                        | an attempt to change users by calling setuid. sudo/su are excluded. users "root" and "nobody" suing to itself are also excluded, as setuid calls typically involve dropping privileges.                                                                                                                                                                                          | container, host | mitre_privilege_escalation                                   | [T1548.001](https://attack.mitre.org/techniques/T1548/001)                                                                                                                                                                                                         | users                     |
-| Outbound Connection to C2 Servers                                      | Detect outbound connection to command & control servers                                                                                                                                                                                                                                                                                                                          | container, host | mitre_command_and_control                                    | [TA0011](https://attack.mitre.org/tactics/TA0011)                                                                                                                                                                                                                  | network                   |
+| Outbound Connection to C2 Servers                                      | Detect outbound connection to command & control servers thanks to a list of IP addresses & a list of FQDN.                                                                                                                                                                                                                                                                       | container, host | mitre_command_and_control                                    | [TA0011](https://attack.mitre.org/tactics/TA0011)                                                                                                                                                                                                                  | network                   |
+| PTRACE attached to process                                             | This rule detects an attempt to inject code into a process using PTRACE.                                                                                                                                                                                                                                                                                                         | container, host | mitre_execution, mitre_privilege_escalation                  | [T1055.008](https://attack.mitre.org/techniques/T1055/008)                                                                                                                                                                                                         | process                   |
 | Polkit Local Privilege Escalation Vulnerability (CVE-2021-4034)        | This rule detects an attempt to exploit a privilege escalation vulnerability in Polkit's pkexec. By running specially crafted code, a local user can leverage this flaw to gain root privileges on a compromised system                                                                                                                                                          | container, host | mitre_privilege_escalation                                   | [TA0004](https://attack.mitre.org/tactics/TA0004)                                                                                                                                                                                                                  | process, users            |
 | Read sensitive file trusted after startup                              | an attempt to read any sensitive file (e.g. files containing user/password/authentication information) by a trusted program after startup. Trusted programs might read these files at startup to load initial state, but not afterwards.                                                                                                                                         | container, host | mitre_credential_access                                      | [T1020](https://attack.mitre.org/techniques/T1020), [T1083](https://attack.mitre.org/techniques/T1083), [T1212](https://attack.mitre.org/techniques/T1212), [T1552](https://attack.mitre.org/techniques/T1552), [T1555](https://attack.mitre.org/techniques/T1555) | filesystem                |
 | Read sensitive file untrusted                                          | an attempt to read any sensitive file (e.g. files containing user/password/authentication information). Exceptions are made for known trusted programs.                                                                                                                                                                                                                          | container, host | mitre_credential_access, mitre_discovery                     | [T1020](https://attack.mitre.org/techniques/T1020), [T1083](https://attack.mitre.org/techniques/T1083), [T1212](https://attack.mitre.org/techniques/T1212), [T1552](https://attack.mitre.org/techniques/T1552), [T1555](https://attack.mitre.org/techniques/T1555) | filesystem                |
@@ -217,7 +227,7 @@ Falco default rules per [Mitre Attack](https://attack.mitre.org/) phase:
 | Launch Suspicious Network Tool on Host                                 | Detect network tools launched on the host                                                                                                                                                                                                                                                                                                                                        | host            | mitre_discovery, mitre_exfiltration                          | [T1046](https://attack.mitre.org/techniques/T1046), [T1595](https://attack.mitre.org/techniques/T1595)                                                                                                                                                             | network, process          |
 
 
-21 Falco rules (28.00% of rules) are *not* enabled by default:
+21 Falco rules (26.92% of rules) are *not* enabled by default:
 
 
 | rule                                                                  | desc                                                                                                                                                                                                         | workload        | mitre_phase                                        | mitre_ttp                                                                                              | extra_tags          |
