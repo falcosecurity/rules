@@ -52,7 +52,9 @@ def print_markdown(df):
 
     print('\n\n\n# Falco Rules - Summary Stats\n\n\n')
     print('\n\n\nThis document is auto-generated. Last Updated: {}.\n\n'.format(datetime.date.today()))
-    print('The Falco project ships with {} [default rules](https://github.com/falcosecurity/falco/blob/master/rules/falco_rules.yaml) contributed by the community. The intended outcome of this document is to provide a comprehensive overview of the default rules, provide additional resources and help drive future improvements.\n\n\n'.format(n_rules))
+    print('The Falco project ships with [{} default rules](https://github.com/falcosecurity/rules/blob/main/rules/falco_rules.yaml) around Linux syscalls and container events that were contributed by the community.\n\n'.format(n_rules))
+    print('The intended outcome of this document is to provide a comprehensive overview of the default rules, provide additional resources and help drive future improvements.\n\n')
+
 
     print('\n\n\nFalco default rules per workload type:\n\n\n')
     df_stats1 = df.groupby('workload').agg(rule_count=('workload', 'count'))
