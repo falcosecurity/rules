@@ -3298,7 +3298,7 @@
   condition: evt.type=ptrace and evt.dir=> and evt.arg.request in (5, 6, 11, 20, 27) and proc_name_exists and not known_ptrace_procs
   output: Detected ptrace PTRACE_ATTACH attempt (proc.cmdline=%proc.cmdline container=%container.info evt.type=%evt.type evt.arg.request=%evt.arg.request proc.pid=%proc.pid proc.cwd=%proc.cwd proc.ppid=%proc.ppid proc.pcmdline=%proc.pcmdline proc.sid=%proc.sid proc.exepath=%proc.exepath user.uid=%user.uid user.loginuid=%user.loginuid user.loginname=%user.loginname user.name=%user.name group.gid=%group.gid group.name=%group.name container.id=%container.id container.name=%container.name image=%container.image.repository)
   priority: WARNING
-  tags: [process]
+  tags: [host, container, process, mitre_execution, mitre_privilege_escalation, T1055.008]
   
 - macro: private_aws_credentials
   condition: >
@@ -3316,7 +3316,7 @@
     (proc.name = "find" and proc.args endswith ".aws/credentials"))
   output: Detected AWS credentials search activity (user.name=%user.name user.loginuid=%user.loginuid proc.cmdline=%proc.cmdline container.id=%container.id container_name=%container.name evt.type=%evt.type evt.res=%evt.res proc.pid=%proc.pid proc.cwd=%proc.cwd proc.ppid=%proc.ppid proc.pcmdline=%proc.pcmdline proc.sid=%proc.sid proc.exepath=%proc.exepath user.uid=%user.uid user.loginname=%user.loginname group.gid=%group.gid group.name=%group.name container.name=%container.name image=%container.image.repository:%container.image.tag)
   priority: WARNING
-  tags: [mitre_credential_access, process, aws]
+  tags: [host, container, mitre_credential_access, process, aws, T1552]
 
 - rule: Execution from /dev/shm
   desc: This rule detects file execution from the /dev/shm directory, a common tactic for threat actors to stash their readable+writable+(sometimes)executable files.
@@ -3331,7 +3331,7 @@
     not container.image.repository in (falco_privileged_images, trusted_images)
   output: "File execution detected from /dev/shm (proc.cmdline=%proc.cmdline connection=%fd.name user.name=%user.name user.loginuid=%user.loginuid container.id=%container.id evt.type=%evt.type evt.res=%evt.res proc.pid=%proc.pid proc.cwd=%proc.cwd proc.ppid=%proc.ppid proc.pcmdline=%proc.pcmdline proc.sid=%proc.sid proc.exepath=%proc.exepath user.uid=%user.uid user.loginname=%user.loginname group.gid=%group.gid group.name=%group.name container.name=%container.name image=%container.image.repository)"
   priority: WARNING
-  tags: [mitre_execution]
+  tags: [host, container, mitre_execution, mitre_defense_evasion, T1036.005, T1059.004]
 
 # Application rules have moved to application_rules.yaml. Please look
 # there if you want to enable them by adding to
