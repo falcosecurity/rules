@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/github/license/falcosecurity/rules?style=for-the-badge)](./LICENSE)
 
-Note: *This repository has been created upon this [proposal](https://github.com/falcosecurity/falco/blob/master/proposals/20221129-artifacts-distribution.md#move-falco-rules-to-their-own-repo) and is not yet ready for use. The progress tracker can be found [here](https://github.com/falcosecurity/evolution/issues/229).*
+Note: *This repository has been created upon this [proposal](https://github.com/falcosecurity/falco/blob/master/proposals/20221129-artifacts-distribution.md#move-falco-rules-to-their-own-repo).*
 
 This repository contains the [Rule Registry](#rule-registry) and the [rules officially maintained](#falcusecurity-rules) by the Falcosecurity organization. [Rules](https://falco.org/docs/rules) tell [Falco](https://github.com/falcosecurity/falco) what to do. Please refer to the [official documentation](https://falco.org/docs/rules) to better understand the rules' concepts. 
 
