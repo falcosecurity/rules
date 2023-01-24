@@ -9,6 +9,10 @@ on:
 jobs:
   release-rulesfile:
     runs-on: ubuntu-latest
+    env:
+      AWS_S3_BUCKET: falco-distribution
+      AWS_S3_PREFIX: rules
+      AWS_S3_REGION: eu-west-1
 
     # These permissions are needed to interact with GitHub's OIDC Token endpoint.
     permissions:
@@ -38,17 +42,17 @@ jobs:
           REGISTRY_USER: ${{ github.repository_owner }}
           REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPO_URL: ${{ github.server_url }}/${{ github.repository }}.git
-        run: build/registry/rules-registry push-to-oci registry.yaml ${{github.ref_name}}
+
+        # uses OCI_REPO_PREFIX environment variable
+        run: build/registry/rules-registry push-to-oci registry.yaml ${{ github.ref_name }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
-          aws-region: us-east-1
+          aws-region: ${{ env.AWS_S3_REGION }}
 
       - name: Upload OCI artifacts to S3
-        env:
-          AWS_S3_BUCKET: falco-distribution
-          AWS_S3_PREFIX: rules
-          AWS_S3_REGION: eu-west-1
+
+        # uses AWS_S3_BUCKET, AWS_S3_PREFIX, AWS_S3_REGION environment variables
         run: build/registry/rules-registry upload-to-s3 registry.yaml ${{ github.ref_name }}
