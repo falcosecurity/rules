@@ -49,10 +49,10 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-to-assume: "arn:aws:iam::292999226676:role/terraform-20230120142903096000000002"
           aws-region: ${{ env.AWS_S3_REGION }}
 
-      - name: Upload OCI artifacts to S3
+      - name: Upload files to S3
 
         # uses AWS_S3_BUCKET, AWS_S3_PREFIX, AWS_S3_REGION environment variables
         run: build/registry/rules-registry upload-to-s3 registry.yaml ${{ github.ref_name }}
