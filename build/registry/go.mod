@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/aws/aws-sdk-go v1.44.183
 	github.com/blang/semver v3.5.1+incompatible
-	github.com/falcosecurity/falcoctl v0.3.0-rc2
+	github.com/falcosecurity/falcoctl v0.3.0-rc5
 	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.7.2
 	gopkg.in/yaml.v2 v2.4.0
