@@ -4,11 +4,15 @@
 
 Note: *This repository has been created upon this [proposal](https://github.com/falcosecurity/falco/blob/master/proposals/20221129-artifacts-distribution.md#move-falco-rules-to-their-own-repo).*
 
-This repository contains the [Rule Registry](#rule-registry) and the [rules officially maintained](#falcusecurity-rules) by the Falcosecurity organization. [Rules](https://falco.org/docs/rules) tell [Falco](https://github.com/falcosecurity/falco) what to do. Please refer to the [official documentation](https://falco.org/docs/rules) to better understand the rules' concepts. 
+This repository contains the [Rules Files Registry](#registry) and *rules files* officially maintained by the Falcosecurity organization. [Rules](https://falco.org/docs/rules) tell [Falco](https://github.com/falcosecurity/falco) what to do. Please refer to the [official documentation](https://falco.org/docs/rules) to better understand the rules' concepts. 
 
-## Rule Registry
+## Registry
 
-The Registry contains metadata and information about every rule known and recognized by the Falcosecurity organization. These rules are developed for Falco and made available to the community. <!-- Check out the sections below to know how to [register your rules](#registering-a-new-rule) and see rules currently contained in the registry. -->
+The Registry contains metadata and information about rules files distributed by the Falcosecurity organization. These rules are developed for Falco and made available to the community. 
+
+Note: _Currently, the registry includes only rules for the syscall call data source; for other data sources see the [plugins repository](https://github.com/falcosecurity/plugins)._
+
+<!-- Check out the sections below to know how to [register your rules](#registering-a-new-rule) and see rules currently contained in the registry. -->
 
 <!--
 ### Registering a new Rules file
