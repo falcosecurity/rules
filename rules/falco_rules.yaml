@@ -1172,6 +1172,17 @@
 - macro: calico_node
   condition: (container.image.repository endswith calico/node and proc.name=calico-node)
 
+# Return always_true from this macro to get warnings about the cups daemons
+# regular updates in /etc/cups/.
+- macro: cupsd_state_updates
+  condition: never_true
+
+- macro: cupsd_state_writing
+  condition: >
+    proc.name = cupsd and
+    fd.name startswith /etc/cups/ and
+    not cupsd_state_updates
+
 - macro: write_etc_common
   condition: >
     etc_dir and evt.dir = < and open_write
@@ -1278,6 +1289,7 @@
     and not avinetworks_supervisor_writing_ssh
     and not multipath_writing_conf
     and not calico_node
+    and not cupsd_state_writing
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc
