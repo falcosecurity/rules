@@ -181,9 +181,6 @@
 - list: sysdigcloud_binaries
   items: [setup-backend, dragent, sdchecks]
 
-- list: docker_binaries
-  items: [docker, dockerd, exe, docker-compose, docker-entrypoi, docker-runc-cur, docker-current, dockerd-current]
-
 - list: k8s_binaries
   items: [hyperkube, skydns, kube2sky, exechealthz, weave-net, loopback, bridge, openshift-sdn, openshift]
 
@@ -3297,7 +3294,7 @@
   tags: [host, container, process, mitre_initial_access, T1190]
 
 - list: docker_binaries
-  items: [dockerd, containerd-shim, "runc:[1:CHILD]", pause]
+  items: [docker, dockerd, containerd-shim, "runc:[1:CHILD]", pause, exe, docker-compose, docker-entrypoi, docker-runc-cur, docker-current, dockerd-current]
 
 - macro: docker_procs
   condition: proc.name in (docker_binaries)
