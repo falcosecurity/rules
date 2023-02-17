@@ -1859,6 +1859,7 @@
     - public.ecr.aws/falcosecurity/falco-no-driver
 
 # These container images are allowed to run with --privileged and full set of capabilities
+# TODO: Remove k8s.gcr.io reference after 01/Dec/2023
 - list: falco_privileged_images
   items: [
     falco_containers,
@@ -1880,11 +1881,15 @@
     k8s.gcr.io/ip-masq-agent-amd64,
     k8s.gcr.io/kube-proxy,
     k8s.gcr.io/prometheus-to-sd,
+    registry.k8s.io/ip-masq-agent-amd64,
+    registry.k8s.io/kube-proxy,
+    registry.k8s.io/prometheus-to-sd,
     quay.io/calico/node,
     sysdig/sysdig,
     sematext_images,
-    k8s.gcr.io/dns/k8s-dns-node-cache
-    ]
+    k8s.gcr.io/dns/k8s-dns-node-cache,
+    registry.k8s.io/dns/k8s-dns-node-cache
+  ]
 
 - macro: falco_privileged_containers
   condition: (openshift_image or
@@ -2417,6 +2422,7 @@
 # allowed to contact the K8s API Server from within a container. This
 # might cover cases where the K8s infrastructure itself is running
 # within a container.
+# TODO: Remove k8s.gcr.io reference after 01/Dec/2023
 - macro: k8s_containers
   condition: >
     (container.image.repository in (gcr.io/google_containers/hyperkube-amd64,
@@ -2428,8 +2434,8 @@
      ibm_cloud_containers,
      velero/velero,
      quay.io/jetstack/cert-manager-cainjector, weaveworks/kured,
-     quay.io/prometheus-operator/prometheus-operator,
-     k8s.gcr.io/ingress-nginx/kube-webhook-certgen, quay.io/spotahome/redis-operator,
+     quay.io/prometheus-operator/prometheus-operator, k8s.gcr.io/ingress-nginx/kube-webhook-certgen,
+     registry.k8s.io/ingress-nginx/kube-webhook-certgen, quay.io/spotahome/redis-operator,
      registry.opensource.zalan.do/acid/postgres-operator, registry.opensource.zalan.do/acid/postgres-operator-ui,
      rabbitmqoperator/cluster-operator)
      or (k8s.ns.name = "kube-system"))
@@ -2485,10 +2491,12 @@
   condition: (never_true)
 
 # Container is supposed to be immutable. Package management should be done in building the image.
+# TODO: Remove k8s.gcr.io reference after 01/Dec/2023
 - macro: pkg_mgmt_in_kube_proxy
   condition: >
     proc.cmdline startswith "update-alternat"
-    and container.image.repository = "k8s.gcr.io/kube-proxy"
+    and (container.image.repository = "registry.k8s.io/kube-proxy"
+    or container.image.repository = "k8s.gcr.io/kube-proxy")
 
 - rule: Launch Package Management Process in Container
   desc: Package management process ran inside container
@@ -2905,19 +2913,23 @@
 - list: k8s_client_binaries
   items: [docker, kubectl, crictl]
 
+# TODO: Remove k8s.gcr.io reference after 01/Dec/2023
 - list: user_known_k8s_ns_kube_system_images
   items: [
-      k8s.gcr.io/fluentd-gcp-scaler,
-      k8s.gcr.io/node-problem-detector/node-problem-detector
+    k8s.gcr.io/fluentd-gcp-scaler,
+    k8s.gcr.io/node-problem-detector/node-problem-detector,
+    registry.k8s.io/fluentd-gcp-scaler,
+    registry.k8s.io/node-problem-detector/node-problem-detector
   ]
 
 - list: user_known_k8s_images
   items: [
-      mcr.microsoft.com/aks/hcp/hcp-tunnel-front
+    mcr.microsoft.com/aks/hcp/hcp-tunnel-front
   ]
 
 # Whitelist for known docker client binaries run inside container
-# - k8s.gcr.io/fluentd-gcp-scaler in GCP/GKE
+# - k8s.gcr.io/fluentd-gcp-scaler / registry.k8s.io/fluentd-gcp-scaler in GCP/GKE
+# TODO: Remove k8s.gcr.io reference after 01/Dec/2023
 - macro: user_known_k8s_client_container
   condition: >
     (k8s.ns.name="kube-system" and container.image.repository in (user_known_k8s_ns_kube_system_images)) or container.image.repository in (user_known_k8s_images)
