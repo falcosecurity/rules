@@ -1877,13 +1877,13 @@
     gke.gcr.io/netd-amd64,
     gke.gcr.io/watcher-daemonset,
     gcr.io/google-containers/prometheus-to-sd,
-    k8s.gcr.io/ip-masq-agent-amd64,
-    k8s.gcr.io/kube-proxy,
-    k8s.gcr.io/prometheus-to-sd,
+    registry.k8s.io/ip-masq-agent-amd64,
+    registry.k8s.io/kube-proxy,
+    registry.k8s.io/prometheus-to-sd,
     quay.io/calico/node,
     sysdig/sysdig,
     sematext_images,
-    k8s.gcr.io/dns/k8s-dns-node-cache
+    registry.k8s.io/dns/k8s-dns-node-cache
     ]
 
 - macro: falco_privileged_containers
@@ -2429,7 +2429,7 @@
      velero/velero,
      quay.io/jetstack/cert-manager-cainjector, weaveworks/kured,
      quay.io/prometheus-operator/prometheus-operator,
-     k8s.gcr.io/ingress-nginx/kube-webhook-certgen, quay.io/spotahome/redis-operator,
+     registry.k8s.io/ingress-nginx/kube-webhook-certgen, quay.io/spotahome/redis-operator,
      registry.opensource.zalan.do/acid/postgres-operator, registry.opensource.zalan.do/acid/postgres-operator-ui,
      rabbitmqoperator/cluster-operator)
      or (k8s.ns.name = "kube-system"))
@@ -2488,7 +2488,7 @@
 - macro: pkg_mgmt_in_kube_proxy
   condition: >
     proc.cmdline startswith "update-alternat"
-    and container.image.repository = "k8s.gcr.io/kube-proxy"
+    and container.image.repository = "registry.k8s.io/kube-proxy"
 
 - rule: Launch Package Management Process in Container
   desc: Package management process ran inside container
@@ -2907,8 +2907,8 @@
 
 - list: user_known_k8s_ns_kube_system_images
   items: [
-      k8s.gcr.io/fluentd-gcp-scaler,
-      k8s.gcr.io/node-problem-detector/node-problem-detector
+      registry.k8s.io/fluentd-gcp-scaler,
+      registry.k8s.io/node-problem-detector/node-problem-detector
   ]
 
 - list: user_known_k8s_images
@@ -2917,7 +2917,7 @@
   ]
 
 # Whitelist for known docker client binaries run inside container
-# - k8s.gcr.io/fluentd-gcp-scaler in GCP/GKE
+# - registry.k8s.io/fluentd-gcp-scaler in GCP/GKE
 - macro: user_known_k8s_client_container
   condition: >
     (k8s.ns.name="kube-system" and container.image.repository in (user_known_k8s_ns_kube_system_images)) or container.image.repository in (user_known_k8s_images)
