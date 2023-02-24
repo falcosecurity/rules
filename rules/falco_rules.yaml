@@ -3120,6 +3120,7 @@
      (fd.sip.name in (c2_server_fqdn_list)))
   output: Outbound connection to C2 server (c2_domain=%fd.sip.name c2_addr=%fd.sip command=%proc.cmdline connection=%fd.name user=%user.name user_loginuid=%user.loginuid container_id=%container.id image=%container.image.repository)
   priority: WARNING
+  enabled: false
   tags: [host, container, network, mitre_command_and_control, TA0011]
 
 - list: white_listed_modules
