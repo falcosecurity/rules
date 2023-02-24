@@ -2392,6 +2392,7 @@
   condition: outbound and fd.sip="169.254.169.254" and container and not ec2_metadata_containers
   output: Outbound connection to EC2 instance metadata service (command=%proc.cmdline pid=%proc.pid connection=%fd.name %container.info image=%container.image.repository:%container.image.tag)
   priority: NOTICE
+  enabled: false
   tags: [network, aws, container, mitre_discovery, T1565]
 
 
@@ -3119,6 +3120,7 @@
      (fd.sip.name in (c2_server_fqdn_list)))
   output: Outbound connection to C2 server (c2_domain=%fd.sip.name c2_addr=%fd.sip command=%proc.cmdline connection=%fd.name user=%user.name user_loginuid=%user.loginuid container_id=%container.id image=%container.image.repository)
   priority: WARNING
+  enabled: false
   tags: [host, container, network, mitre_command_and_control, TA0011]
 
 - list: white_listed_modules
@@ -3267,6 +3269,7 @@
         java_network_read and evt.buffer bcontains cafebabe
   output: Java process class file download (user=%user.name user_loginname=%user.loginname user_loginuid=%user.loginuid event=%evt.type connection=%fd.name server_ip=%fd.sip server_port=%fd.sport proto=%fd.l4proto process=%proc.name command=%proc.cmdline pid=%proc.pid parent=%proc.pname buffer=%evt.buffer container_id=%container.id image=%container.image.repository)
   priority: CRITICAL
+  enabled: false
   tags: [host, container, process, mitre_initial_access, T1190]
 
 - list: docker_binaries
