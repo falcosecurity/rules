@@ -3269,6 +3269,7 @@
         java_network_read and evt.buffer bcontains cafebabe
   output: Java process class file download (user=%user.name user_loginname=%user.loginname user_loginuid=%user.loginuid event=%evt.type connection=%fd.name server_ip=%fd.sip server_port=%fd.sport proto=%fd.l4proto process=%proc.name command=%proc.cmdline pid=%proc.pid parent=%proc.pname buffer=%evt.buffer container_id=%container.id image=%container.image.repository)
   priority: CRITICAL
+  enabled: false
   tags: [host, container, process, mitre_initial_access, T1190]
 
 - list: docker_binaries
