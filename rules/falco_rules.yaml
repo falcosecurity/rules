@@ -2392,6 +2392,7 @@
   condition: outbound and fd.sip="169.254.169.254" and container and not ec2_metadata_containers
   output: Outbound connection to EC2 instance metadata service (command=%proc.cmdline pid=%proc.pid connection=%fd.name %container.info image=%container.image.repository:%container.image.tag)
   priority: NOTICE
+  enabled: false
   tags: [network, aws, container, mitre_discovery, T1565]
 
 
