@@ -1,0 +1,4 @@
+rules
+rules/*
+.vscode
+index.json
