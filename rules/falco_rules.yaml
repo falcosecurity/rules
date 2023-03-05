@@ -1172,6 +1172,16 @@
 - macro: calico_node
   condition: (container.image.repository endswith calico/node and proc.name=calico-node)
 
+- macro: etckeeper_activities
+  condition: (never_true)
+
+- macro: etckeeper
+  condition: (proc.aname in (50vcs-commit, 30store-metadata, 50uncommitted-c) and
+              proc.aname = etckeeper and
+              (fd.name startswith /etc/.git/ or
+               fd.name = /etc/.etckeeper) and
+              etckeeper_activities)
+
 - macro: write_etc_common
   condition: >
     etc_dir and evt.dir = < and open_write
@@ -1278,6 +1288,7 @@
     and not avinetworks_supervisor_writing_ssh
     and not multipath_writing_conf
     and not calico_node
+    and not etckeeper
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc
