@@ -3329,10 +3329,22 @@
 - macro: known_ptrace_procs
   condition: (proc.name in (known_ptrace_binaries))
 
+- macro: ptrace_attach_or_injection
+  condition: >
+    evt.type=ptrace and evt.dir=> and
+    (evt.arg.request contains PTRACE_POKETEXT or
+    evt.arg.request contains PTRACE_POKEDATA or
+    evt.arg.request contains PTRACE_ATTACH or
+    evt.arg.request contains PTRACE_SEIZE or
+    evt.arg.request contains PTRACE_SETREGS)
+
 - rule: PTRACE attached to process
   desc: "This rule detects an attempt to inject code into a process using PTRACE."
-  condition: evt.type=ptrace and evt.dir=> and evt.arg.request in (5, 6, 11, 20, 27) and proc_name_exists and not known_ptrace_procs
-  output: Detected ptrace PTRACE_ATTACH attempt (proc.cmdline=%proc.cmdline container=%container.info evt.type=%evt.type evt.arg.request=%evt.arg.request proc.pid=%proc.pid proc.cwd=%proc.cwd proc.ppid=%proc.ppid proc.pcmdline=%proc.pcmdline proc.sid=%proc.sid proc.exepath=%proc.exepath user.uid=%user.uid user.loginuid=%user.loginuid user.loginname=%user.loginname user.name=%user.name group.gid=%group.gid group.name=%group.name container.id=%container.id container.name=%container.name image=%container.image.repository)
+  condition: ptrace_attach_or_injection and proc_name_exists and not known_ptrace_procs
+  output: > 
+    Detected ptrace PTRACE_ATTACH attempt (proc.cmdline=%proc.cmdline container=%container.info evt.type=%evt.type evt.arg.request=%evt.arg.request proc.pid=%proc.pid proc.cwd=%proc.cwd proc.ppid=%proc.ppid
+    proc.pcmdline=%proc.pcmdline proc.sid=%proc.sid proc.exepath=%proc.exepath user.uid=%user.uid user.loginuid=%user.loginuid user.loginname=%user.loginname user.name=%user.name group.gid=%group.gid
+    group.name=%group.name container.id=%container.id container.name=%container.name image=%container.image.repository)
   priority: WARNING
   tags: [host, container, process, mitre_execution, mitre_privilege_escalation, T1055.008]
   
