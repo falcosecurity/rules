@@ -13,7 +13,7 @@ jobs:
       GH_INDEX_REPO_BRANCH: gh-pages
       REGISTRY_USER: ${{ github.repository_owner }}
       REGISTRY: ghcr.io
-      OCI_REPO_PREFIX: ${{ env.REGISTRY }}/${{ env.REGISTRY_USER }}/${{ github.event.repository.name }}
+      OCI_REPO_PREFIX: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
 
     # These permissions are needed to interact with GitHub's OIDC Token endpoint.
     permissions:
@@ -31,7 +31,7 @@ jobs:
           apt-get update && apt-get install -y --no-install-recommends git && apt-get clean
 
       - name: Setup Golang
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v4
         with:
           go-version: '^1.19'
 
