@@ -3012,6 +3012,9 @@
 - list: allowed_image
   items: [] # add image to monitor, i.e.: bitnami/nginx
 
+- list: authorized_server_binary
+  items: []  # add binary to allow, i.e.: nginx
+  
 - list: authorized_server_port
   items: [] # add port to allow, i.e.: 80
 
