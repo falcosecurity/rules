@@ -17,7 +17,7 @@
 
 # Starting with version 8, the Falco engine supports exceptions.
 # However the Falco rules file does not use them by default.
-- required_engine_version: 16
+- required_engine_version: 17
 
 # Currently disabled as read/write are ignored syscalls. The nearly
 # similar open_write/open_read check for files being opened for
@@ -85,6 +85,9 @@
 
 - macro: chmod
   condition: (evt.type in (chmod, fchmod, fchmodat) and evt.dir=<)
+
+- macro: init_module
+  condition: (evt.type=init_module and evt.dir=<)
 
 # File categories
 - macro: bin_dir
@@ -3150,10 +3153,15 @@
 - list: white_listed_modules
   items: []
 
+# init_module syscall is available since Falco 0.35.0
+# rule coverage now extends to modprobe usage
 - rule: Linux Kernel Module Injection Detected
   desc: Detect kernel module was injected (from container).
-  condition: spawned_process and container and proc.name=insmod and not proc.args in (white_listed_modules) and thread.cap_effective icontains sys_module
-  output: Linux Kernel Module injection using insmod detected (user=%user.name user_loginuid=%user.loginuid parent_process=%proc.pname module=%proc.args %container.info image=%container.image.repository:%container.image.tag)
+  condition: ((spawned_process and proc.name=insmod) or init_module)
+    and container
+    and not proc.args in (white_listed_modules)
+    and thread.cap_effective icontains sys_module
+  output: Linux Kernel Module injection from container detected (user=%user.name uid=%user.uid user_loginuid=%user.loginuid process_name=%proc.name parent_process_name=%proc.pname parent_exepath=%proc.pexepath %proc.aname[2] %proc.aexepath[2] module=%proc.args %container.info image=%container.image.repository:%container.image.tag res=%evt.res syscall=%evt.type)
   priority: WARNING
   tags: [host, container, process, mitre_execution, mitre_persistence, TA0002]
 
