@@ -74,6 +74,11 @@
 - macro: modify
   condition: (rename or remove)
 
+# %evt.arg.flags available for evt.dir=>, but only for umount2
+# %evt.arg.name is path and available for evt.dir=<
+- macro: umount
+  condition: (evt.type in (umount, umount2))
+
 - macro: spawned_process
   condition: (evt.type in (execve, execveat) and evt.dir=<)
 
