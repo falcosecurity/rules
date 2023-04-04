@@ -86,8 +86,8 @@
 - macro: chmod
   condition: (evt.type in (chmod, fchmod, fchmodat) and evt.dir=<)
 
-- macro: init_module
-  condition: (evt.type=init_module and evt.dir=<)
+- macro: kernel_module_load
+  condition: (evt.type in (init_module, finit_module) and evt.dir=<)
 
 # File categories
 - macro: bin_dir
@@ -3150,16 +3150,17 @@
   enabled: false
   tags: [host, container, network, mitre_command_and_control, TA0011]
 
-- list: white_listed_modules
+- list: allowed_container_images_loading_kernel_module
   items: []
 
-# init_module syscall is available since Falco 0.35.0
-# rule coverage now extends to modprobe usage
+# init_module and finit_module syscalls are available since Falco 0.35.0
+# rule coverage now extends to modprobe usage via init_module logging
+# and previous alerting on spawned_process and insmod is now covered
+# by finit_module syscall
 - rule: Linux Kernel Module Injection Detected
   desc: Detect kernel module was injected (from container).
-  condition: ((spawned_process and proc.name=insmod) or init_module)
-    and container
-    and not proc.args in (white_listed_modules)
+  condition: kernel_module_load and container
+    and not container.image.repository in (allowed_container_images_loading_kernel_module)
     and thread.cap_effective icontains sys_module
   output: Linux Kernel Module injection from container detected (user=%user.name uid=%user.uid user_loginuid=%user.loginuid process_name=%proc.name parent_process_name=%proc.pname parent_exepath=%proc.pexepath %proc.aname[2] %proc.aexepath[2] module=%proc.args %container.info image=%container.image.repository:%container.image.tag res=%evt.res syscall=%evt.type)
   priority: WARNING
