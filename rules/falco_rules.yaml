@@ -3398,6 +3398,29 @@
   priority: WARNING
   tags: [host, container, mitre_execution, mitre_defense_evasion, T1036.005, T1059.004]
 
+#The given rule is designed to detect suspicious activities related to disabling system recovery features. 
+#The rule looks for specific commands being executed such as rm -rf, chattr +i, mkfs.ext4 -E nodiscard, mount remount,ro, 
+#and disabling certain services such as systemd-backlight@.service, apport.service, rescue.service, emergency.service, and recovery-mode.service. 
+#https://attack.mitre.org/techniques/T1490/
+#Mitre Impact: Inhibit system recovery
+
+- rule: Disable Recovery Features
+  desc: Detects disabling system recovery features by deleting or disabling services and commands.
+  condition: >
+      (spawned_process and proc.name = "rm" and proc.args contains "-rf") or
+      (spawned_process and proc.name = "chattr" and proc.args contains "+i") or
+      (spawned_process and proc.name = "mkfs.ext4" and proc.args contains "-E nodiscard") or
+      (spawned_process and proc.name = "mount" and proc.args contains "remount,ro") or
+      (spawned_process and proc.name = "systemctl" and proc.args contains "disable systemd-backlight@.service") or 
+      (spawned_process and proc.name = "systemctl" and proc.args contains "disable apport.service") or
+      (spawned_process and proc.name = "systemctl" and proc.args contains "disable rescue.service") or
+      (spawned_process and proc.name = "systemctl" and proc.args contains "disable emergency.service") or
+      (spawned_process and proc.name = "systemctl" and proc.args contains "disable recovery-mode.service")
+  enabled: true
+  output: "Disabling recovery features so that system becomes non recoverable in case of failure."
+  priority: CRITICAL
+  tags: [host, container, recovery, mitre_impact, inhibit_system_recovery, T1490]
+
 # Application rules have moved to application_rules.yaml. Please look
 # there if you want to enable them by adding to
 # falco_rules.local.yaml.
