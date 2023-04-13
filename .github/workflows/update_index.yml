@@ -11,24 +11,15 @@ jobs:
     env:
       GH_INDEX_REPO: falcoctl
       GH_INDEX_REPO_BRANCH: gh-pages
-      REGISTRY_USER: ${{ github.repository_owner }}
-      REGISTRY: ghcr.io
-      OCI_REPO_PREFIX: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
 
     # These permissions are needed to interact with GitHub's OIDC Token endpoint.
     permissions:
       id-token: write
       contents: write
-      packages: write
-      pull-requests: write
 
     steps:
       - name: Checkout Rules
         uses: actions/checkout@v3
-
-      - name: Git set-up
-        run: |
-          apt-get update && apt-get install -y --no-install-recommends git && apt-get clean
 
       - name: Setup Golang
         uses: actions/setup-go@v4
