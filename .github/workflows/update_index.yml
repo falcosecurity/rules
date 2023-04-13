@@ -40,7 +40,7 @@ jobs:
         with:
           repository: ${{ github.repository_owner }}/${{ env.GH_INDEX_REPO }}
           ref: ${{ env.GH_INDEX_REPO_BRANCH }}
-          path: 'tmp'
+          path: $RUNNER_TEMP
           token: ${{ secrets.GITHUB_TOKEN }}
           persist-credentials: false
           fetch-depth: 0
@@ -50,18 +50,18 @@ jobs:
         run: go build -o rules-registry ./...
 
       - name: Upsert the registry
-        run: build/registry/rules-registry update-index registry.yaml /tmp/${{ env.GH_INDEX_REPO }}/index.yaml
+        run: build/registry/rules-registry update-index registry.yaml /$RUNNER_TEMP/${{ env.GH_INDEX_REPO }}/index.yaml
 
       - name: Commit the index
         run: |
-          cd tmp
+          cd $RUNNER_TEMP
           git add index.yaml
           git commit --message="update(index.yaml): new rules registry data" --signoff       
 
       - name: Push the index
         uses: ad-m/github-push-action@v0.6.0
         with:
-          directory: tmp
+          directory: $RUNNER_TEMP
           repository: ${{ github.repository_owner }}/${{ env.GH_INDEX_REPO }}
           branch: ${{ env.GH_INDEX_REPO_BRANCH }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
