@@ -3404,20 +3404,26 @@
 #https://attack.mitre.org/techniques/T1490/
 #Mitre Impact: Inhibit system recovery
 
+- list: recovery_files
+  items: [/etc/default/grub, /etc/inittab, /usr/lib/systemd/system/rescue.service]
+
 - rule: Disable Recovery Features
   desc: Detects disabling system recovery features by deleting or disabling services and commands.
   condition: >
-      (spawned_process and proc.name = "rm" and proc.args contains "-rf") or
-      (spawned_process and proc.name = "chattr" and proc.args contains "+i") or
-      (spawned_process and proc.name = "mkfs.ext4" and proc.args contains "-E nodiscard") or
-      (spawned_process and proc.name = "mount" and proc.args contains "remount,ro") or
-      (spawned_process and proc.name = "systemctl" and proc.args contains "disable systemd-backlight@.service") or 
-      (spawned_process and proc.name = "systemctl" and proc.args contains "disable apport.service") or
-      (spawned_process and proc.name = "systemctl" and proc.args contains "disable rescue.service") or
-      (spawned_process and proc.name = "systemctl" and proc.args contains "disable emergency.service") or
-      (spawned_process and proc.name = "systemctl" and proc.args contains "disable recovery-mode.service")
+      (spawned_process) and 
+      ((open_write and fd.name in (recovery_files)) or
+      (proc.name = "rm" and proc.args contains "-rf") or
+      (proc.name = "chattr" and proc.args contains "+i") or
+      (proc.name = "mkfs.ext4" and proc.args contains "-E nodiscard") or
+      (proc.name = "mount" and proc.args contains "remount,ro") or
+      (proc.name = "systemctl" and proc.args contains "disable systemd-backlight@.service") or 
+      (proc.name = "systemctl" and proc.args contains "disable apport.service") or
+      (proc.name = "systemctl" and proc.args contains "disable rescue.service") or
+      (proc.name = "systemctl" and proc.args contains "disable emergency.service") or
+      (proc.name = "systemctl" and proc.args contains "disable recovery-mode.service"))
   enabled: true
-  output: "Disabling recovery features so that system becomes non recoverable in case of failure."
+  output: command related to Disabling recovery features so that system becomes non recoverable in case of failure is executed .(user=%user.name user_loginuid=%user.loginuid
+    command=%proc.cmdline pid=%proc.pid file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline container_id=%container.id image=%container.image.repository)"
   priority: CRITICAL
   tags: [host, container, recovery, mitre_impact, inhibit_system_recovery, T1490]
 
