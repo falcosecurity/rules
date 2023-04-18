@@ -238,11 +238,13 @@
     frontend, preinst, add-apt-reposit, apt-auto-remova, apt-key,
     apt-listchanges, unattended-upgr, apt-add-reposit, apt-cache, apt.systemd.dai
     ]
+- list: python_package_managers
+  items: [pip, pip3, conda]
 
 # The truncated dpkg-preconfigu is intentional, process names are
 # truncated at the falcosecurity-libs level.
 - list: package_mgmt_binaries
-  items: [rpm_binaries, deb_binaries, update-alternat, gem, npm, pip, pip3, sane-utils.post, alternatives, chef-client, apk, snapd]
+  items: [rpm_binaries, deb_binaries, update-alternat, gem, npm, python_package_managers, sane-utils.post, alternatives, chef-client, apk, snapd]
 
 - macro: package_mgmt_procs
   condition: proc.name in (package_mgmt_binaries)
