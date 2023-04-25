@@ -1,0 +1,2160 @@
+customRules:
+  custom_k8s_rules.yaml: |-
+    - rule: Launch Suspicious Network Tool in Container
+      desc: Detect network tools launched inside container
+      condition: >
+        spawned_process and container and network_tool_procs and not user_known_network_tool_activities
+      output: >
+        Network tool launched in container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid parent_process=%proc.pname
+        container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
+      priority: CRITICAL
+      tags: [container, network, process, mitre_discovery, mitre_exfiltration, T1595, T1046]
+
+    - rule: Redirect STDOUT/STDIN to Network Connection in Container
+      desc: Detect redirecting stdout/stdin to network connection in container (potential reverse shell).
+      condition: dup and container and evt.rawres in (0, 1, 2) and fd.type in ("ipv4", "ipv6") and not user_known_stand_streams_redirect_activities
+      output: >
+        Redirect stdout/stdin to network connection (user=%user.name user_loginuid=%user.loginuid %container.info process=%proc.name parent=%proc.pname cmdline=%proc.cmdline pid=%proc.pid terminal=%proc.tty container_id=%container.id image=%container.image.repository fd.name=%fd.name fd.num=%fd.num fd.type=%fd.type fd.sip=%fd.sip)
+      priority: CRITICAL
+      tags: [container, network, process, mitre_discovery, mitre_execution, T1059]
+
+    - rule: Detect outbound connections to common miner pool ports
+      desc: Miners typically connect to miner pools on common ports.
+      condition: net_miner_pool and not trusted_images_query_miner_domain_dns
+      enabled: false
+      output: Outbound connection to IP/Port flagged by https://cryptoioc.ch (command=%proc.cmdline pid=%proc.pid port=%fd.rport ip=%fd.rip container=%container.info image=%container.image.repository)
+      priority: CRITICAL
+      tags: [host, container, network, mitre_execution, T1496]
+
+    - rule: Contact K8S API Server From Container
+      desc: Detect attempts to contact the K8S API Server from a container
+      condition: >
+        evt.type=connect and evt.dir=< and
+        (fd.typechar=4 or fd.typechar=6) and
+        container and
+        not k8s_containers and
+        k8s_api_server and
+        not user_known_contact_k8s_api_server_activities
+      output: Unexpected connection to K8s API Server from container (command=%proc.cmdline pid=%proc.pid %container.info image=%container.image.repository:%container.image.tag connection=%fd.name)
+      priority: CRITICAL
+      tags: [network, k8s, container, mitre_discovery, T1565]
+
+    - list: network_tool_binaries
+      items: [ncat, nmap, tcpdump, tshark, ngrep, telnet, mitmproxy, socat, zmap]
+
+    - macro: minerpool_https
+      condition: (fd.sport="443" and fd.sip.name in (https_miner_domains))
+
+    - macro: minerpool_http
+      condition: (fd.sport="80" and fd.sip.name in (http_miner_domains))
+
+    - macro: minerpool_other
+      condition: (fd.sport in (miner_ports) and fd.sip.name in (miner_domains))
+
+    - macro: net_miner_pool
+      condition: (evt.type in (sendto, sendmsg, connect) and evt.dir=< and (fd.net != "127.0.0.0/8" and not fd.snet in (rfc_1918_addresses)) and ((minerpool_http) or (minerpool_https) or (minerpool_other)))
+
+    - macro: network_tool_procs
+      condition: (proc.name in (network_tool_binaries))
+
+    - macro: k8s_api_server
+      condition: (fd.sip.name="kubernetes.default.svc.cluster.local")
+
+    - macro: user_known_contact_k8s_api_server_activities
+      condition: (never_true)
+
+    - rule: Malicious process detected
+      desc: >-
+        Malicious process detected in pod or host. This rule is deprecated. The
+        malicious_processes list will no longer be maintained.
+      condition: >
+        evt.type=fork and evt.dir=< and evt.rawres>0 and proc.exe in
+        (malicious_processes)
+      output: >-
+        Malicious processes detected in pod or host. proc.cmdline=%proc.cmdline
+        evt.type=%evt.type evt.res=%evt.res proc.pid=%proc.pid proc.cwd=%proc.cwd
+        proc.ppid=%proc.ppid proc.pcmdline=%proc.pcmdline proc.sid=%proc.sid
+        proc.exepath=%proc.exepath user.uid=%user.uid user.loginuid=%user.loginuid
+        user.loginname=%user.loginname user.name=%user.name group.gid=%group.gid
+        group.name=%group.name container.id=%container.id
+        container.name=%container.name %evt.args
+      priority: CRITICAL
+      tags:
+      - ioc
+      source: syscall
+      append: false
+      exceptions: []
+
+    - rule: Malicious IPs or domains detected on command line
+      desc: >-
+        Malicious commands detected in pod or host. The rule was triggered by the IP
+        or domains in proc_cmdline
+      condition: >
+        spawned_process and proc_args_with_malicious_domain_ip and not
+        user_known_ips_and_domains_cmdline
+      output: >-
+        Malicious connections to IP or domains detected in pod or host.
+        proc.cmdline=%proc.cmdline evt.type=%evt.type evt.res=%evt.res
+        proc.pid=%proc.pid proc.cwd=%proc.cwd proc.ppid=%proc.ppid
+        proc.pcmdline=%proc.pcmdline proc.sid=%proc.sid proc.exepath=%proc.exepath
+        user.uid=%user.uid user.loginuid=%user.loginuid
+        user.loginname=%user.loginname user.name=%user.name group.gid=%group.gid
+        group.name=%group.name container.id=%container.id
+        container.name=%container.name %evt.args
+      priority: CRITICAL
+      tags:
+      - MITRE_TA0003_persistence
+      - MITRE_TA0005_defense_evasion
+      - ioc
+      - MITRE
+      - MITRE_TA0002_execution
+      source: syscall
+      append: false
+      exceptions:
+      - name: proc_name
+        comps: in
+        fields: proc.name
+      - name: container_image_repo
+        comps:
+        - endswith
+        fields:
+        - container.image.repository
+      - name: proc_name_container_image_repo
+        comps:
+        - in
+        - endswith
+        fields:
+        - proc.name
+        - container.image.repository
+      - name: proc_cmdline_image_suffix
+        comps:
+        - startswith
+        - endswith
+        fields:
+        - proc.cmdline
+        - container.image.repository
+      - name: proc_cmdline_proc_pcmdline
+        comps:
+        - startswith
+        - startswith
+        fields:
+        - proc.cmdline
+        - proc.pcmdline
+
+    - rule: Malicious C2 IPs or domains exploiting log4j (Copy)
+      desc: >-
+        Malicious connections detected in pod or host. The rule was triggered by IPs
+        or domains that exploit log4j
+      condition: |
+        evt.type = connect and evt.dir = < and fd.sip in (malicious_log4j_c2)
+      output: >-
+        Malicious connections to C2 IPs or domains detected in pod or host
+        exploiting log4j. proc.cmdline=%proc.cmdline evt.type=%evt.type
+        evt.res=%evt.res proc.pid=%proc.pid proc.cwd=%proc.cwd proc.ppid=%proc.ppid
+        proc.pcmdline=%proc.pcmdline proc.sid=%proc.sid proc.exepath=%proc.exepath
+        user.uid=%user.uid user.loginuid=%user.loginuid
+        user.loginname=%user.loginname user.name=%user.name group.gid=%group.gid
+        group.name=%group.name container.id=%container.id
+        container.name=%container.name %evt.args
+      priority: CRITICAL
+      tags:
+      - ioc
+      - MITRE
+      - MITRE_TA0001_initial_access
+      - MITRE_T1190_exploit_public_facing_application
+      source: syscall
+      append: false
+      exceptions: []
+
+    - rule: Malicious binary detected 
+      desc: >-
+        Malicious script or binary detected in pod or host. The rule was triggered
+        by the execve syscall
+      condition: >
+        spawned_process and (in_malicious_binaries or (proc.name in (shell_binaries)
+        and scripts_in_or and not proc.args startswith "-c"))
+      output: >-
+        Malicious binary or script executed in the pod or host.
+        proc.cmdline=%proc.cmdline evt.type=%evt.type evt.res=%evt.res
+        proc.pid=%proc.pid proc.cwd=%proc.cwd proc.ppid=%proc.ppid
+        proc.pcmdline=%proc.pcmdline proc.sid=%proc.sid proc.exepath=%proc.exepath
+        user.uid=%user.uid user.loginuid=%user.loginuid
+        user.loginname=%user.loginname user.name=%user.name group.gid=%group.gid
+        group.name=%group.name container.id=%container.id
+        container.name=%container.name %evt.args
+      priority: CRITICAL
+      tags:
+      - ioc
+      - MITRE
+      - MITRE_TA0002_execution
+      - MITRE_TA0003_persistence
+      - MITRE_TA0005_defense_evasion
+      source: syscall
+      append: false
+      exceptions: []
+
+    - rule: Set Setuid or Setgid bit
+      desc: >
+        When the setuid or setgid bits are set for an application,
+        this means that the application will run with the privileges of the owning user or group respectively.
+        Detect setuid or setgid bits set via chmod
+      condition: >
+        chmod and (evt.arg.mode contains "S_ISUID" or evt.arg.mode contains "S_ISGID")
+        and not proc.name in (user_known_chmod_applications)
+        and not exe_running_docker_save
+        and not user_known_set_setuid_or_setgid_bit_conditions
+      enabled: true
+      output: >
+        Setuid or setgid bit is set via chmod (fd=%evt.arg.fd filename=%evt.arg.filename mode=%evt.arg.mode user=%user.name user_loginuid=%user.loginuid process=%proc.name
+        command=%proc.cmdline pid=%proc.pid container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
+      priority: NOTICE
+      tags: [host, container, process, users, mitre_persistence, T1548.001]
+      
+    - rule: Launch Package Management Process in Container
+      desc: Package management process ran inside container
+      condition: >
+        spawned_process
+        and container
+        and user.name != "_apt"
+        and package_mgmt_procs
+        and not package_mgmt_ancestor_procs
+        and not user_known_package_manager_in_container
+        and not pkg_mgmt_in_kube_proxy
+      output: >
+        Package management process launched in container (user=%user.name user_loginuid=%user.loginuid
+        command=%proc.cmdline pid=%proc.pid container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
+      priority: NOTICE
+      tags: [container, process, software_mgmt, mitre_persistence, T1505]
+      
+    - rule: Schedule Cron Jobs
+      desc: Detect cron jobs scheduled
+      condition: >
+        ((open_write and fd.name startswith /etc/cron) or
+         (spawned_process and proc.name = "crontab")) and
+        not user_known_cron_jobs
+      enabled: true
+      output: >
+        Cron jobs were scheduled to run (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid
+        file=%fd.name container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
+      priority:
+        NOTICE
+      tags: [host, container, filesystem, mitre_persistence, T1053.003]
+      
+    - rule: Container Drift Detected (chmod)
+      desc: New executable created in a container due to chmod
+      condition: >
+        chmod and
+        container and
+        not runc_writing_exec_fifo and
+        not runc_writing_var_lib_docker and
+        not user_known_container_drift_activities and
+        evt.rawres>=0 and
+        ((evt.arg.mode contains "S_IXUSR") or
+        (evt.arg.mode contains "S_IXGRP") or
+        (evt.arg.mode contains "S_IXOTH"))
+      enabled: true
+      output: Drift detected (chmod), new executable created in a container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid filename=%evt.arg.filename name=%evt.arg.name mode=%evt.arg.mode event=%evt.type)
+      priority: ERROR
+      tags: [container, process, filesystem, mitre_execution, T1059]
+      
+    - rule: Container Drift Detected (open+create)
+      desc: New executable created in a container due to open+create
+      condition: >
+        evt.type in (open,openat,openat2,creat) and
+        evt.is_open_exec=true and
+        container and
+        not runc_writing_exec_fifo and
+        not runc_writing_var_lib_docker and
+        not user_known_container_drift_activities and
+        evt.rawres>=0
+      enabled: true
+      output: Drift detected (open+create), new executable created in a container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid filename=%evt.arg.filename name=%evt.arg.name mode=%evt.arg.mode event=%evt.type)
+      priority: ERROR
+      tags: [container, process, filesystem, mitre_execution, T1059]
+      
+    - rule: Modify ld.so.preload
+      desc: Detect an attempt to write to file /etc/ld.so.preload
+      condition: open_write and fd.name=/etc/ld.so.preload
+      output: >-
+        File /etc/ld.so.preload has been opened for writing. Possible hidden process
+        attempt (user.name=%user.name proc.cmdline=%proc.cmdline parent=%proc.pname
+        proc.pcmdline=%proc.pcmdline file=%fd.name program=%proc.name
+        gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4]
+        container.id=%container.id evt.type=%evt.type evt.res=%evt.res
+        proc.pid=%proc.pid proc.cwd=%proc.cwd proc.ppid=%proc.ppid
+        proc.sid=%proc.sid proc.exepath=%proc.exepath user.uid=%user.uid
+        user.loginuid=%user.loginuid user.loginname=%user.loginname
+        group.gid=%group.gid group.name=%group.name container.name=%container.name
+        image=%container.image.repository)
+      priority: WARNING
+      tags:
+      - filesystem
+      - MITRE_TA0003_persistence
+      - MITRE_TA0005_defense_evasion
+      - MITRE_TA0004_privilege_escalation
+      - MITRE_T1574.006_hijack_execution_flow_dynamic_linker_hijacking
+      source: syscall
+      append: false
+
+    - rule: Disallowed SSH Connection
+      desc: Detect any new ssh connection to a host other than those in an allowed group of hosts
+      condition: (inbound_outbound) and ssh_port and not allowed_ssh_hosts
+      enabled: true
+      output: Disallowed SSH Connection (command=%proc.cmdline pid=%proc.pid connection=%fd.name user=%user.name user_loginuid=%user.loginuid container_id=%container.id image=%container.image.repository)
+      priority: NOTICE
+      tags: [host, container, network, mitre_command_and_control, mitre_lateral_movement, T1021.004]
+      
+    - rule: Outbound Connection to C2 Servers
+      desc: Detect outbound connection to command & control servers thanks to a list of IP addresses & a list of FQDN.
+      condition: >
+        outbound and 
+        ((fd.sip in (c2_server_ip_list)) or
+         (fd.sip.name in (c2_server_fqdn_list)))
+      output: Outbound connection to C2 server (c2_domain=%fd.sip.name c2_addr=%fd.sip command=%proc.cmdline connection=%fd.name user=%user.name user_loginuid=%user.loginuid container_id=%container.id image=%container.image.repository)
+      priority: WARNING
+      enabled: true
+      tags: [host, container, network, mitre_command_and_control, TA0011]
+      
+    - rule: Unexpected inbound connection source
+      desc: Detect any inbound connection from a source outside of an allowed set of ips, networks, or domain names
+      condition: >
+        inbound and not
+        ((fd.cip in (allowed_inbound_source_ipaddrs)) or
+         (fd.cnet in (allowed_inbound_source_networks)) or
+         (fd.cip.name in (allowed_inbound_source_domains)))
+      enabled: true
+      output: Disallowed inbound connection source (command=%proc.cmdline pid=%proc.pid connection=%fd.name user=%user.name user_loginuid=%user.loginuid container_id=%container.id image=%container.image.repository)
+      priority: NOTICE
+      tags: [host, container, network, mitre_command_and_control, TA0011]
+      
+    - rule: Read Shell Configuration File
+      desc: Detect attempts to read shell configuration files by non-shell programs
+      condition: >
+        open_read and
+        (fd.filename in (shell_config_filenames) or
+         fd.name in (shell_config_files) or
+         fd.directory in (shell_config_directories)) and
+        (not proc.name in (shell_binaries))
+      enabled: true
+      output: >
+        a shell configuration file was read by a non-shell program (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid file=%fd.name container_id=%container.id image=%container.image.repository)
+      priority:
+        WARNING
+      tags: [host, container, filesystem, mitre_discovery, T1546.004]
+      
+    - rule: Read ssh information
+      desc: Any attempt to read files below ssh directories by non-ssh programs
+      condition: >
+        ((open_read or open_directory) and
+         (user_ssh_directory or fd.name startswith /root/.ssh) and
+         not user_known_read_ssh_information_activities and
+         not proc.name in (ssh_binaries))
+      enabled: true
+      output: >
+        ssh-related file/directory read by non-ssh program (user=%user.name user_loginuid=%user.loginuid
+        command=%proc.cmdline pid=%proc.pid file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline container_id=%container.id image=%container.image.repository)
+      priority: ERROR
+      tags: [host, container, filesystem, mitre_discovery, T1005]
+      
+    - rule: Contact cloud metadata service from container
+      desc: Detect attempts to contact the Cloud Instance Metadata Service from a container
+      condition: outbound and fd.sip="169.254.169.254" and container and not user_known_metadata_access
+      enabled: true
+      output: Outbound connection to cloud instance metadata service (command=%proc.cmdline pid=%proc.pid connection=%fd.name %container.info image=%container.image.repository:%container.image.tag)
+      priority: NOTICE
+      tags: [network, container, mitre_discovery, T1565]
+      
+    - rule: Contact EC2 Instance Metadata Service From Container
+      desc: Detect attempts to contact the EC2 Instance Metadata Service from a container
+      condition: outbound and fd.sip="169.254.169.254" and container and not ec2_metadata_containers
+      output: Outbound connection to EC2 instance metadata service (command=%proc.cmdline pid=%proc.pid connection=%fd.name %container.info image=%container.image.repository:%container.image.tag)
+      priority: NOTICE
+      enabled: true
+      tags: [network, aws, container, mitre_discovery, T1565]
+      
+    - rule: Interpreted procs outbound network activity
+      desc: Any outbound network activity performed by any interpreted program (perl, python, ruby, etc.)
+      condition: >
+        (outbound and interpreted_procs)
+      enabled: true
+      output: >
+        Interpreted program performed outgoing network connection
+        (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid connection=%fd.name container_id=%container.id image=%container.image.repository)
+      priority: NOTICE
+      tags: [host, container, network, mitre_exfiltration, TA0011]
+      
+    - rule: Unexpected UDP Traffic
+      desc: UDP traffic not on port 53 (DNS) or other commonly used ports
+      condition: (inbound_outbound) and fd.l4proto=udp and not expected_udp_traffic
+      enabled: true
+      output: >
+        Unexpected UDP Traffic Seen
+        (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid connection=%fd.name proto=%fd.l4proto evt=%evt.type %evt.args container_id=%container.id image=%container.image.repository)
+      priority: NOTICE
+      tags: [host, container, network, mitre_exfiltration, TA0011]
+      
+    - rule: Network Connection outside Local Subnet
+      desc: Detect traffic to image outside local subnet.
+      condition: >
+        inbound_outbound and
+        container and
+        not network_local_subnet and
+        k8s.ns.name in (namespace_scope_network_only_subnet)
+      enabled: true
+      output: >
+        Network connection outside local subnet
+        (command=%proc.cmdline pid=%proc.pid connection=%fd.name user=%user.name user_loginuid=%user.loginuid container_id=%container.id
+         image=%container.image.repository namespace=%k8s.ns.name
+         fd.rip.name=%fd.rip.name fd.lip.name=%fd.lip.name fd.cip.name=%fd.cip.name fd.sip.name=%fd.sip.name)
+      priority: WARNING
+      tags: [container, network, mitre_discovery, T1046]
+      
+    - rule: Interpreted procs inbound network activity
+      desc: Any inbound network activity performed by any interpreted program (perl, python, ruby, etc.)
+      condition: >
+        (inbound and interpreted_procs)
+      enabled: true
+      output: >
+        Interpreted program received/listened for network traffic
+        (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid connection=%fd.name container_id=%container.id image=%container.image.repository)
+      priority: NOTICE
+      tags: [host, container, network, mitre_exfiltration, TA0011]
+      
+    - rule: Outbound or Inbound Traffic not to Authorized Server Process and Port
+      desc: Detect traffic that is not to authorized server process and port.
+      condition: >
+        inbound_outbound and
+        container and
+        container.image.repository in (allowed_image) and
+        not proc.name in (authorized_server_binary) and
+        not fd.sport in (authorized_server_port)
+      enabled: true
+      output: >
+        Network connection outside authorized port and binary
+        (command=%proc.cmdline pid=%proc.pid connection=%fd.name user=%user.name user_loginuid=%user.loginuid container_id=%container.id
+        image=%container.image.repository)
+      priority: WARNING
+      tags: [container, network, mitre_discovery, TA0011]
+      
+    - rule: Program run with disallowed http proxy env
+      desc: An attempt to run a program with a disallowed HTTP_PROXY environment variable
+      condition: >
+        spawned_process and
+        http_proxy_procs and
+        not allowed_ssh_proxy_env and
+        proc.env icontains HTTP_PROXY
+      enabled: true
+      output: >
+        Program run with disallowed HTTP_PROXY environment variable
+        (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid env=%proc.env parent=%proc.pname container_id=%container.id image=%container.image.repository)
+      priority: NOTICE
+      tags: [host, container, users, mitre_command_and_control, T1090, T1204]
+      
+    - list: user_known_change_thread_namespace_binaries
+      items: [crio, multus]
+
+    - macro: user_known_change_thread_namespace_activities
+      condition: (never_true)
+
+    - list: network_plugin_binaries
+      items: [aws-cni, azure-vnet]
+
+    - macro: weaveworks_scope
+      condition: (container.image.repository endswith weaveworks/scope and proc.name=scope)
+
+    - rule: Change thread namespace
+      desc: >
+        an attempt to change a program/thread\'s namespace (commonly done
+        as a part of creating a container) by calling setns.
+      condition: >
+        evt.type=setns and evt.dir=<
+        and proc_name_exists
+        and not (container.id=host and proc.name in (docker_binaries, k8s_binaries, lxd_binaries, nsenter))
+        and not proc.name in (sysdigcloud_binaries, sysdig, calico, oci-umount, cilium-cni, network_plugin_binaries)
+        and not proc.name in (user_known_change_thread_namespace_binaries)
+        and not proc.name startswith "runc"
+        and not proc.cmdline startswith "containerd"
+        and not proc.pname in (sysdigcloud_binaries, hyperkube, kubelet, protokube, dockerd, tini, aws)
+        and not java_running_sdjagent
+        and not kubelet_running_loopback
+        and not rancher_agent
+        and not rancher_network_manager
+        and not calico_node
+        and not weaveworks_scope
+        and not user_known_change_thread_namespace_activities
+      enabled: true
+      output: >
+        Namespace change (setns) by unexpected program (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid
+        parent=%proc.pname %container.info container_id=%container.id image=%container.image.repository:%container.image.tag)
+      priority: NOTICE
+      tags: [host, container, process, mitre_privilege_escalation, mitre_lateral_movement, T1611]
+      
+    - rule: Reconnaissance attempt to find SUID binaries
+      desc: >-
+        An attempt was made to enumerate SUID binaries. This typically occurs as
+        part of reconaissance on a compromised machine, where an attacker is looking
+        to escalate privileges.
+      condition: >
+        spawned_process  and proc.name=find  and (proc.args contains "-perm /4000"
+        or proc.args contains "-perm -4000" or (proc.args contains "-perm" and
+        (proc.args contains "-u=s" or proc.args contains "-u+s")) or proc.args
+        contains "-perm /6000")  and not proc.aname[2] startswith "goss"  and not
+        run_by_adclient  and not proc.aname in (security_processes)  and not
+        (user_not_root)
+      output: >-
+        Possible SUID Reconnaissance Attempt Detected (proc.cmdline=%proc.cmdline
+        proc.name=%proc.name proc.pname=%proc.pname gparent=%proc.aname[2]
+        ggparent=%proc.aname[3] gggparent=%proc.aname[4] ggggparent=%proc.aname[5]
+        gggggparent=%proc.aname[6] ggggggparent=%proc.aname[7]
+        gggggggparent=%proc.aname[8] port=%fd.sport domain=%fd.sip.name
+        container=%container.info evt.type=%evt.type evt.res=%evt.res
+        proc.pid=%proc.pid proc.cwd=%proc.cwd proc.ppid=%proc.ppid
+        proc.pcmdline=%proc.pcmdline proc.sid=%proc.sid proc.exepath=%proc.exepath
+        user.uid=%user.uid user.loginuid=%user.loginuid
+        user.loginname=%user.loginname user.name=%user.name group.gid=%group.gid
+        group.name=%group.name container.id=%container.id
+        container.name=%container.name image=%container.image.repository
+        evt.args=%evt.args)
+      priority: warning
+      tags:
+      - CIS
+      - MITRE
+      - MITRE_TA0043_reconnaissance
+      - MITRE_T1083_file_and_directory_discovery
+      - MITRE_TA0007_discovery
+      source: syscall
+      append: false
+      exceptions:
+      - name: proc_name_image_suffix
+        comps:
+        - in
+        - endswith
+        fields:
+        - proc.name
+        - container.image.repository
+      - name: image_repo
+        comps: in
+        fields: container.image.repository
+        values:
+        - trusted_images
+        - falco_privileged_images
+        - sysdig_commercial_images
+        - quay.io/argoproj/argoexec
+      - name: container_name_startswith
+        comps:
+        - startswith
+        fields:
+        - container.name
+        values:
+        - - qcsimagescanning
+        - - wait
+        - - runner-amd
+        - - QCS-Image-Scanning
+      - name: container_image_repo_endswith
+        comps:
+        - endswith
+        fields:
+        - container.image.repository
+        values:
+        - - kspm-analyzer
+      - name: container_repo_startswith
+        comps:
+        - startswith
+        fields:
+        - container.image.repository
+        values:
+        - - evuedsoacr.azurecr.io/amd-opensil
+        - - evuedsoacr.azurecr.io/ava
+      - name: proc_aname_2
+        comps: in
+        fields: 'proc.aname[2]'
+        values:
+        - qualys_binaries
+        - ir_agent
+      - name: proc_aname_5
+        comps: in
+        fields: 'proc.aname[5]'
+        values:
+        - qualys_binaries
+
+
+    - rule: Possible Backdoor using BPF
+      desc: >-
+        A process was seen using BPF on a network socket, this could indicate packet
+        sniffing for use in a backdoor such as BPFDoor. Network diagnostic tools may
+        also trigger this rule.
+      condition: >-
+        evt.type=setsockopt and evt.dir=< and evt.rawres=0 and
+        evt.arg[3]=SO_ATTACH_FILTER and proc_name_exists
+      output: >-
+        Possible BPFDoor Attempt Detected (proc.cmdline=%proc.cmdline port=%fd.sport
+        domain=%fd.sip.name container=%container.info evt.type=%evt.type
+        evt.res=%evt.res proc.pid=%proc.pid proc.cwd=%proc.cwd proc.ppid=%proc.ppid
+        proc.pcmdline=%proc.pcmdline proc.sid=%proc.sid proc.exepath=%proc.exepath
+        user.uid=%user.uid user.loginuid=%user.loginuid
+        user.loginname=%user.loginname user.name=%user.name group.gid=%group.gid
+        group.name=%group.name container.id=%container.id
+        container.name=%container.name image=%container.image.repository)
+      priority: warning
+      tags:
+      - MITRE_TA0005_defense_evasion
+      - network
+      - MITRE
+      - MITRE_TA0007_discovery
+      - MITRE_TA0006_credential_access
+      - MITRE_T1040_network_sniffing
+      source: syscall
+      append: false
+      exceptions:
+      - name: proc_names
+        comps: in
+        fields: proc.name
+        values:
+        - tcpdump
+        - oneagentnetwork
+        - cilium-agent
+        - keepalived
+        - speaker
+        - datacollector
+        - nessusd
+        - chrome
+      - name: proc_name_image_suffix
+        comps:
+        - in
+        - endswith
+        fields:
+        - proc.name
+        - container.image.repository
+      - name: image_repo
+        comps: in
+        fields: container.image.repository
+        values:
+        - trusted_images
+        - falco_privileged_images
+        - sysdig_commercial_images
+
+    - rule: Detect malicious cmdlines
+      desc: This rule detects the execution of potentially malicious command lines.
+      condition: spawned_process and malicious_cmdlines
+      output: >-
+        Detected use of a potentially malicious cmdline (proc.name=%proc.name
+        proc.pname=%proc.pname proc.cmdline=%proc.cmdline
+        proc.pcmdline=%proc.pcmdline container.name=%container.name
+        image=%container.image.repository evt.type=%evt.type evt.args=%evt.args
+        gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4]
+        user.name=%user.name user.loginuid=%user.loginuid user.uid=%user.uid
+        user.loginname=%user.loginname fd.cport=%fd.cport fd.sport=%fd.sport
+        fd.name=%fd.name)
+      priority: critical
+      tags:
+      - process
+      - MITRE
+      - MITRE_TA0002_execution
+      - MITRE_TA0003_persistence
+      - MITRE_TA0004_privilege_escalation
+      source: syscall
+      append: false
+      exceptions:
+      - name: proc_cmdline_contains
+        comps:
+        - contains
+        fields:
+        - proc.cmdline
+      - name: proc_pcmdline_contains
+        comps:
+        - contains
+        fields:
+        - proc.pcmdline
+      - name: container_image_contains
+        comps:
+        - in
+        fields:
+        - container.image.repository
+      - name: container_proc_cmdline
+        comps:
+        - in
+        - contains
+        fields:
+        - container.image.repository
+        - proc.cmdline
+
+    - rule: Container Run as Root User
+      desc: Detected container running as root user
+      condition: spawned_process and container and proc.vpid=1 and user.uid=0 and not user_known_run_as_root_container
+      enabled: true
+      output: Container launched with root user privilege (uid=%user.uid container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
+      priority: INFO
+      tags: [container, process, users, mitre_execution, T1610]
+      
+    - rule: Launch Root User Container 
+      desc: >-
+        Detect a container being started and configured to run as root. This differs
+        from Container Run as Root User in that it looks for the container started
+        event rather that processes running inside the container.
+      condition: >-
+        container_started and container and proc.exe startswith "container" and
+        (user.name=root or user.name=0 or user.name="" or user.name="0:0") and not
+        user_known_run_as_root_container and not aws_eks_core_images
+      output: >-
+        Container started configured to run as root (user.name=%user.name
+        %container.info evt.type=%evt.type evt.res=%evt.res proc.pid=%proc.pid
+        proc.cmdline=%proc.cmdline proc.cwd=%proc.cwd proc.ppid=%proc.ppid
+        proc.name=%proc.name proc.pname=%proc.pname gparent=%proc.aname[2]
+        ggparent=%proc.aname[3] gggparent=%proc.aname[4]
+        proc.pcmdline=%proc.pcmdline proc.sid=%proc.sid proc.exepath=%proc.exepath
+        user.uid=%user.uid user.loginuid=%user.loginuid
+        user.loginname=%user.loginname group.gid=%group.gid group.name=%group.name
+        container.id=%container.id container.name=%container.name
+        image=%container.image.repository:%container.image.tag)
+      priority: INFO
+      tags:
+      - container
+      - CIS
+      - MITRE
+      - MITRE_T1611_escape_to_host
+      - MITRE_TA0004_privilege_escalation
+      source: syscall
+      append: false
+      exceptions:
+      - name: image_suffix
+        comps:
+        - endswith
+        fields:
+        - container.image.repository
+        values:
+        - - /sysdig/kspm-analyzer
+        - - /sysdig/vuln-host-scanner
+        - - /sysdig/vuln-runtime-scanner
+        - - /sysdig/host-analyzer
+        - - /sysdig/node-image-analyzer
+        - - /sysdig/compliance-benchmark-runner
+        - - /images/cilium
+        - - dynatrace/dynatrace-operator
+        - - amazon/amazon-ecs-agent
+        - - datadog-agent
+        - - istio/proxyv2
+        - - mcr.microsoft.com/k8s/csi/blob-csi
+        - - sysdig-node-image-analyzer
+        - - sysdig-host-analyzer
+        - - sysdig-kspm-analyzer
+        - - /k8s-garbage-collector
+        - - /aws-ebs-csi-driver
+      - name: image_repo
+        comps: in
+        fields: container.image.repository
+        values:
+        - gke_trusted_images_launch_root_list
+        - falco_privileged_images
+        - sysdig_commercial_images
+        - quay.io/openshift-release-dev/ocp-v4.0-art-dev
+        - mcr.microsoft.com/azuremonitor/containerinsights/ciprod
+        - ghcr.io/aquasecurity/trivy
+        - quay.io/argoproj/argoexec
+        - docker.io/argoproj/argoexec
+        - docker.io/grafana/agent-operator
+      - name: image_repo_image_tag
+        fields:
+        - container.image.repository
+        - container.image.tag
+
+
+    - rule: Kernel startup modules changed 
+      desc: This rule detects new kernel modules added
+      condition: >-
+        (file_creation and (fd.name glob "/lib/modules/*/kernel/lib/*" and fd.name
+        endswith ".ko")) or (open_write and (fd.name="/etc/modules"))
+      output: >-
+        Detected a possible kernel module creation, please investigate
+        (proc.name=%proc.name proc.pname=%proc.pname fd.name=%fd.name
+        proc.cmdline=%proc.cmdline proc.pcmdline=%proc.pcmdline
+        gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4]
+        evt.type=%evt.typeproc.args=%proc.args proc.pid=%proc.pid proc.cwd=%proc.cwd
+        proc.ppid=%proc.ppid proc.exepath=%proc.exepath user.uid=%user.uid
+        user.loginuid=%user.loginuid user.loginname=%user.loginname
+        user.name=%user.name group.gid=%group.gid group.name=%group.name
+        container.id=%container.id container.name=%container.name
+        image=%container.image.repository:%container.image.tag)
+      priority: WARNING
+      tags:
+      - host
+      - container
+      source: syscall
+      append: false
+      exceptions:
+      - name: proc_name_image_suffix
+        comps:
+        - in
+        - endswith
+        fields:
+        - proc.name
+        - container.image.repository
+      - name: image_repo
+        comps: in
+        fields: container.image.repository
+        values:
+        - trusted_images
+        - falco_privileged_images
+        - sysdig_commercial_images
+      - name: proc_name_fd_name
+        comps:
+        - in
+        - startswith
+        fields:
+        - proc.name
+        - fd.name
+      - name: proc_cmdline_startswith
+        comps:
+        - startswith
+        fields:
+        - proc.cmdline
+        values:
+        - - exe / /var/lib/docker/overlay2/
+        - - exe /var/lib/docker/overlay2/
+        - - exe / /var/lib/containers/storage/overlay/
+        - - executor --dockerfile=Dockerfile
+
+
+    - rule: Privileged Shell Spawned Inside Container
+      desc: >-
+        This rule detects the creation of a shell as root for interaction within a
+        container.  If this rule fires, it may be an indication of compromise.
+      condition: >-
+        spawned_process and container and shell_procs and user.uid = 0 and
+        (proc.args = "" or proc.args startswith "-i") and not container_entrypoint
+        and not user_shell_container_exclusions and not
+        user_expected_terminal_shell_in_container_conditions and proc.tty = 0
+      output: >-
+        Privileged Shell Spawned in Container (user.uid=%user.uid
+        proc.cmdline=%proc.cmdline proc.name=%proc.name proc.pname=%proc.pname
+        gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4]
+        proc.pcmdline=%proc.pcmdline user.name=%user.name
+        user.loginuid=%user.loginuid proc.args=%proc.args
+        container.name=%container.name evt.type=%evt.type evt.res=%evt.res
+        proc.pid=%proc.pid proc.cwd=%proc.cwd proc.ppid=%proc.ppid
+        proc.sid=%proc.sid proc.exepath=%proc.exepath user.loginname=%user.loginname
+        group.gid=%group.gid group.name=%group.name,
+        container.image=%container.image.repository)
+      priority: CRITICAL
+      tags:
+      - HIPAA_164.310(b)
+      - HITRUST_CSF_09.aa
+      - PCI
+      - NIST_800-171_3.1.1
+      - HITRUST_CSF_01.j
+      - HITRUST_CSF_01.n
+      - MITRE_TA0002_execution
+      - NIST
+      - NIST_800-53_AU-2
+      - NIST_800-53_AC-17
+      - FedRAMP_AU-2
+      - SOC2
+      - SOC2_CC6.1
+      - NIST_800-171_3.3.1
+      - NIST_800-171_3.3.2
+      - GDPR_32.2
+      - HITRUST_CSF_01.y
+      - ISO_27001_A.9.4.4
+      - NIST_800-171_3.1.2
+      - NIST_800-171
+      - ISO
+      - HITRUST_CSF_09.m
+      - MITRE_T1609_container_administration_command
+      - CIS
+      - PCI_DSS_10.2.1
+      - NIST_800-53
+      - ISO_27001
+      - HITRUST_CSF_01.s
+      - HITRUST_CSF_01.i
+      - HITRUST_CSF_09.ad
+      - PCI_DSS
+      - NIST_800-53_AC-2(4)
+      - HIPAA_164.312(b)
+      - HITRUST
+      - HIPAA_164.308(a)
+      - HIPAA_164.312(a)
+      - GDPR
+      - GDPR_32.1
+      - PCI_DSS_10.1
+      - HITRUST_CSF_01.p
+      - HITRUST_CSF_06.i
+      - HIPAA
+      - HITRUST_CSF
+      - HITRUST_CSF_09.ae
+      - container
+      - NIST_800-171_3.14.6
+      - FedRAMP_AC-2(4)
+      - HITRUST_CSF_09.s
+      - shell
+      - MITRE
+      - FedRAMP
+      - NIST_800-53_AU-6(8)
+      - HITRUST_CSF_09.ab
+      source: syscall
+      append: false
+
+    - rule: Execution from /tmp 
+      desc: >-
+        This rule detects file execution from the /tmp directory, a common tactic
+        for threat actors to stash their readable+writable+executable files.
+      condition: >-
+        spawned_process and ((proc.exe startswith "/tmp/" or (proc.cwd startswith
+        "/tmp/" and proc.exe startswith "./" )) or (proc.cwd startswith "/tmp/" and
+        proc.args startswith "./")) and not pip_venv_tmp
+      output: >-
+        File execution detected from /tmp (proc.cmdline=%proc.cmdline
+        connection=%fd.name user.name=%user.name proc.name=%proc.name
+        proc.pname=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3]
+        gggparent=%proc.aname[4] user.loginuid=%user.loginuid
+        container.id=%container.id evt.type=%evt.type evt.res=%evt.res
+        proc.pid=%proc.pid proc.cwd=%proc.cwd proc.ppid=%proc.ppid
+        proc.pcmdline=%proc.pcmdline proc.sid=%proc.sid proc.exepath=%proc.exepath
+        user.uid=%user.uid user.loginname=%user.loginname group.gid=%group.gid
+        group.name=%group.name container.name=%container.name
+        image=%container.image.repository)
+      priority: WARNING
+      tags:
+      - MITRE_T1564.001_hide_artifacts_hidden_files_and_directories
+      - MITRE_T1055_process_injection
+      - MITRE_TA004_privilege_escalation
+      - MITRE_TA0002_execution
+      - MITRE
+      - MITRE_TA0005_defense_evasion
+      source: syscall
+      append: false
+      exceptions:
+      - name: proc_cmdlines
+        comps:
+        - startswith
+        fields:
+        - proc.cmdline
+        values:
+        - - chromedriver --version
+        - - conftest
+        - - sh -c LIVENESS_THRESHOLD_SECONDS
+        - - bash -c fail=
+        - - sh /tmp/apt-key-gpghome
+        - - sh -c set -e; TMP=/var/lib/dkms/draios-agent
+        - - cat /home/ubuntu/.cache/bazel
+        - - touch
+        - - 'python -u -c import io,os'
+        - - 'python -u -c import io, os'
+        - - 'python -c import io,os'
+        - - 'python -c import io, os'
+        - - python /tmp/tmp
+        - - sh ../libtool --silent
+        - - sh ../../../libtool --silent
+        - - autogen.sh
+        - - pip /tmp/venv
+        - - docker-bench-security
+        - - kubectl apply -f
+        - - actions-sync sync
+        - - bash ./configure
+        - - rustup-init
+        - - jq -er
+        - - jattach
+      - name: proc_cmdlines_contains
+        comps:
+        - contains
+        fields:
+        - proc.cmdline
+        values:
+        - - from setuptools import setup
+        - - '-test.paniconexit0'
+        - - ^helper.
+        - - ^syscall.
+      - name: proc_name_cmdlines
+        comps:
+        - '='
+        - startswith
+        fields:
+        - proc.name
+        - proc.cmdline
+      - name: trusted_images_sysdig_endswith
+        comps:
+        - endswith
+        fields:
+        - container.image.repository
+        values:
+        - - sysdig/compliance-benchmark-runner
+        - - buildkite/agent
+      - name: proc_names
+        comps: in
+        fields: proc.name
+        values:
+        - gcc
+        - g++
+        - c1plus
+        - configure
+        - cc1
+        - ld
+        - collect2
+        - dummy
+        - list_repository
+      - name: proc_exepath
+        comps:
+        - startswith
+        fields:
+        - proc.exepath
+        values:
+        - - /tmp/go-build
+
+    - rule: Create Disallowed Namespace
+      desc: >-
+        Detect any attempt to create a namespace outside of a set of known
+        namespaces
+      condition: kevt and namespace and kcreate
+      output: Disallowed namespace created (user=%ka.user.name ns=%ka.target.name)
+      priority: WARNING
+      tags:
+      - NIST_800-53
+      - HIPAA
+      - HIPAA_164.312(b)
+      - MITRE
+      - MITRE_TA0005_defense_evasion
+      - MITRE_T1036_masquerading
+      - k8s
+      - SOC2
+      - SOC2_CC7.1
+      - NIST
+      - NIST_800-53_AU-6(8)
+      - HIPAA_164.308(a)
+      source: k8s_audit
+      append: false
+      exceptions:
+      - name: services
+        comps: in
+        fields: ka.target.name
+        values:
+        - allowed_namespaces
+
+
+    - rule: Create Disallowed Pod
+      desc: >
+        Detect an attempt to start a pod with a container image outside of a list of
+        allowed images.
+      condition: kevt and pod and kcreate and not allowed_k8s_containers
+      output: >-
+        Pod started with container not in allowed list (user=%ka.user.name
+        pod=%ka.resp.name ns=%ka.target.namespace
+        images=%ka.req.pod.containers.image)
+      priority: WARNING
+      tags:
+      - k8s
+      - NIST
+      - NIST_800-53
+      - NIST_800-53_AU-6(8)
+      - HIPAA_164.308(a)
+      - NIST_800-190_3.4.5
+      - HIPAA_164.312(b)
+      - SOC2
+      - MITRE
+      - MITRE_T1610_deploy_container
+      - MITRE_TA0002_execution
+      - SOC2_CC7.1
+      - NIST_800-190
+      - HIPAA
+      source: k8s_audit
+      append: false
+      exceptions:
+      - name: image_repos
+        comps: in
+        fields: ka.req.pod.containers.image.repository
+
+    - rule: Disallowed K8s User (Copy)
+      desc: Detect any k8s operation by users outside of an allowed set of users.
+      condition: kevt and non_system_user
+      output: >-
+        K8s Operation performed by user not in allowed list of users
+        (user=%ka.user.name target=%ka.target.name/%ka.target.resource verb=%ka.verb
+        uri=%ka.uri resp=%ka.response.code)
+      priority: WARNING
+      tags:
+      - k8s
+      - SOC2_CC5.2
+      - PCI_DSS_6.4.2
+      - GDPR_32.2
+      - PCI_DSS
+      - NIST_800-53_AC-2(12)
+      - FedRAMP_AC-2
+      - HIPAA
+      - HITRUST_CSF_09.j
+      - SOC2_CC6.1
+      - NIST_800-171_3.1.2
+      - NIST_800-171_3.13.3
+      - HIPAA_164.312(a)
+      - HITRUST
+      - HITRUST_CSF_01.n
+      - GDPR
+      - GDPR_32.1
+      - PCI
+      - NIST_800-190_3.3.2
+      - FedRAMP
+      - HIPAA_164.310(b)
+      - HITRUST_CSF_01.j
+      - HITRUST_CSF_01.y
+      - HITRUST_CSF_09.m
+      - NIST_800-53_AC-2
+      - HITRUST_CSF_01.s
+      - MITRE_T1078_valid_accounts
+      - SOC2
+      - NIST
+      - NIST_800-171
+      - NIST_800-190
+      - NIST_800-53
+      - NIST_800-53_SC-2
+      - HITRUST_CSF_09.y
+      - NIST_800-171_3.1.1
+      - NIST_800-53_AC-17
+      - HITRUST_CSF_01.i
+      - HITRUST_CSF_09.k
+      - HITRUST_CSF_09.s
+      - MITRE_TA0005_defense_evasion
+      - FedRAMP_AC-2(12)
+      - HIPAA_164.308(a)
+      - HITRUST_CSF
+      - MITRE
+      source: k8s_audit
+      append: false
+      exceptions:
+      - name: user_names
+        comps: in
+        fields: ka.user.name
+        values:
+        - allowed_k8s_users
+      - name: user_suffix
+        comps:
+        - endswith
+        fields:
+        - ka.user.name
+      - name: group_names
+        comps:
+        - intersects
+        fields:
+        - ka.user.groups
+      - name: user_name_target_name
+        comps:
+        - in
+        - in
+        fields:
+        - ka.user.name
+        - ka.target.name
+      - name: user_name_target_name_prefix
+        comps:
+        - in
+        - startswith
+        fields:
+        - ka.user.name
+        - ka.target.name
+      - name: user_name_target_resource
+        comps:
+        - in
+        - in
+        fields:
+        - ka.user.name
+        - ka.target.resource
+      - name: user_name_target_resource_prefix
+        comps:
+        - in
+        - startswith
+        fields:
+        - ka.user.name
+        - ka.target.resource
+
+    - rule: System ClusterRole Modified/Deleted (Copy)
+      desc: Detect any attempt to modify/delete a ClusterRole/Role starting with system
+      condition: >-
+        kevt and (role or clusterrole) and (kmodify or kdelete) and (ka.target.name
+        startswith "system:") and not ka.target.name in (system:coredns,
+        system:managed-certificate-controller)
+      output: >-
+        System ClusterRole/Role modified or deleted (user=%ka.user.name
+        role=%ka.target.name ns=%ka.target.namespace action=%ka.verb)
+      priority: WARNING
+      tags:
+      - HITRUST
+      - MITRE
+      - NIST
+      - FedRAMP_AC-2(12)
+      - HIPAA
+      - HITRUST_CSF_01.i
+      - HITRUST_CSF_10.j
+      - k8s
+      - NIST_800-53_AC-2
+      - NIST_800-53_AC-6
+      - HITRUST_CSF_01.c
+      - HIPAA_164.310(b)
+      - SOC2
+      - SOC2_CC6.2
+      - NIST_800-53_AC-2(12)
+      - NIST_800-53_AC-3
+      - HITRUST_CSF_05.i
+      - NIST_800-171
+      - NIST_800-171_3.1.2
+      - HIPAA_164.308(a)
+      - HITRUST_CSF_01.v
+      - NIST_800-171_3.1.1
+      - NIST_800-171_3.1.5
+      - FedRAMP
+      - HIPAA_164.310(a)
+      - HITRUST_CSF_01.s
+      - MITRE_TA0004_privilege_escalation
+      - HITRUST_CSF_01.y
+      - MITRE_T1068_explotation_for_privilege_escalation
+      - NIST_800-53
+      - FedRAMP_AC-2
+      - HIPAA_164.312(a)
+      - HITRUST_CSF
+      source: k8s_audit
+      append: false
+      exceptions:
+      - name: roles
+        fields:
+        - ka.target.namespace
+        - ka.target.name
+      - name: roles_users
+        fields:
+        - ka.target.name
+        - ka.user.name
+        values:
+        - - '"system:aggregated-metrics-reader"'
+        - '"system:serviceaccount:openshift-monitoring:cluster-monitoring-operator"'
+        - - 'system:aggregated-metrics-reader'
+        - 'system:serviceaccount:openshift-monitoring:cluster-monitoring-operator'
+        
+    - rule: Full K8s Administrative Access
+      desc: >-
+        Detect any k8s operation by a user name that may be an administrator with
+        full access.
+      condition: >
+        kevt and non_system_user and ka.user.name in (full_admin_k8s_users) and not
+        allowed_full_admin_users
+      output: >-
+        K8s Operation performed by full admin user (user=%ka.user.name
+        target=%ka.target.name/%ka.target.resource verb=%ka.verb uri=%ka.uri
+        resp=%ka.response.code)
+      priority: WARNING
+      tags:
+      - HIPAA_164.310(b)
+      - HITRUST_CSF
+      - MITRE
+      - NIST_800-171_3.1.1
+      - HIPAA_164.308(a)
+      - FedRAMP_AC-6(2)
+      - ISO
+      - HIPAA_164.312(c)
+      - NIST_800-190_3.3.1
+      - FedRAMP_AC-2
+      - ISO_27001
+      - ISO_27001_A.6.1.2
+      - PCI
+      - NIST_800-53_AC-2
+      - NIST_800-190
+      - NIST_800-53
+      - NIST_800-53_AC-6(2)
+      - HIPAA_164.312(a)
+      - HITRUST
+      - MITRE_T1078.001_default_accounts
+      - SOC2_CC6.2
+      - NIST_800-171
+      - FedRAMP_AC-2(12)
+      - PCI_DSS
+      - NIST_800-171_3.1.2
+      - PCI_DSS_2.1
+      - HIPAA
+      - HIPAA_164.310(a)
+      - HIPAA_164.312(e)
+      - HITRUST_CSF_01.c
+      - HITRUST_CSF_01.q
+      - k8s
+      - SOC2_CC5.2
+      - NIST_800-53_AC-2(12)
+      - NIST_800-53_AC-3
+      - NIST_800-53_CM-7(6)
+      - SOC2_CC7.1
+      - NIST
+      - MITRE_T1078_valid_accounts
+      - MITRE_TA0004_privilege_escalation
+      - SOC2
+      - FedRAMP
+      source: k8s_audit
+      append: false
+      exceptions:
+      - name: user_names
+        comps: in
+        fields: ka.user.name
+
+    - rule: Create Privileged Pod (Copy)
+      desc: |
+        Detect an attempt to start a pod with a privileged container
+      condition: >-
+        kevt and pod and kcreate and ka.req.pod.containers.privileged intersects
+        (true)
+      output: >-
+        Pod started with privileged container (user=%ka.user.name pod=%ka.resp.name
+        ns=%ka.target.namespace images=%ka.req.pod.containers.image)
+      priority: WARNING
+      tags:
+      - HITRUST_CSF_09.ae
+      - HITRUST_CSF_09.k
+      - NIST_800-53_CM-3
+      - NIST_800-53_SI-4
+      - HITRUST
+      - HITRUST_CSF_10.j
+      - MITRE
+      - HIPAA_164.308(a)
+      - FedRAMP
+      - HITRUST_CSF_01.v
+      - GDPR
+      - HITRUST_CSF_09.ac
+      - GDPR_32.2
+      - NIST
+      - HIPAA
+      - HITRUST_CSF_05.i
+      - HITRUST_CSF_01.p
+      - HITRUST_CSF_06.i
+      - NIST_800-171
+      - NIST_800-171_3.14.7
+      - HITRUST_CSF_10.h
+      - NIST_800-171_3.14.6
+      - NIST_800-53
+      - HIPAA_164.312(b)
+      - MITRE_TA0002_execution
+      - NIST_800-171_3.3.1
+      - NIST_800-171_3.3.2
+      - HITRUST_CSF_10.k
+      - HITRUST_CSF_01.i
+      - HITRUST_CSF_09.aa
+      - HITRUST_CSF_09.ab
+      - NIST_800-171_3.1.5
+      - FedRAMP_AU-2
+      - HIPAA_164.312(a)
+      - HITRUST_CSF_09.ad
+      - HITRUST_CSF_09.m
+      - k8s
+      - NIST_800-171_3.4.3
+      - HITRUST_CSF_03.d
+      - HITRUST_CSF_09.i
+      - GDPR_32.1
+      - NIST_800-53_AC-6(9)
+      - NIST_800-53_AU-2
+      - HITRUST_CSF_01.y
+      - MITRE_T1609_container_administration_command
+      - HITRUST_CSF_01.c
+      - HITRUST_CSF_01.x
+      - HITRUST_CSF_11.b
+      - NIST_800-53_AC-6(10)
+      - HITRUST_CSF
+      - HITRUST_CSF_01.s
+      - HITRUST_CSF_09.b
+      - NIST_800-53_AC-6
+      - HITRUST_CSF_11.a
+      source: k8s_audit
+      append: false
+      exceptions:
+      - name: image_repos
+        comps: in
+        fields: ka.req.pod.containers.image.repository
+        values:
+        - falco_privileged_images
+      - name: image_repos_in
+        comps: in
+        fields: ka.req.pod.containers.image
+        values:
+        - sysdig_commercial_images
+      - name: image_repos_contains
+        comps:
+        - contains
+        fields:
+        - ka.req.pod.containers.image
+        values:
+        - - quay.io/sysdig/kspm-analyzer
+        - - quay.io/sysdig/vuln-runtime-scanner
+        - - quay.io/sysdig/vuln-host-scanner
+      - name: image_repo_suffix
+        comps:
+        - endswith
+        fields:
+        - ka.req.pod.containers.image.repository
+      - name: namespaces
+        comps: in
+        fields: ka.target.namespace
+      - name: user_suffix
+        comps:
+        - endswith
+        fields:
+        - ka.user.name
+      - name: user_prefix
+        comps:
+        - startswith
+        fields:
+        - ka.user.name
+      - name: ka_pod_name
+        comps:
+        - startswith
+        fields:
+        - ka.resp.name
+        values:
+        - - sysdig-agent
+        - - dynakube-classic
+        - - fluentd-kubernetes
+
+    - rule: Ingress Object without TLS Certificate Created (Copy)
+      desc: Detect any attempt to create an ingress without TLS certification.
+      condition: >
+        (kactivity and kcreate and ingress and response_successful and not
+        ingress_tls)
+      output: >
+        K8s Ingress Without TLS Cert Created (user=%ka.user.name
+        ingress=%ka.target.name namespace=%ka.target.namespace)
+      priority: WARNING
+      tags:
+      - PCI_DSS
+      - PCI_DSS_4
+      - HITRUST_CSF_09.x
+      - ISO_27001_A.10.1.1
+      - HIPAA_164.310(b)
+      - network
+      - PCI
+      - NIST_800-171_3.13.8
+      - NIST_800-53
+      - NIST_800-53_SC-17
+      - ISO
+      - HIPAA_164.312(c)
+      - FedRAMP
+      - HITRUST_CSF_10.g
+      - NIST_800-53_SC-8
+      - HITRUST
+      - HITRUST_CSF_09.s
+      - SOC2
+      - SOC2_CC6.7
+      - HIPAA_164.308(a)
+      - HITRUST_CSF_01.n
+      - ISO_27001
+      - GDPR
+      - GDPR_5.1
+      - MITRE_TA0001_initial_access
+      - HITRUST_CSF_09.v
+      - HITRUST_CSF_10.d
+      - NIST
+      - NIST_800-53_AC-4(17)
+      - NIST_800-53_CM-3(6)
+      - NIST_800-53_SC-12(3)
+      - ISO_27001_A.14.1.2
+      - ISO_27001_A.18.1.5
+      - MITRE_T1190_exploit_public-facing_application
+      - HITRUST_CSF
+      - HITRUST_CSF_09.m
+      - k8s
+      - NIST_800-171
+      - FedRAMP_CM-3(6)
+      - FedRAMP_SC-8
+      - HIPAA
+      - HIPAA_164.312(e)
+      - HITRUST_CSF_09.y
+      - MITRE
+      source: k8s_audit
+      append: false
+      exceptions:
+      - name: ingresses
+        fields:
+        - ka.target.namespace
+        - ka.target.name
+
+    - rule: Create/Modify Configmap With Private Credentials (Copy)
+      desc: >
+        Detect creating/modifying a configmap containing a private credential (aws
+        key, password, etc.)
+      condition: kevt and configmap and kmodify and contains_private_credentials
+      output: >-
+        K8s configmap with private credential (user=%ka.user.name verb=%ka.verb
+        configmap=%ka.req.configmap.name namespace=%ka.target.namespace)
+      priority: WARNING
+      tags:
+      - MITRE
+      - SOC2
+      - SOC2_CC6.3
+      - NIST
+      - NIST_800-171_3.13.4
+      - NIST_800-53
+      - HITRUST_CSF
+      - MITRE_T1552_unsecured_credentials
+      - MITRE_TA0006_credential_access
+      - k8s
+      - SOC2_CC6.7
+      - NIST_800-171
+      - NIST_800-53_SC-4
+      - NIST_800-53_CA-9
+      - HITRUST
+      - HITRUST_CSF_01.w
+      - HITRUST_CSF_09.w
+      source: k8s_audit
+      append: false
+      exceptions:
+      - name: configmaps
+        fields:
+        - ka.target.namespace
+        - ka.req.configmap.name
+
+    - rule: Create Sensitive Mount Pod (Copy)
+      desc: >
+        Detect an attempt to start a pod with a volume from a sensitive host
+        directory (i.e. /proc). Exceptions are made for known trusted images.
+      condition: kevt and pod and kcreate and sensitive_vol_mount
+      output: >-
+        Pod started with sensitive mount (user=%ka.user.name pod=%ka.resp.name
+        ns=%ka.target.namespace images=%ka.req.pod.containers.image
+        volumes=%jevt.value[/requestObject/spec/volumes])
+      priority: WARNING
+      tags:
+      - NIST
+      - HITRUST_CSF
+      - HITRUST_CSF_01.i
+      - NIST_800-171_3.14.7
+      - NIST_800-190_3.3
+      - NIST_800-53_SI-4
+      - HITRUST_CSF_01.v
+      - HITRUST_CSF_10.k
+      - NIST_800-171_3.1.5
+      - NIST_800-171_3.3.2
+      - NIST_800-53
+      - FedRAMP_AU-2
+      - HITRUST_CSF_09.i
+      - GDPR
+      - MITRE_T1611_escape_to_host
+      - NIST_800-53_AU-2
+      - HITRUST
+      - HITRUST_CSF_09.ad
+      - HIPAA
+      - HIPAA_164.312(b)
+      - HITRUST_CSF_01.x
+      - HITRUST_CSF_09.m
+      - NIST_800-53_CM-3
+      - HIPAA_164.308(a)
+      - HITRUST_CSF_10.h
+      - NIST_800-171
+      - NIST_800-190_3.5.5
+      - HITRUST_CSF_11.b
+      - MITRE_T1609_container_administration_command
+      - NIST_800-171_3.14.6
+      - NIST_800-171_3.4.3
+      - NIST_800-190
+      - NIST_800-53_AC-6
+      - HITRUST_CSF_06.i
+      - HITRUST_CSF_09.aa
+      - HITRUST_CSF_09.b
+      - NIST_800-53_AC-6(10)
+      - HITRUST_CSF_01.c
+      - MITRE
+      - MITRE_TA0002_execution
+      - NIST_800-171_3.3.1
+      - FedRAMP
+      - HITRUST_CSF_03.d
+      - HITRUST_CSF_09.ac
+      - GDPR_32.1
+      - GDPR_32.2
+      - HITRUST_CSF_09.ae
+      - HITRUST_CSF_09.k
+      - MITRE_TA0004_privilege_escalation
+      - HITRUST_CSF_10.j
+      - HITRUST_CSF_11.a
+      - k8s
+      - NIST_800-53_AC-6(9)
+      - HITRUST_CSF_01.y
+      - HIPAA_164.312(a)
+      - HITRUST_CSF_01.p
+      - HITRUST_CSF_01.s
+      - HITRUST_CSF_09.ab
+      - HITRUST_CSF_05.i
+      source: k8s_audit
+      append: false
+      exceptions:
+      - name: image_repos
+        comps: in
+        fields: ka.req.pod.containers.image.repository
+        values:
+        - falco_sensitive_mount_images
+      - name: user_name_target_name_prefix
+        comps:
+        - startswith
+        - '='
+        fields:
+        - ka.user.name
+        - ka.target.namespace
+      - name: image_repo_suffix
+        comps:
+        - endswith
+        fields:
+        - ka.req.pod.containers.image.repository
+      - name: image_repos_ns
+        comps:
+        - in
+        - in
+        fields:
+        - ka.req.pod.containers.image
+        - ka.target.namespace
+      - name: image_repos_prefix_ns
+        comps:
+        - startswith
+        - in
+        fields:
+        - ka.req.pod.containers.image
+        - ka.target.namespace
+      - name: image_repos_ns_contains
+        comps:
+        - contains
+        - contains
+        fields:
+        - ka.req.pod.containers.image
+        - ka.target.namespace
+
+    - rule: Create HostNetwork Pod 
+      desc: 'Detect an attempt to start a pod using the host network. '
+      condition: kevt and pod and kcreate and ka.req.pod.host_network intersects (true)
+      output: >-
+        Pod started using host network (user=%ka.user.name pod=%ka.resp.name
+        ns=%ka.target.namespace images=%ka.req.pod.containers.image)
+      priority: WARNING
+      tags:
+      - NIST_800-171_3.13.5
+      - NIST_800-171_3.14.7
+      - HIPAA
+      - HIPAA_164.310(b)
+      - HITRUST_CSF_01.n
+      - HITRUST_CSF_11.a
+      - GDPR
+      - k8s
+      - SOC2_CC6.6
+      - NIST_800-171_3.1.2
+      - NIST_800-171_3.13.1
+      - NIST_800-53
+      - ISO
+      - HITRUST
+      - HITRUST_CSF_01.y
+      - MITRE_TA0002_execution
+      - SOC2
+      - NIST
+      - NIST_800-171_3.1.3
+      - NIST_800-53_SC-7
+      - HITRUST_CSF
+      - HITRUST_CSF_09.ac
+      - HITRUST_CSF_09.m
+      - HITRUST_CSF_09.z
+      - NIST_800-171
+      - NIST_800-53_AC-4
+      - ISO_27001
+      - HITRUST_CSF_11.b
+      - NIST_800-53_SC-7(3)
+      - HITRUST_CSF_01.i
+      - NIST_800-171_3.1.1
+      - NIST_800-171_3.14.6
+      - NIST_800-53_AC-17
+      - NIST_800-53_SI-4
+      - NIST_800-53_AC-17(1)
+      - HITRUST_CSF_01.j
+      - HITRUST_CSF_01.x
+      - NIST_800-171_3.13.2
+      - NIST_800-53_AC-17(3)
+      - HIPAA_164.308(a)
+      - GDPR_32.1
+      - SOC2_CC6.1
+      - ISO_27001_A.9.1.2
+      - HITRUST_CSF_01.m
+      - HITRUST_CSF_01.o
+      - HITRUST_CSF_09.ab
+      - HITRUST_CSF_09.s
+      - GDPR_32.2
+      - MITRE
+      - MITRE_T1609_container_administration_command
+      source: k8s_audit
+      append: false
+      exceptions:
+      - name: image_repos
+        comps: in
+        fields: ka.req.pod.containers.image.repository
+        values:
+        - falco_hostnetwork_images
+      - name: image_repo_suffix
+        comps:
+        - endswith
+        fields:
+        - ka.req.pod.containers.image.repository
+      - name: namespaces
+        comps: in
+        fields: ka.target.namespace
+      - name: user_suffix
+        comps:
+        - endswith
+        fields:
+        - ka.user.name
+      - name: user_prefix
+        comps:
+        - startswith
+        fields:
+        - ka.user.name
+      - name: users_contains
+        comps:
+        - contains
+        fields:
+        - ka.user.name
+
+    - rule: Create NodePort Service (Copy)
+      desc: |
+        Detect an attempt to start a service with a NodePort service type
+      condition: >-
+        kevt and service and kcreate and ka.req.service.type=NodePort and not
+        user_known_node_port_service
+      output: >-
+        NodePort Service Created (user=%ka.user.name service=%ka.target.name
+        ns=%ka.target.namespace ports=%ka.req.service.ports)
+      priority: WARNING
+      tags:
+      - HITRUST_CSF_09.z
+      - ISO
+      - HITRUST
+      - HITRUST_CSF_09.ac
+      - HITRUST_CSF_09.ab
+      - GDPR
+      - GDPR_32.2
+      - HIPAA_164.308(a)
+      - HITRUST_CSF_01.o
+      - NIST_800-171_3.1.1
+      - NIST_800-53_AC-17(1)
+      - NIST_800-53_SC-7
+      - NIST_800-171_3.14.6
+      - NIST_800-171_3.14.7
+      - NIST_800-53
+      - HITRUST_CSF_09.s
+      - SOC2_CC6.1
+      - NIST_800-171
+      - NIST_800-171_3.1.3
+      - NIST_800-171_3.13.5
+      - NIST_800-53_AC-17
+      - HITRUST_CSF
+      - HITRUST_CSF_01.i
+      - HITRUST_CSF_01.j
+      - k8s
+      - SOC2_CC6.6
+      - NIST_800-171_3.13.1
+      - MITRE_T1609_container_administration_command
+      - MITRE_TA0002_execution
+      - HIPAA_164.310(b)
+      - HITRUST_CSF_01.n
+      - HITRUST_CSF_01.x
+      - HITRUST_CSF_09.m
+      - GDPR_32.1
+      - SOC2
+      - NIST_800-53_AC-4
+      - HIPAA
+      - MITRE
+      - HITRUST_CSF_01.m
+      - HITRUST_CSF_11.b
+      - NIST
+      - NIST_800-171_3.13.2
+      - NIST_800-53_AC-17(3)
+      - ISO_27001
+      - ISO_27001_A.9.1.2
+      - HITRUST_CSF_01.y
+      - HITRUST_CSF_11.a
+      - NIST_800-171_3.1.2
+      - NIST_800-53_SI-4
+      - NIST_800-53_SC-7(3)
+      source: k8s_audit
+      append: false
+      exceptions:
+      - name: services
+        fields:
+        - ka.target.namespace
+        - ka.target.name
+      - name: users
+        comps:
+        - in
+        - in
+        fields:
+        - ka.target.namespace
+        - ka.user.name
+
+    - rule: K8s Role/Clusterrole Deleted
+      desc: Detect any attempt to delete a cluster role/role
+      condition: (kactivity and kdelete and (clusterrole or role) and response_successful)
+      output: >-
+        K8s Cluster Role Deleted (user=%ka.user.name role=%ka.target.name
+        resp=%ka.response.code decision=%ka.auth.decision reason=%ka.auth.reason)
+      priority: INFO
+      tags:
+      - k8s
+      - NIST_800-171_3.1.2
+      - HIPAA
+      - HITRUST_CSF_01.p
+      - HITRUST_CSF_09.ae
+      - NIST_800-171_3.14.6
+      - NIST_800-171_3.3.2
+      - FedRAMP_AC-2
+      - HITRUST_CSF_01.s
+      - HITRUST_CSF_06.i
+      - HITRUST_CSF_09.ab
+      - NIST_800-171_3.1.1
+      - NIST_800-53
+      - NIST_800-53_AU-2
+      - NIST
+      - NIST_800-171_3.3.1
+      - FedRAMP_AU-2
+      - NIST_800-53_AC-2(4)
+      - NIST_800-171
+      - NIST_800-53_AC-3
+      - HIPAA_164.312(a)
+      - HIPAA_164.312(b)
+      - NIST_800-53_AC-2
+      - FedRAMP
+      - FedRAMP_AC-2(4)
+      - HITRUST_CSF_09.ad
+      - HIPAA_164.308(a)
+      - HIPAA_164.310(a)
+      - HIPAA_164.310(b)
+      - HITRUST
+      - HITRUST_CSF
+      - HITRUST_CSF_09.aa
+      source: k8s_audit
+      append: false
+      exceptions:
+      - name: user_name
+        comps:
+        - in
+        fields:
+        - ka.user.name
+      - name: user_name_prefix
+        comps:
+        - startswith
+        fields:
+        - ka.user.name
+      - name: ka_auth_reason
+        comps:
+        - contains
+        fields:
+        - ka.auth.reason
+      - name: user_name_target_name
+        comps:
+        - in
+        - in
+        fields:
+        - ka.user.name
+        - ka.target.name
+      - name: user_name_target_name_prefix
+        comps:
+        - in
+        - startswith
+        fields:
+        - ka.user.name
+        - ka.target.name
+
+    - rule: K8s Serviceaccount Deleted
+      desc: Detect any attempt to delete a service account
+      condition: (kactivity and kdelete and serviceaccount and response_successful)
+      output: >-
+        K8s Serviceaccount Deleted (user=%ka.user.name
+        serviceaccount=%ka.target.name ns=%ka.target.namespace
+        resp=%ka.response.code decision=%ka.auth.decision reason=%ka.auth.reason)
+      priority: INFO
+      tags:
+      - HIPAA_164.310(b)
+      - NIST_800-53
+      - HITRUST_CSF_09.aa
+      - SOC2_CC6.2
+      - NIST_800-171_3.1.1
+      - NIST_800-171_3.3.1
+      - FedRAMP_AC-2
+      - HITRUST_CSF_09.ad
+      - k8s
+      - NIST_800-171_3.3.2
+      - NIST_800-53_AC-3
+      - HIPAA_164.308(a)
+      - HITRUST
+      - HITRUST_CSF_01.s
+      - HITRUST_CSF_06.i
+      - SOC2
+      - NIST
+      - NIST_800-171
+      - FedRAMP
+      - HIPAA_164.310(a)
+      - HIPAA_164.312(a)
+      - HITRUST_CSF
+      - NIST_800-171_3.14.6
+      - NIST_800-53_AC-2
+      - NIST_800-53_AC-2(4)
+      - HITRUST_CSF_09.ae
+      - NIST_800-53_AU-2
+      - FedRAMP_AC-2(4)
+      - HITRUST_CSF_09.ab
+      - HITRUST_CSF_01.p
+      - HIPAA_164.312(b)
+      - NIST_800-171_3.1.2
+      - FedRAMP_AU-2
+      - HIPAA
+      source: k8s_audit
+      append: false
+      exceptions:
+      - name: user_name
+        comps:
+        - in
+        fields:
+        - ka.user.name
+      - name: account_only
+        comps:
+        - in
+        fields:
+        - ka.target.name
+      - name: user_name_target_name
+        comps:
+        - in
+        - in
+        fields:
+        - ka.user.name
+        - ka.target.name
+      - name: user_name_target_name_prefix
+        comps:
+        - in
+        - startswith
+        fields:
+        - ka.user.name
+        - ka.target.name
+
+    - rule: K8s Role/Clusterrolebinding Deleted (Copy)
+      desc: Detect any attempt to delete a clusterrolebinding
+      condition: (kactivity and kdelete and clusterrolebinding and response_successful)
+      output: >-
+        K8s Cluster Role Binding Deleted (user=%ka.user.name binding=%ka.target.name
+        resp=%ka.response.code decision=%ka.auth.decision reason=%ka.auth.reason)
+      priority: INFO
+      tags:
+      - NIST_800-53_AC-2(4)
+      - HIPAA_164.308(a)
+      - HIPAA_164.310(b)
+      - NIST_800-171
+      - FedRAMP_AC-2(4)
+      - HIPAA
+      - HIPAA_164.310(a)
+      - HIPAA_164.312(a)
+      - k8s
+      - NIST
+      - NIST_800-171_3.1.1
+      - NIST_800-171_3.1.2
+      - NIST_800-53
+      - NIST_800-53_AC-2
+      - NIST_800-53_AC-3
+      - FedRAMP
+      - FedRAMP_AC-2
+      source: k8s_audit
+      append: false
+      exceptions:
+      - name: user_name_target_name
+        comps:
+        - in
+        - in
+        fields:
+        - ka.user.name
+        - ka.target.name
+      - name: user_name_target_name_prefix
+        comps:
+        - in
+        - startswith
+        fields:
+        - ka.user.name
+        - ka.target.name
+
+    - rule: K8s Namespace Deleted
+      desc: Detect any attempt to delete a namespace
+      condition: >-
+        (kactivity and non_system_user and kdelete and namespace and
+        response_successful)
+      output: >-
+        K8s Namespace Deleted (user=%ka.user.name namespace=%ka.target.name
+        resp=%ka.response.code decision=%ka.auth.decision reason=%ka.auth.reason)
+      priority: INFO
+      tags:
+      - NIST_800-171_3.4.5
+      - NIST_800-53
+      - HITRUST_CSF_09.ad
+      - HIPAA_164.312(b)
+      - FedRAMP_AU-2
+      - HIPAA_164.308(a)
+      - HITRUST_CSF_01.p
+      - HITRUST_CSF_09.aa
+      - HITRUST_CSF_09.ab
+      - HITRUST_CSF_10.k
+      - NIST_800-171_3.3.2
+      - HITRUST
+      - NIST_800-53_AU-2
+      - NIST_800-53_CM-5
+      - HIPAA
+      - HITRUST_CSF
+      - HITRUST_CSF_01.s
+      - NIST_800-171_3.14.6
+      - HITRUST_CSF_06.i
+      - NIST_800-171_3.3.1
+      - FedRAMP
+      - HITRUST_CSF_09.b
+      - HITRUST_CSF_10.j
+      - NIST_800-171
+      - NIST
+      - HITRUST_CSF_09.ae
+      - k8s
+      source: k8s_audit
+      append: false
+      exceptions:
+      - name: user_name_target_name
+        comps:
+        - in
+        - in
+        fields:
+        - ka.user.name
+        - ka.target.name
+      - name: user_name_target_name_prefix
+        comps:
+        - in
+        - startswith
+        fields:
+        - ka.user.name
+        - ka.target.name
+        
+    - list: malicious_processes
+      items: []
+      
+    - macro: spawned_process
+      condition: (evt.type in (execve, execveat) and evt.dir=<)
+      
+    - macro: proc_args_with_malicious_domain_ip
+      condition: (proc.args contains "pool.minexmr.com" or proc.args contains "pool.supportxmr.com" or proc.args contains "xmr-us-east1.nanopool.org" or proc.args contains "xmr-us-west1.nanopool.org" or proc.args contains "xmr.pool.minergate.com" or proc.args contains "46.105.31.147" or proc.args contains "104.244.72.115" or proc.args contains "185.220.100.242" or proc.args contains "rx.unmineable.com" or proc.args contains "xmr.hashcity.org" or proc.args contains "xmrpool.eu" or proc.args contains "pool.hashvault.pro" or proc.args contains "ap.luckpool.net" or proc.args contains "btc-eu.f2pool.com" or proc.args contains "etc.2miners.com" or proc.args contains "eth.2miners.com" or proc.args contains "eu.luckpool.net" or proc.args contains "fastpool.xyz" or proc.args contains "gulf.moneroocean.stream" or proc.args contains "kva.ss.dxpool.com" or proc.args contains "149.56.27.47" or proc.args contains "na.luckpool.net" or proc.args contains "nimiq.icemining.ca" or proc.args contains "ravenminer.com" or proc.args contains "rvn.2miners.com" or proc.args contains "solo-xmr.2miners.com" or proc.args contains "stratum-eu.rplant.xyz" or proc.args contains "stratum-na.rplant.xyz" or proc.args contains "turtlecoin.herominers.com" or proc.args contains "us-eth.2miners.com" or proc.args contains "us-solo-rvn.2miners.com" or proc.args contains "51.89.217.80" or proc.args contains "185.154.53.140" or proc.args contains "43.135.124.4" or proc.args contains "54.39.248.217" or proc.args contains "185.157.160.214" or proc.args contains "download.c3pool.org" or proc.args contains "84.201.153.234" or proc.args contains "198.199.81.5" or proc.args contains "tor2web.su" or proc.args contains "anondns.net" or proc.args contains "teamtnt.red" or proc.args contains "pastebin.com" or proc.args contains "freedns.com" or proc.args contains "104.168.46.12" or proc.args contains "202.28.229.174" or proc.args contains "185.220.101.138" or proc.args contains "0.tcp.ap.ngrok.io" or proc.args contains "ip-api.com" or proc.args contains "0.tcp.sa.ngrok.io" or proc.args contains "dns.twnic.tw" or proc.args contains "doh-ch.blahdns.com" or proc.args contains "doh-de.blahdns.com" or proc.args contains "doh-fi.blahdns.com" or proc.args contains "doh-jp.blahdns.com" or proc.args contains "doh.li" or proc.args contains "doh.pub" or proc.args contains "doh-sg.blahdns.com" or proc.args contains "fi.doh.dns.snopyta.org" or proc.args contains "hydra.plan9-ns1.com" or proc.args contains "tor2socks.in" or proc.args contains "blahdns.com" or proc.args contains "tor2web.it" or proc.args contains "200.150.198.92" or proc.args contains "62.102.148.154" or proc.args contains "paws.wmcloud.org" or proc.args contains "80.80.80.80" or proc.args contains "34.160.111.145" or proc.args contains "tracker.opentrackr.org" or proc.args contains "152.89.162.186" or proc.args contains "205.185.118.246" or proc.args contains "134.209.248.91" or proc.args contains "ipfs.io" or proc.args contains "199.195.253.187" or proc.args contains "198.23.187.168" or proc.args contains "cthd.icu" or proc.args contains "212.22.77.79" or proc.args contains "194.87.102.77" or proc.args contains "tor2web.in" or proc.args contains "doh.defaultroutes.de" or proc.args contains "ghabutech.xyz" or proc.args contains "dns.hostux.net" or proc.args contains "dns.dns-over-https.com" or proc.args contains "uncensored.lux1.dns.nixnet.xyz" or proc.args contains "dns.rubyfish.cn" or proc.args contains "doh.centraleu.pi-dns.com" or proc.args contains "doh.dns.sb" or proc.args contains "dns.flatuslifir.is" or proc.args contains "dns.digitale-gesellschaft.ch" or proc.args contains "community-pools.mysrv.cloud" or proc.args contains "pool.xdag.org" or proc.args contains "stratum.xdag.org" or proc.args contains "loper.shaderox.site" or proc.args contains "bandrex.ghabutech.xyz" or proc.args contains "webshare.io" or proc.args contains "code-server.dev" or proc.args contains "mypaneldata.my.id" or proc.args contains "bsmderopool.my.id" or proc.args contains "dg6.dnslook.ga" or proc.args contains "dg5.dnslook.ga" or proc.args contains "dnslook.ga" or proc.args contains "srbminer.com" or proc.args contains "gateway.ipfs.io" or proc.args contains "dweb.link" or proc.args contains "ninetailed.ninja" or proc.args contains "via0.com" or proc.args contains "ipfs.eternum.io" or proc.args contains "hardbin.com" or proc.args contains "astyanax.io" or proc.args contains "ipns.co" or proc.args contains "gateway.originprotocol.com" or proc.args contains "gateway.pinata.cloud" or proc.args contains "ipfs.sloppyta.co" or proc.args contains "ipfs.busy.org" or proc.args contains "ipfs.greyh.at" or proc.args contains "gateway.serph.network" or proc.args contains "jorropo.net" or proc.args contains "ipfs.fooock.com" or proc.args contains "cdn.cwinfo.net" or proc.args contains "aragon.ventures" or proc.args contains "permaweb.io" or proc.args contains "ipfs.best-practice.se" or proc.args contains "storjipfs-gateway.com" or proc.args contains "ipfs.runfission.com" or proc.args contains "ipfs.trusti.id" or proc.args contains "ipfs.overpi.com" or proc.args contains "ipfs.ink" or proc.args contains "ipfsgateway.makersplace.com" or proc.args contains "ipfs.funnychain.co" or proc.args contains "ipfs.telos.miami" or proc.args contains "ipfs.mttk.net" or proc.args contains "ipfs.fleek.co" or proc.args contains "ipfs.jbb.one" or proc.args contains "ipfs.yt" or proc.args contains "hashnews.k1ic.com" or proc.args contains "ipfs.drink.cafe" or proc.args contains "ipfs.kavin.rocks" or proc.args contains "ipfs.denarius.io" or proc.args contains "crustwebsites.net" or proc.args contains "ipfs0.sjc.cloudsigma.com" or proc.args contains "ipfs.genenetwork.org" or proc.args contains "ipfs.eth.aragon.network" or proc.args contains "ipfs.smartholdem.io" or proc.args contains "ipfs.xoqq.ch" or proc.args contains "natoboram.mynetgear.com" or proc.args contains "video.oneloveipfs.com" or proc.args contains "ipfs.anonymize.com" or proc.args contains "ipfs.scalaproject.io" or proc.args contains "search.ipfsgate.com" or proc.args contains "ipfs.decoo.io" or proc.args contains "alexdav.id" or proc.args contains "ipfs.uploads.nu" or proc.args contains "hub.textile.io" or proc.args contains "ipfs1.pixura.io" or proc.args contains "ravencoinipfs-gateway.com" or proc.args contains "konubinix.eu" or proc.args contains "ipfs.tubby.cloud" or proc.args contains "ipfs.lain.la" or proc.args contains "ipfs.kaleido.art" or proc.args contains "ipfs.slang.cx" or proc.args contains "ipfs.arching-kaos.com" or proc.args contains "storry.tv" or proc.args contains "ipfs.1-2.dev" or proc.args contains "dweb.eu.org" or proc.args contains "permaweb.eu.org" or proc.args contains "ipfs.namebase.io" or proc.args contains "ipfs.tribecap.co" or proc.args contains "ipfs.kinematiks.com" or proc.args contains "c4rex.co" or proc.args contains "gravity.jup.io" or proc.args contains "tth-ipfs.com" or proc.args contains "ipfs.chisdealhd.co.uk" or proc.args contains "ipfs.alloyxuast.tk" or proc.args contains "ipfs.litnet.work" or proc.args contains "4everland.io" or proc.args contains "ipfs-gateway.cloud" or proc.args contains "ipfs.joaoleitao.org" or proc.args contains "ipfs.tayfundogdas.me" or proc.args contains "194.38.23.2" or proc.args contains "103.214.112.73" or proc.args contains "devestiy.cc" or proc.args contains "000webhostapp.com" or proc.args contains "discord.com" or proc.args contains "172.105.211.21" or proc.args contains "wget.hostname.help" or proc.args contains "204.44.109.68" or proc.args contains "185.106.94.146" or proc.args contains "pool.pkteer.com" or proc.args contains "pool.pktpool.io" or proc.args contains "pkt.world" or proc.args contains "pool.webchain.network" or proc.args contains "dero-node-overlode.mysrv.cloud" or proc.args contains "denaro-pool.gaetano.eu.org" or proc.args contains "anonpasta.rocks" or proc.args contains "bash.givemexyz.in" or proc.args contains "uplooder.net" or proc.args contains "ufile.io" or proc.args contains "textbin.net" or proc.args contains "termbin.com" or proc.args contains "sprunge.us" or proc.args contains "sendspace.com" or proc.args contains "rentry.co" or proc.args contains "pastie.org" or proc.args contains "pastetext.net" or proc.args contains "paste.ee" or proc.args contains "mediafire.com" or proc.args contains "localhost.run" or proc.args contains "ideone.com" or proc.args contains "filetransfer.io" or proc.args contains "filecloudonline.com" or proc.args contains "filebin.net" or proc.args contains "clbin.com" or proc.args contains "194.38.20.225" or proc.args contains "43.154.86.218" or proc.args contains "205.185.124.121" or proc.args contains "185.224.128.251" or proc.args contains "51.91.79.17" or proc.args contains "85.217.144.207" )
+      
+    - macro: user_known_ips_and_domains_cmdline
+      condition: (never_true)
+      
+    - list: malicious_log4j_c2
+      items: []
+      
+    - macro: in_malicious_binaries
+      condition: (proc.name in (malicious_binaries))
+      
+    - list: malicious_binaries
+      items: ["kdevtmpfsi", "libsystem.so", "kinsing", "Josho.mips", "Josho.mpsl", "Josho.arm5", "Josho.arm6", "Josho.arm7", "Josho.m68k", "Josho.ppc", "Josho.sh4", "bashirc", "xmrig", "xmrig.tar.gz", "ldapdomaindump", "ldd2bloodhound", "0as1d5asf4as5dm4", "0as1d5asf4as5dm6", "0as1d5asf4as5dm7", "0as1d5asf4as5dx64", "0as1d5asf4as5d86", "0as1d5asf4as5d8k", "0as1d5asf4as5dsl", "0as1d5asf4as5dpc", "0as1d5asf4as5dm5", "0as1d5asf4as5dps", "0as1d5asf4as5dh4", "skid.x86", "ptyw64", ".x1mr", "sdjdshdgdsdsfsfausjashsaggsafsfaa.arm6", "sdjdshdgdsdsfsfausjashsaggsafsfaa.sh4", "sdjdshdgdsdsfsfausjashsaggsafsfaa.arm7", "gobuster", "boatnet.arm", "boatnet.arm7", "nanominer", "pwnrig", "initdr", "astrominer", "SRBMiner-MULTI", "hellminer", "xmrigDaemon", "dero-stratum-miner", "libproxychains4.so", "eazyminer", "libprocesshider.so", "magicBezzHash.zip", "linux_386", "cpuminer-avx2", "webchain-miner", "boatnet.sh4", "boatnet.arc", "boatnet.mips", "boatnet.x86_64", "boatnet.m68k", "boatnet.arm6", "boatnet.arm5", "boatnet.spc", "boatnet.ppc", "boatnet.i686", "boatnet.mpsl", "pool-miner-linux64", "packetcrypt", "TLS-BYPASS.js"]
+      
+    - macro: scripts_in_or
+      condition: (proc.args endswith "/wb.sh" or proc.args endswith "/aws2.sh" or proc.args endswith "/ldr.sh" or proc.args endswith "miner.sh" or proc.args endswith "/bins.sh" or proc.args endswith "aktualisieren.sh" or proc.args endswith "creds.sh" or proc.args endswith "cronb.sh" or proc.args endswith "abah1.sh" or proc.args endswith "ohshit.sh")
+      
+    - macro: open_write
+      condition: (evt.type in (open,openat,openat2) and evt.is_open_write=true and fd.typechar='f' and fd.num>=0)
+      
+    - macro: run_by_adclient
+      condition: (proc.aname[2]=adclient or proc.aname[3]=adclient or proc.aname[4]=adclient or proc.aname[5]=adclient or proc.aname[6]=adclient)
+      
+    - list: security_processes
+      items: [AliYunDun, AliHids, AliHips, AliNet, AliSecGuard, AliYunDunUpdate, TaniumCXi, TaniumCX, cilium-agent, oneagentnettracer, oneagentnettrac, falco, dragent, falcon-sensor-b, falcond, s1-perf, s1-orchestrator, oneagentos, oneagentdynamiz, oneagenthelper, oneagentdumppro, ossec-syscheckd, AliYunDunMonito, awsagent, ovalprobes]
+
+    - macro: user_not_root
+      condition: (user.name="root" or user.uid=0)
+
+    - macro: proc_name_exists
+      condition: (proc.name!="<NA>")
+
+    - macro: malicious_cmdlines
+      condition: (proc.cmdline="rm -rf /") or (proc.name = "mv" and proc.cmdline endswith "/dev/null") or (proc.name=modprobe and proc.cmdline contains "msr" and proc.cmdline contains "allow_writes=on") or (proc.name=ipfs)
+
+    - macro: container_started
+      condition: ((evt.type = container or (spawned_process and proc.vpid=1)) and container.image.repository != incomplete)
+
+    - macro: user_known_run_as_root_container
+      condition: (container.image.repository in (run_as_root_image_list))
+
+    - list: run_as_root_image_list
+      items: []
+
+    - macro: pip_venv_tmp
+      condition: ((proc.pname=pip and proc.pcmdline contains "/tmp/venv") or (proc.name=python and proc.cmdline contains "/tmp/venv"))
+
+    - list: k8s_audit_stages
+      items: [ResponseComplete]
+
+    - macro: kevt
+      condition: (jevt.value[/stage] in (k8s_audit_stages))
+
+    - macro: kcreate
+      condition: (ka.verb=create)
+
+    - macro: namespace
+      condition: (ka.target.resource=namespaces)
+
+    - macro: k8s_audit_always_true
+      condition: (jevt.rawtime exists)
+
+    - macro: allowed_k8s_containers
+      condition: (k8s_audit_always_true)
+
+    - macro: pod
+      condition: (ka.target.resource=pods and not ka.target.subresource exists)
+
+    - macro: non_system_user
+      condition: (not ka.user.name startswith "system:")
+
+    - macro: role
+      condition: (ka.target.resource=roles)
+
+    - macro: clusterrole
+      condition: (ka.target.resource=clusterroles)
+
+    - macro: kmodify
+      condition: (ka.verb in (create,update,patch))
+
+    - macro: kdelete
+      condition: (ka.verb=delete)
+
+    - list: full_admin_k8s_users
+      items: [admin, kubernetes-admin, kubernetes-admin@kubernetes, kubernetes-admin@cluster.local, minikube-user]
+
+    - macro: allowed_full_admin_users
+      condition: (k8s_audit_always_true)
+
+    - macro: consider_activity_events
+      condition: (k8s_audit_always_true)
+
+    - macro: kactivity
+      condition: (kevt and consider_activity_events)
+
+    - macro: ingress
+      condition: (ka.target.resource=ingresses)
+
+    - macro: ingress_tls
+      condition: (jevt.value[/requestObject/spec/tls] exists)
+
+    - macro: response_successful
+      condition: (ka.response.code startswith 2)
+
+    - macro: configmap
+      condition: (ka.target.resource=configmaps)
+
+    - macro: contains_private_credentials
+      condition: (ka.req.configmap.obj contains "aws_access_key_id" or ka.req.configmap.obj contains "aws-access-key-id" or ka.req.configmap.obj contains "aws_s3_access_key_id" or ka.req.configmap.obj contains "aws-s3-access-key-id" or ka.req.configmap.obj contains "password" or ka.req.configmap.obj contains "passphrase")
+
+    - macro: sensitive_vol_mount
+      condition: ((ka.req.pod.volumes.hostpath intersects (/, /etc, /etc/kubernetes, /etc/kubernetes/manifests, /home/admin, /proc, /root, /run/containerd/containerd.sock, /var/run/containerd/containerd.sock, /var/run/crio/crio.sock, /var/run/docker.sock)) or ka.req.pod.volumes.hostpath startswith "/etc/cron" or ka.req.pod.volumes.hostpath startswith "/var/spool/cron" or ka.req.pod.volumes.hostpath startswith "/var/lib/kubelet")
+
+    - macro: service
+      condition: (ka.target.resource=services)
+
+    - macro: k8s_audit_never_true
+      condition: (jevt.rawtime=0)
+
+    - macro: user_known_node_port_service
+      condition: (k8s_audit_never_true)
+      
+    - macro: serviceaccount
+      condition: (ka.target.resource=serviceaccounts and not ka.target.subresource exists)
+
+    - macro: clusterrolebinding
+      condition: (ka.target.resource=clusterrolebindings)
+
+    - macro: namespace
+      condition: (ka.target.resource=namespaces)
+
+    - macro: file_creation
+      condition: (evt.type = creat or ((evt.type = open or evt.type = openat) and evt.arg.flags contains O_CREAT))
+
+    - macro: container
+      condition: (container.id != host)
