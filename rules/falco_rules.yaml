@@ -3406,13 +3406,16 @@
 
 - list: recovery_files
   items: [/etc/default/grub, /etc/inittab, /usr/lib/systemd/system/rescue.service]
+  
+- list: critical_dir
+  items: [/boot, /bin, /etc, /lib, /sbin, /usr, ~/.local/share/Trash, ~/.local/share/Trash/files]
 
 - rule: Disable Recovery Features
   desc: Detects disabling system recovery features by deleting or disabling services and commands.
   condition: >
       (spawned_process) and 
       ((open_write and fd.name in (recovery_files)) or
-      (proc.name = "rm" and proc.args contains "-rf") or
+      (remove and (fd.name in (critical_dir))) or
       (proc.name = "chattr" and proc.args contains "+i") or
       (proc.name = "mkfs.ext4" and proc.args contains "-E nodiscard") or
       (proc.name = "mount" and proc.args contains "remount,ro") or
