@@ -3398,14 +3398,14 @@
   priority: WARNING
   tags: [host, container, mitre_execution, mitre_defense_evasion, T1036.005, T1059.004]
  
-- list: open_appn_windows
+- list: open_appln_windows
   items: ["xwininfo", "wmctrl", "xprop", "xlsclients", "xdotool", "xrestop", "xwininfo", "xdpyinfo", "glxinfo", "xrandr", "xset", "xdriinfo", "xhost", "xev", "xdotool", "xsetroot"]
    
 - rule: Get Information About Open Application Windows
   desc: Detects attempts to get information about open application windows
   condition: >
     spawned_process and 
-    (proc.name in (open_appn_windows))
+    (proc.name in (open_appln_windows))
   enabled: true
   output: "Get info about open windows in system detected (proc.cmdline=%proc.cmdline connection=%fd.name user.name=%user.name user.loginuid=%user.loginuid container.id=%container.id evt.type=%evt.type     evt.res=%evt.res proc.pid=%proc.pid proc.cwd=%proc.cwd proc.ppid=%proc.ppid proc.pcmdline=%proc.pcmdline proc.sid=%proc.sid proc.exepath=%proc.exepath user.uid=%user.uid user.loginname=%user.loginname group.gid=%group.gid group.name=%group.name container.name=%container.name image=%container.image.repository)"
   priority: WARNING
