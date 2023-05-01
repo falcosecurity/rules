@@ -3398,6 +3398,21 @@
   priority: WARNING
   tags: [host, container, mitre_execution, mitre_defense_evasion, T1036.005, T1059.004]
 
+- rule: Archive and Compression Activity
+  desc: Detects archive and compression activity using tar, zip, gzip, and bzip2.
+  condition: >
+    (proc.name = "zip" and evt.dir = "<") or 
+    (proc.name = "tar" and (evt.arg[1] = "-czf" or evt.arg[1] = "-cpf"))
+    or (proc.name = "gzip" and evt.dir = "<")
+    or (proc.name = "bzip2" and evt.dir = "<")
+  enabled: true
+  output:
+    "Archive and compression activity detected (user=%user.name command=%proc.cmdline file=%evt.arg[2] or %evt.arg[1])"
+  priority: WARNING
+  tags: [host, container, data, mitre_collection, archive_collected_data, T1560]
+  
+- list: device_enumeration
+  items: ["lsusb", "lspci", "dmesg", "lsblk", "lshw", "hwinfo"]
 # Application rules have moved to application_rules.yaml. Please look
 # there if you want to enable them by adding to
 # falco_rules.local.yaml.
