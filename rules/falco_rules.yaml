@@ -1030,7 +1030,7 @@
   tags: [host, container, filesystem, mitre_discovery, T1005]
 
 - list: safe_etc_dirs
-  items: [/etc/cassandra, /etc/ssl/certs/java, /etc/logstash, /etc/nginx/conf.d, /etc/container_environment, /etc/hrmconfig, /etc/fluent/configs.d]
+  items: [/etc/cassandra, /etc/ssl/certs/java, /etc/logstash, /etc/nginx/conf.d, /etc/container_environment, /etc/hrmconfig, /etc/fluent/configs.d. /etc/alertmanager]
 
 - macro: fluentd_writing_conf_files
   condition: (proc.name=start-fluentd and fd.name in (/etc/fluent/fluent.conf, /etc/td-agent/td-agent.conf))
@@ -1917,7 +1917,8 @@
     sysdig/sysdig,
     sematext_images,
     k8s.gcr.io/dns/k8s-dns-node-cache,
-    registry.k8s.io/dns/k8s-dns-node-cache
+    registry.k8s.io/dns/k8s-dns-node-cache,
+    mcr.microsoft.com/oss/kubernetes/kube-proxy
   ]
 
 - macro: falco_privileged_containers
@@ -2467,7 +2468,8 @@
      quay.io/prometheus-operator/prometheus-operator, k8s.gcr.io/ingress-nginx/kube-webhook-certgen,
      registry.k8s.io/ingress-nginx/kube-webhook-certgen, quay.io/spotahome/redis-operator,
      registry.opensource.zalan.do/acid/postgres-operator, registry.opensource.zalan.do/acid/postgres-operator-ui,
-     rabbitmqoperator/cluster-operator)
+     rabbitmqoperator/cluster-operator, quay.io/kubecost1/opencost-ui, quay.io/kubecost1/kubecost-cost-model,
+     docker.io/bitnami/prometheus, docker.io/bitnami/kube-state-metrics, mcr.microsoft.com/oss/azure/aad-pod-identity/nmi)
      or (k8s.ns.name = "kube-system"))
 
 - macro: k8s_api_server
@@ -3214,6 +3216,11 @@
     (k8s.ns.name = kube-system
     and container.image.repository = gke.gcr.io/gcp-compute-persistent-disk-csi-driver)
 
+- macro: known_aks_mount_in_privileged_containers
+  condition:
+    (k8s.ns.name = kube-system and container.image.repository = mcr.microsoft.com/oss/kubernetes-csi/azuredisk-csi
+    or k8s.ns.name = system and container.image.repository = mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver)
+
 - macro: user_known_mount_in_privileged_containers
   condition: (never_true)
 
@@ -3225,6 +3232,7 @@
     and proc.name=mount
     and not mount_info
     and not known_gke_mount_in_privileged_containers
+    and not known_aks_mount_in_privileged_containers
     and not user_known_mount_in_privileged_containers
   output: Mount was executed inside a privileged container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid %container.info image=%container.image.repository:%container.image.tag)
   priority: WARNING
