@@ -2470,7 +2470,7 @@
      quay.io/prometheus-operator/prometheus-operator, k8s.gcr.io/ingress-nginx/kube-webhook-certgen,
      registry.k8s.io/ingress-nginx/kube-webhook-certgen, quay.io/spotahome/redis-operator,
      registry.opensource.zalan.do/acid/postgres-operator, registry.opensource.zalan.do/acid/postgres-operator-ui,
-     rabbitmqoperator/cluster-operator, quay.io/kubecost1/opencost-ui, quay.io/kubecost1/kubecost-cost-model,
+     rabbitmqoperator/cluster-operator, quay.io/kubecost1/kubecost-cost-model,
      docker.io/bitnami/prometheus, docker.io/bitnami/kube-state-metrics, mcr.microsoft.com/oss/azure/aad-pod-identity/nmi)
      or (k8s.ns.name = "kube-system"))
 
