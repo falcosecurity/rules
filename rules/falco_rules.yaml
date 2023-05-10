@@ -3410,20 +3410,19 @@
 - list: critical_dir
   items: [/boot, /bin, /etc, /lib, /sbin, /usr, ~/.local/share/Trash, ~/.local/share/Trash/files]
 
+- list: recovery_proc_args
+  items: ["disable systemd-backlight@.service", "disable apport.service", "disable rescue.service", "disable emergency.service", "disable recovery-mode.service"]
+
 - rule: Disable Recovery Features
   desc: Detects disabling system recovery features by deleting or disabling services and commands.
   condition: >
       (spawned_process) and 
-      ((open_write and fd.name in (recovery_files)) or
-      (remove and (fd.name in (critical_dir))) or
-      (proc.name = "chattr" and proc.args contains "+i") or
+      ((proc.name = "chattr" and proc.args contains "+i") or
       (proc.name = "mkfs.ext4" and proc.args contains "-E nodiscard") or
       (proc.name = "mount" and proc.args contains "remount,ro") or
-      (proc.name = "systemctl" and proc.args contains "disable systemd-backlight@.service") or 
-      (proc.name = "systemctl" and proc.args contains "disable apport.service") or
-      (proc.name = "systemctl" and proc.args contains "disable rescue.service") or
-      (proc.name = "systemctl" and proc.args contains "disable emergency.service") or
-      (proc.name = "systemctl" and proc.args contains "disable recovery-mode.service"))
+      (proc.name = "systemctl" and proc.args in (recovery_proc_args)) or
+      (open_write and fd.name in (recovery_files)) or
+      (remove and (fd.name pmatch (critical_dir))))
   enabled: true
   output: command related to Disabling recovery features so that system becomes non recoverable in case of failure is executed .(user=%user.name user_loginuid=%user.loginuid
     command=%proc.cmdline pid=%proc.pid file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline container_id=%container.id image=%container.image.repository)"
