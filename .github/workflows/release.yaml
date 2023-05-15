@@ -46,7 +46,7 @@ jobs:
         with:
           path: rules
 
-      # Upload the rules with falcoctl
+      # Upload the rules artifact with falcoctl
       - name: Upload OCI artifacts to GitHub packages
         run: |
              falcoctl/falcoctl registry push \
@@ -57,4 +57,18 @@ jobs:
              rules/${RULES_FILE}             
         env:
           FALCOCTL_REGISTRY_AUTH_BASIC: ${{ env.OCI_REGISTRY }},${{ github.repository_owner }},${{ secrets.GITHUB_TOKEN }}
+
+      # Create an signature of the rules artifact as OCI artifact
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@main
+        with:
+          cosign-release: 'v2.0.2' 
+      - run: cosign version
+      - name: Sign the images with GitHub OIDC Token
+        env:
+          # Add support for OCI v1.1
+          COSIGN_EXPERIMENTAL: "1"
+        run: |
+             echo "${{ steps.meta.outputs.tags }}" | \
+             xargs -I {} cosign sign {}@${{ steps.build-and-push.outputs.digest }}
 
