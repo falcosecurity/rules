@@ -1,18 +1,12 @@
 name: Release Rulesfile
-
 on:
   push:
     tags:
-      # potential semver
-      - '[a-z]*[0-9]+.[0-9]+.[0-9]+*'
+      - v*
 
 jobs:
-  release-rulesfile:
+  Release-Rulesfile:
     runs-on: ubuntu-latest
-    env:
-      AWS_S3_BUCKET: falco-distribution
-      AWS_S3_PREFIX: rules
-      AWS_S3_REGION: eu-west-1
 
     # These permissions are needed to interact with GitHub's OIDC Token endpoint.
     permissions:
@@ -20,39 +14,47 @@ jobs:
       contents: read
       packages: write
 
+    env:
+      RULES_FILE: falco_rules.yaml
+
+      OCI_REGISTRY: ghcr.io
+      OCI_ARTIFACT_NAME: custom-rules
+      OCI_ARTIFACT_VERSION: ${{ github.ref_name }}
+
     steps:
-      - name: Checkout Rules
+
+      # Get falcoctl
+      - name: Checkout Falcoctl Repo
         uses: actions/checkout@v3
-
+        with:
+          repository: falcosecurity/falcoctl
+          ref: v0.4.0
+          path: falcoctl
       - name: Setup Golang
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v4
         with:
-          go-version: '^1.19'
+          go-version-file: falcoctl/go.mod
+          cache-dependency-path: falcoctl/go.sum
+      - run: go version
+      - name: Build falcoctl
+        run: make
+        working-directory: falcoctl
 
-      - name: Build registry artifact tool
-        working-directory: build/registry
-        run: go build -o rules-registry ./...
+      # Get the rules
+      - name: Checkout Rules Repo
+        uses: actions/checkout@v3
+        with:
+          path: rules
 
-      - name: Get lowercase OCI repo prefix
-        run: |
-          echo "OCI_REPO_PREFIX=ghcr.io/${GITHUB_REPOSITORY,,}" >>${GITHUB_ENV}
-
+      # Upload the rules with falcoctl
       - name: Upload OCI artifacts to GitHub packages
+        run: |
+             falcoctl/falcoctl registry push \
+             --config /dev/null \
+             --type rulesfile \
+             --version ${OCI_ARTIFACT_VERSION} \
+             ${OCI_REGISTRY}/${GITHUB_REPOSITORY}/${OCI_ARTIFACT_NAME}:${OCI_ARTIFACT_VERSION} \
+             rules/${RULES_FILE}             
         env:
-          REGISTRY_USER: ${{ github.repository_owner }}
-          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPO_URL: ${{ github.server_url }}/${{ github.repository }}.git
+          FALCOCTL_REGISTRY_AUTH_BASIC: ${{ env.OCI_REGISTRY }},${{ github.repository_owner }},${{ secrets.GITHUB_TOKEN }}
 
-        # uses OCI_REPO_PREFIX environment variable
-        run: build/registry/rules-registry push-to-oci registry.yaml ${{ github.ref_name }}
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          role-to-assume: "arn:aws:iam::292999226676:role/terraform-20230120142903096000000002"
-          aws-region: ${{ env.AWS_S3_REGION }}
-
-      - name: Upload files to S3
-
-        # uses AWS_S3_BUCKET, AWS_S3_PREFIX, AWS_S3_REGION environment variables
-        run: build/registry/rules-registry upload-to-s3 registry.yaml ${{ github.ref_name }}
