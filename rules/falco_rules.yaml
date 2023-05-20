@@ -2623,7 +2623,13 @@
   condition: >
     (spawned_process and
      ((grep_commands and private_key_or_password) or
-      (proc.name = "find" and (proc.args contains "id_rsa" or proc.args contains "id_dsa")))
+      (proc.name = "find" and
+        (proc.args contains "id_rsa" or 
+         proc.args contains "id_dsa" or 
+         proc.args contains "id_ed25519" or 
+         proc.args contains "id_ecdsa"
+        )
+      ))
     )
   output: >
     Grep private keys or passwords activities found
