@@ -36,7 +36,7 @@ func pluginRulesToIndexEntry(rf Rulesfile, registry, repo string) *index.Entry {
 		Repository:  repo,
 		Description: rf.Description,
 		Home:        rf.URL,
-		Keywords:    append(rf.Keywords, rf.Name),
+		Keywords:    appendIfNotPresent(rf.Keywords, rf.Name),
 		License:     rf.License,
 		Maintainers: rf.Maintainers,
 		Sources:     []string{rf.URL},
@@ -68,4 +68,17 @@ func upsertIndexFile(r *Registry, ociArtifacts map[string]string, indexPath stri
 	upsertIndex(r, ociArtifacts, i)
 
 	return i.Write(indexPath)
+}
+
+// Add new item to a slice if not present.
+func appendIfNotPresent(keywords []string, kw string) []string {
+	// If the keyword already exist do nothing.
+	for i := range keywords {
+		if keywords[i] == kw {
+			return keywords
+		}
+	}
+
+	// Add the keyword
+	return append(keywords, kw)
 }
