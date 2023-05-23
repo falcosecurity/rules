@@ -8,6 +8,8 @@ rulesfiles:
         email: cncf-falco-dev@lists.cncf.io
     path: rules/falco_rules.yaml
     license: apache-2.0
+    keywords:
+      - falco
     url: https://github.com/falcosecurity/rules/blob/main/rules/falco_rules.yaml
   - name: applications
     description: Application rules
