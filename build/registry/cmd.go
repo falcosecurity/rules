@@ -109,29 +109,29 @@ func doUploadToS3(registryFilename, gitTag string) error {
 	return nil
 }
 
-func doPushToOCI(registryFilename, gitTag string) error {
+func doPushToOCI(registryFilename, gitTag string) (*string, error) {
 	var ociRepoPrefix, repoGit, user, token string
 	var found bool
 
 	if token, found = os.LookupEnv(RegistryTokenEnv); !found {
-		return fmt.Errorf("environment variable with key %q not found, please set it before running this tool", RegistryTokenEnv)
+		return nil, fmt.Errorf("environment variable with key %q not found, please set it before running this tool", RegistryTokenEnv)
 	}
 
 	if user, found = os.LookupEnv(RegistryUserEnv); !found {
-		return fmt.Errorf("environment variable with key %q not found, please set it before running this tool", RegistryUserEnv)
+		return nil, fmt.Errorf("environment variable with key %q not found, please set it before running this tool", RegistryUserEnv)
 	}
 
 	if ociRepoPrefix, found = os.LookupEnv(OCIRepoPrefixEnv); !found {
-		return fmt.Errorf("environment variable with key %q not found, please set it before running this tool", OCIRepoPrefixEnv)
+		return nil, fmt.Errorf("environment variable with key %q not found, please set it before running this tool", OCIRepoPrefixEnv)
 	}
 
 	if repoGit, found = os.LookupEnv(RepoGithubEnv); !found {
-		return fmt.Errorf("environment variable with key %q not found, please set it before running this tool", RepoGithubEnv)
+		return nil, fmt.Errorf("environment variable with key %q not found, please set it before running this tool", RepoGithubEnv)
 	}
 
 	pt, err := parseGitTag(gitTag)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	cred := &auth.Credential{
@@ -144,18 +144,18 @@ func doPushToOCI(registryFilename, gitTag string) error {
 
 	reg, err := loadRegistryFromFile(registryFilename)
 	if err != nil {
-		return fmt.Errorf("could not read registry from %s: %w", registryFilename, err)
+		return nil, fmt.Errorf("could not read registry from %s: %w", registryFilename, err)
 	}
 
 	rulesfileInfo := reg.RulesfileByName(pt.Name)
 	if rulesfileInfo == nil {
-		return fmt.Errorf("could not find rulesfile %s in registry", pt.Name)
+		return nil, fmt.Errorf("could not find rulesfile %s in registry", pt.Name)
 	}
 
 	// Create the repository object for the ref.
 	var repo *repository.Repository
 	if repo, err = repository.NewRepository(ociRepoRef, repository.WithClient(client)); err != nil {
-		return fmt.Errorf("unable to create repository for ref %q: %w", ociRepoRef, err)
+		return nil, fmt.Errorf("unable to create repository for ref %q: %w", ociRepoRef, err)
 	}
 
 	existingTags, _ := repo.Tags(context.Background())
@@ -171,19 +171,21 @@ func doPushToOCI(registryFilename, gitTag string) error {
 
 	tgzFile := filepath.Join(tmpDir, filepath.Base(rulesfileInfo.Path)+".tar.gz")
 	if err = tarGzSingleFile(tgzFile, rulesfileInfo.Path); err != nil {
-		return fmt.Errorf("could not compress %s: %w", rulesfileInfo.Path, err)
+		return nil, fmt.Errorf("could not compress %s: %w", rulesfileInfo.Path, err)
 	}
 	defer os.RemoveAll(tgzFile)
 
 	config, err := rulesfileConfig(rulesfileInfo.Name, pt.Version(), rulesfileInfo.Path)
 	if err != nil {
-		return fmt.Errorf("could not generate configuration layer for rulesfiles %q: %w", rulesfileInfo.Path, err)
-	}
-	if err = pushCompressedRulesfile(client, tgzFile, ociRepoRef, repoGit, tagsToUpdate, config); err != nil {
-		return fmt.Errorf("could not push %s to %s with source %s and tags %v: %w", tgzFile, ociRepoRef, repoGit, tagsToUpdate, err)
+		return nil, fmt.Errorf("could not generate configuration layer for rulesfiles %q: %w", rulesfileInfo.Path, err)
 	}
 
-	return nil
+	digest, err := pushCompressedRulesfile(client, tgzFile, ociRepoRef, repoGit, tagsToUpdate, config)
+	if err != nil {
+		return nil, fmt.Errorf("could not push %s to %s with source %s and tags %v: %w", tgzFile, ociRepoRef, repoGit, tagsToUpdate, err)
+	}
+
+	return digest, nil
 }
 
 func rulesOciRepos(registryEntries *Registry, ociRepoPrefix string) (map[string]string, error) {
@@ -263,7 +265,13 @@ func main() {
 		Args:                  cobra.ExactArgs(2),
 		DisableFlagsInUseLine: true,
 		RunE: func(c *cobra.Command, args []string) error {
-			return doPushToOCI(args[0], args[1])
+			digest, err := doPushToOCI(args[0], args[1])
+			if err != nil {
+				return err
+			}
+			fmt.Println(*digest)
+
+			return nil
 		},
 	}
 
