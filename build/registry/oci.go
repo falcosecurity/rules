@@ -27,19 +27,25 @@ import (
 	ocipusher "github.com/falcosecurity/falcoctl/pkg/oci/pusher"
 )
 
-func pushCompressedRulesfile(ociClient remote.Client, filePath, repoRef, repoGit string, tags []string, config *oci.ArtifactConfig) error {
+// pushCompressedRulesfile publishes rulesfile as OCI artifact and returns its digest.
+// It possibly returns an error.
+func pushCompressedRulesfile(
+	ociClient remote.Client,
+	filePath, repoRef, repoGit string,
+	tags []string,
+	config *oci.ArtifactConfig) (*string, error) {
 	klog.Infof("Processing compressed rulesfile %q for repo %q and tags %s...", filePath, repoRef, tags)
 
 	pusher := ocipusher.NewPusher(ociClient, false, nil)
-	_, err := pusher.Push(context.Background(), oci.Rulesfile, repoRef,
+	artifact, err := pusher.Push(context.Background(), oci.Rulesfile, repoRef,
 		ocipusher.WithTags(tags...),
 		ocipusher.WithFilepaths([]string{filePath}),
 		ocipusher.WithAnnotationSource(repoGit),
 		ocipusher.WithArtifactConfig(*config))
 
 	if err != nil {
-		return fmt.Errorf("an error occurred while pushing: %w", err)
+		return nil, fmt.Errorf("an error occurred while pushing: %w", err)
 	}
 
-	return nil
+	return &artifact.Digest, nil
 }
