@@ -22,6 +22,10 @@ jobs:
       - name: Build registry artifact tool
         working-directory: build/registry
         run: go build -o rules-registry ./...
+      
+      - name: Test registry artifact tool
+        working-directory: build/registry
+        run: go test ./... -cover
 
       - name: Check Registry validity
         run: build/registry/rules-registry check registry.yaml
@@ -51,6 +55,10 @@ jobs:
       - name: Build checker tool
         working-directory: build/checker
         run: go build -o rules-check
+      
+      - name: Test checker tool
+        working-directory: build/checker
+        run: go test ./... -cover
 
       - name: Validate rules files
         run: |
@@ -87,6 +95,10 @@ jobs:
       - name: Build checker tool
         working-directory: build/checker
         run: go build -o rules-check
+      
+      - name: Test checker tool
+        working-directory: build/checker
+        run: go test ./... -cover
 
       - name: Compare changed files with previous versions
         id: compare
