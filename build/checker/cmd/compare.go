@@ -10,51 +10,57 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type falcoListOutput struct {
+	Details struct {
+		Lists []string `json:"lists"`
+	} `json:"details"`
+	Info struct {
+		Items []string `json:"items"`
+		Name  string   `json:"name"`
+	} `json:"info"`
+}
+
+type falcoMacroOutput struct {
+	Details struct {
+		ConditionFields []string `json:"condition_fields"`
+		Events          []string `json:"events"`
+		Lists           []string `json:"lists"`
+		Macros          []string `json:"macros"`
+		Operators       []string `json:"operators"`
+	} `json:"details"`
+	Info struct {
+		Condition string `json:"condition"`
+		Name      string `json:"name"`
+	} `json:"info"`
+}
+
+type falcoRuleOutput struct {
+	Details struct {
+		ConditionFields    []string `json:"condition_fields"`
+		Events             []string `json:"events"`
+		ExceptionFields    []string `json:"exception_fields"`
+		ExceptionOperators []string `json:"exception_operators"`
+		Lists              []string `json:"lists"`
+		Macros             []string `json:"macros"`
+		Operators          []string `json:"operators"`
+		OutputFields       []string `json:"output_fields"`
+	} `json:"details"`
+	Info struct {
+		Condition   string   `json:"condition"`
+		Description string   `json:"description"`
+		Enabled     bool     `json:"enabled"`
+		Name        string   `json:"name"`
+		Output      string   `json:"output"`
+		Priority    string   `json:"priority"`
+		Source      string   `json:"source"`
+		Tags        []string `json:"tags"`
+	} `json:"info"`
+}
+
 type falcoCompareOutput struct {
-	Lists []struct {
-		Details struct {
-			Lists []string `json:"lists"`
-		} `json:"details"`
-		Info struct {
-			Items []string `json:"items"`
-			Name  string   `json:"name"`
-		} `json:"info"`
-	} `json:"lists"`
-	Macros []struct {
-		Details struct {
-			ConditionFields []string `json:"condition_fields"`
-			Events          []string `json:"events"`
-			Lists           []string `json:"lists"`
-			Macros          []string `json:"macros"`
-			Operators       []string `json:"operators"`
-		} `json:"details"`
-		Info struct {
-			Condition string `json:"condition"`
-			Name      string `json:"name"`
-		} `json:"info"`
-	} `json:"macros"`
-	Rules []struct {
-		Details struct {
-			ConditionFields    []string `json:"condition_fields"`
-			Events             []string `json:"events"`
-			ExceptionFields    []string `json:"exception_fields"`
-			ExceptionOperators []string `json:"exception_operators"`
-			Lists              []string `json:"lists"`
-			Macros             []string `json:"macros"`
-			Operators          []string `json:"operators"`
-			OutputFields       []string `json:"output_fields"`
-		} `json:"details"`
-		Info struct {
-			Condition   string   `json:"condition"`
-			Description string   `json:"description"`
-			Enabled     bool     `json:"enabled"`
-			Name        string   `json:"name"`
-			Output      string   `json:"output"`
-			Priority    string   `json:"priority"`
-			Source      string   `json:"source"`
-			Tags        []string `json:"tags"`
-		} `json:"info"`
-	} `json:"rules"`
+	Lists  []falcoListOutput  `json:"lists"`
+	Macros []falcoMacroOutput `json:"macros"`
+	Rules  []falcoRuleOutput  `json:"rules"`
 }
 
 func (f *falcoCompareOutput) ListNames() []string {
@@ -117,41 +123,6 @@ func getCompareOutput(falcoImage, ruleFile string) (*falcoCompareOutput, error) 
 	return &out, nil
 }
 
-func strSliceToMap(s []string) map[string]bool {
-	items := make(map[string]bool)
-	for _, item := range s {
-		items[item] = true
-	}
-	return items
-}
-
-func diffStrSet(left, right []string) map[string]bool {
-	l := strSliceToMap(left)
-	r := strSliceToMap(right)
-	for k := range r {
-		delete(l, k)
-	}
-	return l
-}
-
-// compareStrSets returns -1 if "left" has at least one item not contained in "right",
-// 1 if "right" has at least one item not contained in "left", and 0 otherwise.
-func compareStrSets(left, right []string) int {
-	l := strSliceToMap(left)
-	r := strSliceToMap(right)
-	for k := range l {
-		if _, ok := r[k]; !ok {
-			return -1
-		}
-	}
-	for k := range r {
-		if _, ok := l[k]; !ok {
-			return -1
-		}
-	}
-	return 0
-}
-
 func compareRulesPatch(left, right *falcoCompareOutput) (res []string) {
 	for _, l := range left.Rules {
 		for _, r := range right.Rules {
@@ -181,6 +152,9 @@ func compareRulesPatch(left, right *falcoCompareOutput) (res []string) {
 					res = append(res, fmt.Sprintf("rule '%s' has a more urgent priority than before", l.Info.Name))
 				}
 
+				// todo: decrement engine version req
+				// todo: decrement or remove plugin version req
+
 				// todo: Adding or removing exceptions for one or more Falco rules
 				// todo: add required engine version to Falco outputs
 				// todo: add exception names to Falco outputs
@@ -192,19 +166,9 @@ func compareRulesPatch(left, right *falcoCompareOutput) (res []string) {
 		for _, r := range right.Lists {
 			if l.Info.Name == r.Info.Name {
 				// Adding or removing items for one or more lists
-				if compareStrSets(l.Info.Items, r.Info.Items) != 0 {
+				if len(diffStrSet(l.Info.Items, r.Info.Items)) != 0 ||
+					len(diffStrSet(r.Info.Items, l.Info.Items)) != 0 {
 					res = append(res, fmt.Sprintf("list '%s' has some item added or removed", l.Info.Name))
-				}
-			}
-		}
-	}
-
-	for _, l := range left.Macros {
-		for _, r := range right.Macros {
-			if l.Info.Name == r.Info.Name {
-				// Matching more events in a macro condition
-				if len(diffStrSet(r.Details.Events, l.Details.Events)) > 0 {
-					res = append(res, fmt.Sprintf("macro '%s' matches more events than before", l.Info.Name))
 				}
 			}
 		}
@@ -219,28 +183,28 @@ func compareRulesMinor(left, right *falcoCompareOutput) (res []string) {
 	// todo: Adding a new plugin version requirement in required_plugin_versions
 
 	// Adding one or more lists, macros, or rules
-	if compareStrSets(left.RuleNames(), right.RuleNames()) > 0 {
-		res = append(res, "some rule has been added")
+	if len(diffStrSet(right.RuleNames(), left.RuleNames())) > 0 {
+		res = append(res, "one or more rules have been added")
 	}
-	if compareStrSets(left.MacroNames(), right.MacroNames()) > 0 {
-		res = append(res, "some macro has been added")
+	if len(diffStrSet(right.MacroNames(), left.MacroNames())) > 0 {
+		res = append(res, "one or more macros have been added")
 	}
-	if compareStrSets(left.ListNames(), right.ListNames()) > 0 {
-		res = append(res, "some list has been added")
+	if len(diffStrSet(right.ListNames(), left.ListNames())) > 0 {
+		res = append(res, "one or more lists have been added")
 	}
 	return
 }
 
 func compareRulesMajor(left, right *falcoCompareOutput) (res []string) {
 	// Renaming or removing a list, macro, or rule
-	if compareStrSets(left.RuleNames(), right.RuleNames()) < 0 {
-		res = append(res, "some rule has been removed")
+	if len(diffStrSet(left.RuleNames(), right.RuleNames())) > 0 {
+		res = append(res, "one or more rules have been removed")
 	}
-	if compareStrSets(left.MacroNames(), right.MacroNames()) < 0 {
-		res = append(res, "some macro has been removed")
+	if len(diffStrSet(left.MacroNames(), right.MacroNames())) > 0 {
+		res = append(res, "one or more macros have been removed")
 	}
-	if compareStrSets(left.ListNames(), right.ListNames()) < 0 {
-		res = append(res, "some list has been removed")
+	if len(diffStrSet(left.ListNames(), right.ListNames())) > 0 {
+		res = append(res, "one or more lists have been removed")
 	}
 
 	for _, l := range left.Rules {
