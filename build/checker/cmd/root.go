@@ -7,7 +7,7 @@ import (
 
 var rootCmd = &cobra.Command{
 	Use:   "checker",
-	Short: "",
+	Short: "General-purpose tool for sanity checks around Falco rules files",
 	Long:  "",
 }
 
