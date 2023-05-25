@@ -2,7 +2,9 @@ name: CI
 
 on:
   pull_request:
-    branches: [main]
+    branches:
+      - main
+      - release/*
 
 jobs:
   check-registry:
@@ -23,3 +25,109 @@ jobs:
 
       - name: Check Registry validity
         run: build/registry/rules-registry check registry.yaml
+
+  validate-rules:
+    strategy:
+      fail-fast: false
+      matrix:
+        falco-version: ["master", "0.34.1", "0.33.1"]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Golang
+        uses: actions/setup-go@v3
+        with:
+          go-version: '^1.19'
+
+      - name: Checkout rules
+        uses: actions/checkout@v3
+
+      - name: Get changed files
+        uses: jitterbit/get-changed-files@v1
+        id: changed
+        with:
+          format: space-delimited
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build checker tool
+        working-directory: build/checker
+        run: go build -o rules-check
+
+      - name: Validate rules files
+        run: |
+          for changed_file in ${{ steps.changed.outputs.all }}; do
+            if [[ ${changed_file} =~ ^rules/.* ]]; then
+              echo Validate ${changed_file}
+              build/checker/rules-check validate --falco-image="falcosecurity/falco-no-driver:${{ matrix.falco-version }}" ${changed_file}
+            fi
+          done
+
+  rules-version-checks:
+    env:
+      FALCO_VERSION: "master"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Golang
+        uses: actions/setup-go@v3
+        with:
+          go-version: '^1.19'
+
+      - name: Checkout rules
+        uses: actions/checkout@v3
+
+      - name: Get all git tags
+        run: git fetch --tags origin
+
+      - name: Get changed files
+        uses: jitterbit/get-changed-files@v1
+        id: changed
+        with:
+          format: space-delimited
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build checker tool
+        working-directory: build/checker
+        run: go build -o rules-check
+
+      - name: Compare changed files with previous versions
+        id: compare
+        run: |
+          rm -f result.txt
+          touch result.txt
+          cur_branch=`git rev-parse HEAD`
+          echo Current branch is \"$cur_branch\"
+          for changed_file in "rules/falco_rules.yaml"; do
+              if [[ ${changed_file} =~ ^rules/.*.yaml ]]; then
+                  echo ""
+                  echo Checking version for ${changed_file}...
+                  cp ${changed_file} tmprulesfile.yaml
+
+                  rules_name=`echo ${changed_file} | sed -re 's/rules\/(.*)_rules\.yaml/\1/'`
+                  echo Searching tag with prefix prefix \"$rules_name-rules-\"...
+                  latest_tag=`git describe --match="$rules_name-rules-*.*.*" --exclude="$rules_name-rules-*.*.*-*" --abbrev=0 --tags $(git rev-list --tags="$rules_name-rules-*.*.*" --max-count=1)`
+                  echo Most recent tag found is \"$latest_tag\"
+
+                  git checkout tags/$latest_tag
+                  build/checker/rules-check compare --falco-image="falcosecurity/falco-no-driver:$FALCO_VERSION" ${changed_file} tmprulesfile.yaml 1>cur_result.txt
+                  git switch --detach $cur_branch
+
+                  if [ -s cur_result.txt ]; then
+                      echo '##' ${changed_file} >> result.txt
+                      echo Comparing \`$cur_branch\` with latest tag \`$latest_tag\` >> result.txt
+                      echo "" >> result.txt
+                      cat cur_result.txt >> result.txt
+                      echo "" >> result.txt
+                  fi
+                  rm -f tmprulesfile.yaml
+                  rm -f cur_result.txt
+              fi
+          done
+
+          if [ -s result.txt ]; then
+              echo "comment_file=result.txt" >> $GITHUB_OUTPUT
+          fi
+
+      - uses: mshick/add-pr-comment@v2
+        if: steps.compare.outputs.comment_file != ''
+        with:
+          message-path: |
+            ${{ steps.compare.outputs.comment_file }}
