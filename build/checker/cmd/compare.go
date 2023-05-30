@@ -56,6 +56,7 @@ type falcoRuleOutput struct {
 		Events             []string `json:"events"`
 		ExceptionFields    []string `json:"exception_fields"`
 		ExceptionOperators []string `json:"exception_operators"`
+		Exceptions         []string `json:"exceptions"`
 		Lists              []string `json:"lists"`
 		Macros             []string `json:"macros"`
 		Operators          []string `json:"operators"`
@@ -171,9 +172,12 @@ func compareRulesPatch(left, right *falcoCompareOutput) (res []string) {
 				// todo: decrement engine version req
 				// todo: decrement or remove plugin version req
 
-				// todo: Adding or removing exceptions for one or more Falco rules
-				// todo: add required engine version to Falco outputs
-				// todo: add exception names to Falco outputs
+				// Adding or removing exceptions for one or more Falco rules
+				if len(diffStrSet(l.Details.Exceptions, r.Details.Exceptions)) != 0 ||
+					len(diffStrSet(r.Details.Exceptions, l.Details.Exceptions)) != 0 {
+					res = append(res, fmt.Sprintf("rule '%s' has some exceptions added or removed", l.Info.Name))
+				}
+
 			}
 		}
 	}
