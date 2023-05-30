@@ -19,6 +19,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 
 	"github.com/falcosecurity/testing/pkg/falco"
 	"github.com/falcosecurity/testing/pkg/run"
@@ -75,9 +76,11 @@ type falcoRuleOutput struct {
 }
 
 type falcoCompareOutput struct {
-	Lists  []falcoListOutput  `json:"lists"`
-	Macros []falcoMacroOutput `json:"macros"`
-	Rules  []falcoRuleOutput  `json:"rules"`
+	Lists                  []falcoListOutput  `json:"lists"`
+	Macros                 []falcoMacroOutput `json:"macros"`
+	RequiredEngineVersion  string             `json:"required_engine_version"`
+	RequiredPluginVersions []string           `json:"required_plugin_versions"`
+	Rules                  []falcoRuleOutput  `json:"rules"`
 }
 
 func (f *falcoCompareOutput) ListNames() []string {
@@ -141,6 +144,14 @@ func getCompareOutput(falcoImage, ruleFile string) (*falcoCompareOutput, error) 
 }
 
 func compareRulesPatch(left, right *falcoCompareOutput) (res []string) {
+	// Decrementing required_engine_version
+	l_required_engine_version, _ := strconv.Atoi(left.RequiredEngineVersion)
+	r_required_engine_version, _ := strconv.Atoi(right.RequiredEngineVersion)
+	if compareInt(l_required_engine_version, r_required_engine_version) > 0 {
+		res = append(res, fmt.Sprintf("required engine version was decremented from %s to %s",
+			left.RequiredEngineVersion, right.RequiredEngineVersion))
+	}
+
 	for _, l := range left.Rules {
 		for _, r := range right.Rules {
 			if l.Info.Name == r.Info.Name {
@@ -164,12 +175,11 @@ func compareRulesPatch(left, right *falcoCompareOutput) (res []string) {
 					res = append(res, fmt.Sprintf("Rule `%s` has more tags than before", l.Info.Name))
 				}
 
-				// a priority becomes more urgent than before
+				// A rule's priority becomes more urgent than before
 				if compareFalcoPriorities(r.Info.Priority, l.Info.Priority) > 0 {
 					res = append(res, fmt.Sprintf("Rule `%s` has a more urgent priority than before", l.Info.Name))
 				}
 
-				// todo: decrement engine version req
 				// todo: decrement or remove plugin version req
 
 				// Adding or removing exceptions for one or more Falco rules
@@ -198,7 +208,14 @@ func compareRulesPatch(left, right *falcoCompareOutput) (res []string) {
 }
 
 func compareRulesMinor(left, right *falcoCompareOutput) (res []string) {
-	// todo: Incrementing the required_engine_version number
+	// Incrementing the required_engine_version number
+	l_required_engine_version, _ := strconv.Atoi(left.RequiredEngineVersion)
+	r_required_engine_version, _ := strconv.Atoi(right.RequiredEngineVersion)
+	if compareInt(l_required_engine_version, r_required_engine_version) < 0 {
+		res = append(res, fmt.Sprintf("required engine version was incremented from %s to %s",
+			left.RequiredEngineVersion, right.RequiredEngineVersion))
+	}
+
 	// todo: Incrementing the required_plugin_versions version requirement for one or more plugin
 	// todo: Adding a new plugin version requirement in required_plugin_versions
 
