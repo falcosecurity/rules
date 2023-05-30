@@ -49,6 +49,8 @@ const sampleFalcoCompareOutput = `{
 			}
 		}
 	],
+	"required_engine_version": "13",
+	"required_plugin_versions": [],
 	"rules": [
 		{
 			"details": {
