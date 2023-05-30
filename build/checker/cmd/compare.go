@@ -145,27 +145,27 @@ func compareRulesPatch(left, right *falcoCompareOutput) (res []string) {
 			if l.Info.Name == r.Info.Name {
 				// Enabling at default one or more rules that used to be disabled
 				if !l.Info.Enabled && r.Info.Enabled {
-					res = append(res, fmt.Sprintf("rule '%s' has been enabled by default", l.Info.Name))
+					res = append(res, fmt.Sprintf("Rule `%s` has been enabled at default", l.Info.Name))
 				}
 
 				// Matching more events in a rule condition
 				if len(diffStrSet(r.Details.Events, l.Details.Events)) > 0 {
-					res = append(res, fmt.Sprintf("rule '%s' matches more events than before", l.Info.Name))
+					res = append(res, fmt.Sprintf("Rule `%s` matches more events than before", l.Info.Name))
 				}
 
 				// A rule has different output fields
 				if compareInt(len(l.Details.OutputFields), len(r.Details.OutputFields)) != 0 {
-					res = append(res, fmt.Sprintf("rule '%s' changed its output fields", l.Info.Name))
+					res = append(res, fmt.Sprintf("Rule `%s` changed its output fields", l.Info.Name))
 				}
 
 				// A rule has more tags than before
 				if len(diffStrSet(r.Info.Tags, l.Info.Tags)) > 0 {
-					res = append(res, fmt.Sprintf("rule '%s' has more tags than before", l.Info.Name))
+					res = append(res, fmt.Sprintf("Rule `%s` has more tags than before", l.Info.Name))
 				}
 
 				// a priority becomes more urgent than before
 				if compareFalcoPriorities(r.Info.Priority, l.Info.Priority) > 0 {
-					res = append(res, fmt.Sprintf("rule '%s' has a more urgent priority than before", l.Info.Name))
+					res = append(res, fmt.Sprintf("Rule `%s` has a more urgent priority than before", l.Info.Name))
 				}
 
 				// todo: decrement engine version req
@@ -184,7 +184,7 @@ func compareRulesPatch(left, right *falcoCompareOutput) (res []string) {
 				// Adding or removing items for one or more lists
 				if len(diffStrSet(l.Info.Items, r.Info.Items)) != 0 ||
 					len(diffStrSet(r.Info.Items, l.Info.Items)) != 0 {
-					res = append(res, fmt.Sprintf("list '%s' has some item added or removed", l.Info.Name))
+					res = append(res, fmt.Sprintf("List `%s` has some item added or removed", l.Info.Name))
 				}
 			}
 		}
@@ -199,28 +199,47 @@ func compareRulesMinor(left, right *falcoCompareOutput) (res []string) {
 	// todo: Adding a new plugin version requirement in required_plugin_versions
 
 	// Adding one or more lists, macros, or rules
-	if len(diffStrSet(right.RuleNames(), left.RuleNames())) > 0 {
-		res = append(res, "one or more rules have been added")
+	diff := diffStrSet(right.RuleNames(), left.RuleNames())
+	if len(diff) > 0 {
+		for v := range diff {
+			res = append(res, fmt.Sprintf("Rule `%s` has been added", v))
+		}
 	}
-	if len(diffStrSet(right.MacroNames(), left.MacroNames())) > 0 {
-		res = append(res, "one or more macros have been added")
+	diff = diffStrSet(right.MacroNames(), left.MacroNames())
+	if len(diff) > 0 {
+		for v := range diff {
+			res = append(res, fmt.Sprintf("Macro `%s` has been added", v))
+		}
 	}
-	if len(diffStrSet(right.ListNames(), left.ListNames())) > 0 {
-		res = append(res, "one or more lists have been added")
+	diff = diffStrSet(right.ListNames(), left.ListNames())
+	if len(diff) > 0 {
+		for v := range diff {
+			res = append(res, fmt.Sprintf("List `%s` has been added", v))
+		}
 	}
+
 	return
 }
 
 func compareRulesMajor(left, right *falcoCompareOutput) (res []string) {
 	// Renaming or removing a list, macro, or rule
-	if len(diffStrSet(left.RuleNames(), right.RuleNames())) > 0 {
-		res = append(res, "one or more rules have been removed")
+	diff := diffStrSet(left.RuleNames(), right.RuleNames())
+	if len(diff) > 0 {
+		for v := range diff {
+			res = append(res, fmt.Sprintf("Rule `%s` has been removed", v))
+		}
 	}
-	if len(diffStrSet(left.MacroNames(), right.MacroNames())) > 0 {
-		res = append(res, "one or more macros have been removed")
+	diff = diffStrSet(left.MacroNames(), right.MacroNames())
+	if len(diff) > 0 {
+		for v := range diff {
+			res = append(res, fmt.Sprintf("Macro `%s` has been removed", v))
+		}
 	}
-	if len(diffStrSet(left.ListNames(), right.ListNames())) > 0 {
-		res = append(res, "one or more lists have been removed")
+	diff = diffStrSet(left.ListNames(), right.ListNames())
+	if len(diff) > 0 {
+		for v := range diff {
+			res = append(res, fmt.Sprintf("List `%s` has been removed", v))
+		}
 	}
 
 	for _, l := range left.Rules {
@@ -228,27 +247,27 @@ func compareRulesMajor(left, right *falcoCompareOutput) (res []string) {
 			if l.Info.Name == r.Info.Name {
 				// Rule has a different source
 				if l.Info.Source != r.Info.Source {
-					res = append(res, fmt.Sprintf("rule '%s' has different source (before='%s', after='%s')", l.Info.Name, l.Info.Source, r.Info.Source))
+					res = append(res, fmt.Sprintf("Rule `%s` has different source (before='%s', after='%s')", l.Info.Name, l.Info.Source, r.Info.Source))
 				}
 
 				// Disabling at default one or more rules that used to be enabled
 				if l.Info.Enabled && !r.Info.Enabled {
-					res = append(res, fmt.Sprintf("rule '%s' has been disabled by default", l.Info.Name))
+					res = append(res, fmt.Sprintf("Rule `%s` has been disabled at default", l.Info.Name))
 				}
 
 				// Matching less events in a rule condition
 				if len(diffStrSet(l.Details.Events, r.Details.Events)) > 0 {
-					res = append(res, fmt.Sprintf("rule '%s' matches less events than before", l.Info.Name))
+					res = append(res, fmt.Sprintf("Rule `%s` matches less events than before", l.Info.Name))
 				}
 
 				// A rule has less tags than before
 				if len(diffStrSet(l.Info.Tags, r.Info.Tags)) > 0 {
-					res = append(res, fmt.Sprintf("rule '%s' has less tags than before", l.Info.Name))
+					res = append(res, fmt.Sprintf("Rule `%s` has less tags than before", l.Info.Name))
 				}
 
 				// a priority becomes less urgent than before
 				if compareFalcoPriorities(l.Info.Priority, r.Info.Priority) > 0 {
-					res = append(res, fmt.Sprintf("rule '%s' has a less urgent priority than before", l.Info.Name))
+					res = append(res, fmt.Sprintf("Rule `%s` has a less urgent priority than before", l.Info.Name))
 				}
 			}
 		}
@@ -260,7 +279,7 @@ func compareRulesMajor(left, right *falcoCompareOutput) (res []string) {
 				// Matching different events in a macro condition
 				if len(diffStrSet(l.Details.Events, r.Details.Events)) > 0 ||
 					len(diffStrSet(r.Details.Events, l.Details.Events)) > 0 {
-					res = append(res, fmt.Sprintf("macro '%s' matches different events than before", l.Info.Name))
+					res = append(res, fmt.Sprintf("Macro `%s` matches different events than before", l.Info.Name))
 				}
 			}
 		}
@@ -294,7 +313,7 @@ var compareCmd = &cobra.Command{
 
 		diff := compareRulesMajor(leftOutput, rightOutput)
 		if len(diff) > 0 {
-			fmt.Fprintln(cmd.OutOrStdout(), "Major version change detected for the following reasons:")
+			fmt.Fprintln(cmd.OutOrStdout(), "**Major** version bump is required because:")
 			for _, s := range diff {
 				fmt.Fprintln(cmd.OutOrStdout(), "* "+s)
 			}
@@ -303,7 +322,7 @@ var compareCmd = &cobra.Command{
 
 		diff = compareRulesMinor(leftOutput, rightOutput)
 		if len(diff) > 0 {
-			fmt.Fprintln(cmd.OutOrStdout(), "Minor version change detected for the following reasons:")
+			fmt.Fprintln(cmd.OutOrStdout(), "**Minor** version bump is required because:")
 			for _, s := range diff {
 				fmt.Fprintln(cmd.OutOrStdout(), "* "+s)
 			}
@@ -312,7 +331,7 @@ var compareCmd = &cobra.Command{
 
 		diff = compareRulesPatch(leftOutput, rightOutput)
 		if len(diff) > 0 {
-			fmt.Fprintln(cmd.OutOrStdout(), "Patch version change detected for the following reasons:")
+			fmt.Fprintln(cmd.OutOrStdout(), "**Patch** version bump is required because:")
 			for _, s := range diff {
 				fmt.Fprintln(cmd.OutOrStdout(), "* "+s)
 			}
