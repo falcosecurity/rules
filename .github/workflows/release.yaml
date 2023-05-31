@@ -52,9 +52,9 @@ jobs:
 
         # uses OCI_REPO_PREFIX environment variable
         run: >-
-          echo "::set-output name=ARTIFACT_DIGEST::$(
+          echo "ARTIFACT_DIGEST=$(
             build/registry/rules-registry push-to-oci registry.yaml ${{ github.ref_name }}
-          )"
+          )" >> $GITHUB_OUTPUT
       - run: "echo ${{ steps.oci_build.outputs.ARTIFACT_DIGEST }}"
 
       # Create a signature of the rules artifact as OCI artifact
