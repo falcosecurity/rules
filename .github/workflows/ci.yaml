@@ -149,8 +149,16 @@ jobs:
             echo "comment_file=result.txt" >> $GITHUB_OUTPUT
           fi
 
-      - uses: mshick/add-pr-comment@v2
+      - name: Save PR info
+        if: steps.compare.outputs.comment_file != ''
+        run: |
+          mkdir -p ./pr
+          echo ${{ github.event.number }} > ./pr/NR
+          cp ${{ steps.compare.outputs.comment_file }} ./pr/COMMENT
+
+      - name: Upload PR info as artifact
+        uses: actions/upload-artifact@v2
         if: steps.compare.outputs.comment_file != ''
         with:
-          message-path: |
-            ${{ steps.compare.outputs.comment_file }}
+          name: pr
+          path: pr/
