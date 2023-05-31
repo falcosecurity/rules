@@ -3,6 +3,7 @@ module checker
 go 1.19
 
 require (
+	github.com/blang/semver v3.5.1+incompatible
 	github.com/falcosecurity/testing v0.0.0-20230519163006-93666fd8e5c6
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.7.0

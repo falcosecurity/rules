@@ -50,7 +50,22 @@ const sampleFalcoCompareOutput = `{
 		}
 	],
 	"required_engine_version": "13",
-	"required_plugin_versions": [],
+	"required_plugin_versions": [
+		{
+			"alternatives": [
+				{
+					"name": "k8saudit-eks",
+					"version": "0.2.0"
+				}
+			],
+			"name": "k8saudit",
+			"version": "0.6.0"
+		},
+		{
+			"name": "json",
+			"version": "0.7.0"
+		}
+	],
 	"rules": [
 		{
 			"details": {
@@ -87,22 +102,39 @@ func testGetSampleFalcoCompareOutput(t *testing.T) *falcoCompareOutput {
 func TestCompareRulesPatch(t *testing.T) {
 	t.Parallel()
 
-	t.Run("change-required-engine-version", func(t *testing.T) {
+	t.Run("decrement-required-engine-version", func(t *testing.T) {
 		t.Parallel()
-		t.Run("decrement-required-engine-version", func(t *testing.T) {
+		o2 := testGetSampleFalcoCompareOutput(t)
+		o2.RequiredEngineVersion = "0"
+		res := compareRulesPatch(testGetSampleFalcoCompareOutput(t), o2)
+		assert.Len(t, res, 1)
+	})
+
+	t.Run("remove-plugin-version-requirement", func(t *testing.T) {
+		t.Parallel()
+		t.Run("with-alternatives", func(t *testing.T) {
 			t.Parallel()
 			o2 := testGetSampleFalcoCompareOutput(t)
-			o2.RequiredEngineVersion = "0"
+			o2.RequiredPluginVersions = o2.RequiredPluginVersions[1:]
+			res := compareRulesPatch(testGetSampleFalcoCompareOutput(t), o2)
+			assert.Len(t, res, 2)
+		})
+		t.Run("with-no-alternatives", func(t *testing.T) {
+			t.Parallel()
+			o2 := testGetSampleFalcoCompareOutput(t)
+			o2.RequiredPluginVersions = o2.RequiredPluginVersions[:1]
 			res := compareRulesPatch(testGetSampleFalcoCompareOutput(t), o2)
 			assert.Len(t, res, 1)
 		})
-		t.Run("increment-required-engine-version", func(t *testing.T) {
-			t.Parallel()
-			o2 := testGetSampleFalcoCompareOutput(t)
-			o2.RequiredEngineVersion = "100"
-			res := compareRulesMinor(testGetSampleFalcoCompareOutput(t), o2)
-			assert.Len(t, res, 1)
-		})
+	})
+
+	t.Run("add-plugin-version-requirement-alternative", func(t *testing.T) {
+		t.Parallel()
+		o2 := testGetSampleFalcoCompareOutput(t)
+		a := falcoPluginVerReq{Name: "json2", Version: "0.1.0"}
+		o2.RequiredPluginVersions[1].Alternatives = append(o2.RequiredPluginVersions[1].Alternatives, a)
+		res := compareRulesPatch(testGetSampleFalcoCompareOutput(t), o2)
+		assert.Len(t, res, 1)
 	})
 
 	t.Run("change-list", func(t *testing.T) {
@@ -192,6 +224,44 @@ func TestCompareRulesPatch(t *testing.T) {
 
 func TestCompareRulesMinor(t *testing.T) {
 	t.Parallel()
+
+	t.Run("increment-required-engine-version", func(t *testing.T) {
+		t.Parallel()
+		o2 := testGetSampleFalcoCompareOutput(t)
+		o2.RequiredEngineVersion = "100"
+		res := compareRulesMinor(testGetSampleFalcoCompareOutput(t), o2)
+		assert.Len(t, res, 1)
+	})
+
+	t.Run("add-plugin-version-requirement", func(t *testing.T) {
+		t.Parallel()
+		o2 := testGetSampleFalcoCompareOutput(t)
+		dep := falcoPluginVerReqOutput{
+			falcoPluginVerReq: falcoPluginVerReq{Name: "some_other_plugin", Version: "0.1.0"},
+		}
+		o2.RequiredPluginVersions = append(o2.RequiredPluginVersions, dep)
+		res := compareRulesMinor(testGetSampleFalcoCompareOutput(t), o2)
+		assert.Len(t, res, 1)
+	})
+
+	t.Run("increment-plugin-version-requirement", func(t *testing.T) {
+		t.Parallel()
+		t.Run("of alternative", func(t *testing.T) {
+			t.Parallel()
+			o2 := testGetSampleFalcoCompareOutput(t)
+			o2.RequiredPluginVersions[0].Alternatives[0].Version = "10.0.0"
+			res := compareRulesMinor(testGetSampleFalcoCompareOutput(t), o2)
+			assert.Len(t, res, 1)
+		})
+		t.Run("of main requirement", func(t *testing.T) {
+			t.Parallel()
+			o2 := testGetSampleFalcoCompareOutput(t)
+			o2.RequiredPluginVersions[1].Version = "10.0.0"
+			res := compareRulesMinor(testGetSampleFalcoCompareOutput(t), o2)
+			assert.Len(t, res, 1)
+		})
+	})
+
 	t.Run("add-list", func(t *testing.T) {
 		t.Parallel()
 		l := falcoListOutput{}
@@ -241,6 +311,18 @@ func TestCompareRulesMinor(t *testing.T) {
 
 func TestCompareRulesMajor(t *testing.T) {
 	t.Parallel()
+
+	t.Run("remove-plugin-version-requirement", func(t *testing.T) {
+		t.Parallel()
+		t.Run("with-alternatives", func(t *testing.T) {
+			t.Parallel()
+			o2 := testGetSampleFalcoCompareOutput(t)
+			o2.RequiredPluginVersions[0].Alternatives = []falcoPluginVerReq{}
+			res := compareRulesMajor(testGetSampleFalcoCompareOutput(t), o2)
+			assert.Len(t, res, 1)
+		})
+	})
+
 	t.Run("remove-list", func(t *testing.T) {
 		t.Parallel()
 		o2 := testGetSampleFalcoCompareOutput(t)
