@@ -270,7 +270,7 @@ func compareRulesPatch(left, right *falcoCompareOutput) (res []string) {
 				// Adding or removing exceptions for one or more Falco rules
 				if len(diffStrSet(l.Details.Exceptions, r.Details.Exceptions)) != 0 ||
 					len(diffStrSet(r.Details.Exceptions, l.Details.Exceptions)) != 0 {
-					res = append(res, fmt.Sprintf("rule '%s' has some exceptions added or removed", l.Info.Name))
+					res = append(res, fmt.Sprintf("Rule '%s' has some exceptions added or removed", l.Info.Name))
 				}
 
 			}
@@ -297,7 +297,7 @@ func compareRulesMinor(left, right *falcoCompareOutput) (res []string) {
 	l_required_engine_version, _ := strconv.Atoi(left.RequiredEngineVersion)
 	r_required_engine_version, _ := strconv.Atoi(right.RequiredEngineVersion)
 	if compareInt(l_required_engine_version, r_required_engine_version) < 0 {
-		res = append(res, fmt.Sprintf("required engine version was incremented from %s to %s",
+		res = append(res, fmt.Sprintf("Required engine version was incremented from %s to %s",
 			left.RequiredEngineVersion, right.RequiredEngineVersion))
 	}
 
