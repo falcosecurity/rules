@@ -463,29 +463,29 @@ var compareCmd = &cobra.Command{
 
 		diff := compareRulesMajor(leftOutput, rightOutput)
 		if len(diff) > 0 {
-			fmt.Fprintln(cmd.OutOrStdout(), "**Major** version bump is required because:")
+			fmt.Fprintln(cmd.OutOrStdout(), "**Major** changes:")
 			for _, s := range diff {
 				fmt.Fprintln(cmd.OutOrStdout(), "* "+s)
 			}
-			return nil
+			fmt.Fprintln(cmd.OutOrStdout())
 		}
 
 		diff = compareRulesMinor(leftOutput, rightOutput)
 		if len(diff) > 0 {
-			fmt.Fprintln(cmd.OutOrStdout(), "**Minor** version bump is required because:")
+			fmt.Fprintln(cmd.OutOrStdout(), "**Minor** changes:")
 			for _, s := range diff {
 				fmt.Fprintln(cmd.OutOrStdout(), "* "+s)
 			}
-			return nil
+			fmt.Fprintln(cmd.OutOrStdout())
 		}
 
 		diff = compareRulesPatch(leftOutput, rightOutput)
 		if len(diff) > 0 {
-			fmt.Fprintln(cmd.OutOrStdout(), "**Patch** version bump is required because:")
+			fmt.Fprintln(cmd.OutOrStdout(), "**Patch** changes:")
 			for _, s := range diff {
 				fmt.Fprintln(cmd.OutOrStdout(), "* "+s)
 			}
-			return nil
+			fmt.Fprintln(cmd.OutOrStdout())
 		}
 
 		return nil
