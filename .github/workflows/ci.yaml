@@ -65,7 +65,7 @@ jobs:
           while read -r line
           do
             values="${values}${line}"$'\n'
-          done < "./.github/FALCO_VERSION"
+          done < "./.github/FALCO_VERSIONS"
           echo "versions=$(echo "${values}" | jq -R -s -c 'split("\n")[:-2]')" >> $GITHUB_OUTPUT
 
   rules-validate:
