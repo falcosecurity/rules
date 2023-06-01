@@ -56,7 +56,7 @@ jobs:
               values="${values}${changed_file}"
             fi
           done
-          echo "changed-files=$(echo "${values}" | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
+          echo "changed-files=$(echo "${values}" | jq -R -s -c 'split("\n")' | jq -c 'map(select(length > 0))')" >> $GITHUB_OUTPUT
 
       - name: Read Falco versions
         id: set-falco-versions
@@ -66,9 +66,10 @@ jobs:
           do
             values="${values}${line}"$'\n'
           done < "./.github/FALCO_VERSIONS"
-          echo "versions=$(echo "${values}" | jq -R -s -c 'split("\n")[:-2]')" >> $GITHUB_OUTPUT
+          echo "versions=$(echo "${values}" | jq -R -s -c 'split("\n")' | jq -c 'map(select(length > 0))')" >> $GITHUB_OUTPUT
 
   rules-validate:
+    if: needs.rules-get-values.outputs.changed-files != '[]' && needs.rules-get-values.outputs.changed-files != ''
     needs: rules-get-values
     strategy:
       fail-fast: false
@@ -101,6 +102,7 @@ jobs:
               ${{ matrix.rules-file }}
 
   rules-check-version:
+    if: needs.rules-get-values.outputs.changed-files != '[]' && needs.rules-get-values.outputs.changed-files != ''
     needs: rules-get-values
     env:
       # note(jasondellaluce): using the most recent targeted Falco version
