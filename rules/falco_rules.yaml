@@ -1010,9 +1010,8 @@
   priority: WARNING
   tags: [host, container, filesystem, mitre_discovery, mitre_exfiltration, mitre_credential_access, T1555, T1212, T1020, T1552, T1083]
 
-# This rule is disabled by default as many system management tools
+# The rule below is disabled by default as many system management tools
 # like ansible, etc can read these files/paths. Enable it using this macro.
-
 - macro: user_known_read_ssh_information_activities
   condition: (never_true)
 
