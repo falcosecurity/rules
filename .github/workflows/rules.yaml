@@ -78,7 +78,7 @@ jobs:
               --falco-image="falcosecurity/falco-no-driver:${{ matrix.falco-version }}" \
               ${{ matrix.rules-file }}
 
-  rules-check-version:
+  check-version:
     if: needs.get-values.outputs.changed-files != '[]' && needs.get-values.outputs.changed-files != ''
     needs: get-values
     env:
