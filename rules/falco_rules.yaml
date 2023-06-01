@@ -481,7 +481,6 @@
 
 # This rule is not enabled by default, as there are many legitimate
 # readers of shell config files.
-
 - rule: Read Shell Configuration File
   desc: Detect attempts to read shell configuration files by non-shell programs
   condition: >
