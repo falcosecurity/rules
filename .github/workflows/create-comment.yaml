@@ -50,5 +50,5 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: issue_number,
-              body: comment_body
+              body: comment_body.toString('utf8')
             });
