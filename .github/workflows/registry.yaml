@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  registry-validate:
+  validate:
     runs-on: ubuntu-latest
 
     steps:
