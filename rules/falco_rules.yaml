@@ -2061,7 +2061,6 @@
 # In the overridden macro, the condition would look something like
 # (container.image.repository = vendor/container-1 or
 # container.image.repository = vendor/container-2 or ...)
-
 - macro: allowed_containers
   condition: (container.id exists)
 
