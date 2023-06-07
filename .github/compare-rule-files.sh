@@ -34,12 +34,16 @@ $CHECKER_TOOL \
 1>tmp_res.txt
 git switch --detach $cur_branch
 
-if [ -s tmp_res.txt ]; then
-    echo '##' $RULES_FILE >> $RESULT_FILE
-    echo Comparing \`$cur_branch\` with latest tag \`$latest_tag\` >> $RESULT_FILE
-    echo "" >> $RESULT_FILE
+echo '##' $RULES_FILE >> $RESULT_FILE
+echo Comparing \`$cur_branch\` with latest tag \`$latest_tag\` >> $RESULT_FILE
+echo "" >> $RESULT_FILE
+if [ -s tmp_res.txt ]
+then
     cat tmp_res.txt >> $RESULT_FILE
-    echo "" >> $RESULT_FILE
+else
+    echo "No changes detected" >> $RESULT_FILE
 fi
+echo "" >> $RESULT_FILE
+
 rm -f tmp_rule_file.yaml
 rm -f tmp_res.txt
