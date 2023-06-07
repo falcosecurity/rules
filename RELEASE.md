@@ -6,10 +6,37 @@ Official Falcosecurity rules releases are automated using GitHub Actions. Each r
 
 In this repo, each ruleset is a standalone YAML file in the `/rules` directory (e.g. `falco_rules.yaml`, `application_rules.yaml`, ...). Each ruleset is released and versioned individually. When we release a ruleset, we do the following process:
 
-1. Make sure that the `./github/FALCO_VERSIONS` file contains the most recent versions of Falco compatible with the given ruleset. When releasing a ruleset, the versions must be explicit stable Falco releases (e.g. not using `latest` or `master`), so that the new tag will provide an history of the Falco versions on which the ruleset was tested.
-2. Determine a new version for the given ruleset (see the [section below](#versioning-a-ruleset))
+1. Make sure that the `./github/FALCO_VERSIONS` file contains the most recent versions of Falco with which the given ruleset validates successfully.
+  - When releasing a ruleset, the versions must be explicit stable Falco releases (e.g. not using `latest` or `master`), so that the new tag will provide an history of the Falco versions on which the ruleset was tested
+  - If the ruleset does not validate with a stable Falco release (it can happen close to the time of a Falco release), it's ok to use a `master` version, which however needs to be patched with an additional commit [on the ruleset's release branch](#patching-a-ruleset) once the next stable Falco release gets published.
+2. Determine a new version for the given ruleset (see the [section below](#versioning-a-ruleset)).
 3. Create a new Git tag with the name convention `*name*-rules-*version*` (e.g. `falco-rules-0.1.0`, `application-rules-0.1.0`, ...). The naming convention is required due to this repository being a [monorepo](https://en.wikipedia.org/wiki/Monorepo) and in order to be machine-readable.
-4. A GitHub action will validate the repository [registry](./registry.yaml) and release the new OCI artifact in the packages of this repository
+4. A GitHub action will validate the repository [registry](./registry.yaml) and release the new OCI artifact in the packages of this repository.
+
+## Patching a ruleset
+
+Patches on an already-released ruleset can anytime on a per-need basis. Assuming a release Git tag in the form of `*name*-rules-*version*`, with version being in the form of `X.Y.Z` (e.g. `falco-rules-0.1.0`), the process is as follows:
+
+1. If not already created, create a release branch starting from the first tag of the released ruleset.
+  a. Checkout the first ruleset release tag: e.g. `git checkout falco-rules-0.1.0`
+  b. Create a new branch with the naming convention `release/*name*-rules-X.Y.x`, starting from the tag: e.g. `git checkout -b release/falco-rules-0.1.x`
+  c. As for step #1 of the [*Releasing a ruleset section*](#releasing-a-ruleset), make sure that `./github/FALCO_VERSIONS` contains all the **stable** Falco versions with which the ruleset validates successfully, by adding an extra commit to the release branch in case changes are required.
+  d. Open a [PR in falcosecurity/test-infra](https://github.com/falcosecurity/test-infra/edit/master/config/config.yaml) to add `release/*name*-rules-X.Y.x` as protected branch to the `prow/config.yaml`, for example:
+    ```yaml
+    rules:
+      branches:
+        main:
+          protect: true
+        ...
+        "release/falco-rules-0.1.x":
+          protect: true
+    ```
+2. Open one or more PRs agains the release branch of the released ruleset.
+  a. Wait for all the CI checks to pass.
+  b. Check the automatic versioning suggestions provided by the CI (see [an example](https://github.com/falcosecurity/rules/pull/74#issuecomment-1571867580)), and make sure that **only patch changes** are present.
+  c. Considering the automatic versioning suggestions, and at discretion of the domain knowledge of the repository maintainers, decide whether the PR should be merged or not.
+3. Bump the ruleset version **patch** number by 1 and create a new Git tag from the release branch (e.g. `falco-rules-0.1.1`).
+4. A GitHub action will validate the repository [registry](./registry.yaml) and release the new OCI artifact in the packages of this repository.
 
 ## Versioning a ruleset
 
