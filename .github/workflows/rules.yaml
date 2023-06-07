@@ -5,6 +5,9 @@ on:
     branches:
       - main
       - release/*
+  push:
+    branches:
+      - main
 
 jobs:
   # retrieves the changed rules files and the Falco versions to be used
@@ -18,8 +21,9 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Get changed files
-        uses: jitterbit/get-changed-files@v1
         id: changed-files
+        if: github.event_name == 'pull_request'
+        uses: jitterbit/get-changed-files@v1
         with:
           format: space-delimited
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -27,12 +31,19 @@ jobs:
       - name: Find changed rules files
         id: set-changed-files
         run: |
+          # if we skip changed-files because we're not in a pull-request,
+          # then we consider all the rules contained in the repo
+          all_files=${{ steps.changed-files.outputs.all }}
           values=""
-          for changed_file in ${{ steps.changed-files.outputs.all }}; do
-            if [[ ${changed_file} =~ ^rules/.* ]]; then
-              values="${values}${changed_file}"
-            fi
-          done
+          if [ -z $all_files ]; then
+            values=$(ls rules/*.yaml)
+          else
+            for changed_file in $all_files; do
+              if [[ ${changed_file} =~ ^rules/.* ]]; then
+                values="${values}${changed_file}"
+              fi
+            done
+          fi
           echo "changed-files=$(echo "${values}" | jq -R -s -c 'split("\n")' | jq -c 'map(select(length > 0))')" >> $GITHUB_OUTPUT
 
       - name: Read Falco versions
@@ -79,7 +90,7 @@ jobs:
               ${{ matrix.rules-file }}
 
   check-version:
-    if: needs.get-values.outputs.changed-files != '[]' && needs.get-values.outputs.changed-files != ''
+    if: github.event_name == 'pull_request' && needs.get-values.outputs.changed-files != '[]' && needs.get-values.outputs.changed-files != ''
     needs: get-values
     env:
       # note(jasondellaluce): using the most recent targeted Falco version
