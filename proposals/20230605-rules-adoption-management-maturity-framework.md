@@ -42,6 +42,15 @@ Adopters will be presented with clear primary use cases to better understand how
 
 A rules maturity framework will be developed for Falco users to better facilitate the adoption of non-custom rules. This framework ensures a smooth transition for adopters, whether they use rules generically or for specific use cases.
 
+Rules maturity will adopt the [status](https://github.com/falcosecurity/evolution/blob/main/REPOSITORIES.md#status) levels used to indicate the maturity of each repository within The Falco Project, that is, "Stable", "Incubating", "Sandbox", "Deprecated":
+
+- **Stable** (enabled by default) indicates that the rule has been thoroughly evaluated by experts in the field who have hands-on production experience. These experts have determined that the rule addresses a highly relevant threat and recommend that adopters adjust the rule to their specific environment. "Stable" rules embody the utmost best practices and demonstrate optimal robustness in relation to Falco's current capabilities.      
+- **Incubating** (disabled by default) indicates that rules have been identified by experts as catering to more specific use cases that may or may not be relevant for each adopter. However, these rules address relevant threats, provide some level of robustness guarantee, and adhere to best practices in rule writing.    
+- **Sandbox** (disabled by default), indicates that the rule is in an experimental stage. The potential for broader usefulness and relevance of "Sandbox" rules is currently being assessed. The rule can serve as an inspiration and adheres to the minimum acceptance criteria for rules.
+- **Deprecated** (disabled by default), indicates that after re-assessing the rule, it was deemed less applicable to the broader community, and each adopter needs to determine their relevance on their own. These rules are kept as examples, but they are no longer actively supported or tuned by The Falco Project.
+
+> Falco introduces a new key called "maturity" to each rule with levels including "Stable", "Incubating", "Sandbox" and "Deprecated" to guide the adoption process. This key reflects the robustness and relevance of each predefined rule in the [falcosecurity/rules](https://github.com/falcosecurity/rules/blob/main/rules/) repository. Each rule must go through the "Incubating" state before advancing to "Stable" as a minimum requirement. Only "Stable" rules will be enabled by default. 
+
 The maturity level of the rules, however, does not directly reflect their potential for generating noise in the adopters' environment. This is due to the unique and constantly changing nature of each environment, especially in cloud environments, making it challenging to accurately predict the impact of rules.
 
 Newcomers to Falco will be encouraged to start by configuring their setup with introductory rules labeled as "Falco's default rules" (maturity: "Stable"). These rules will be based on syscall and container events and will live in the established [falco_rules.yaml](https://github.com/falcosecurity/rules/blob/main/rules/falco_rules.yaml). 
@@ -50,27 +59,14 @@ As users become more familiar with Falco and better understand their unique envi
 
 Once adopters have integrated the stable default rules with low false positives and acceptable performance consistently, they can add a next set of rules (maturity: "Incubating") for more specific detections. These efforts will be accompanied by guidance on rule customization and broader educational initiatives focusing on Linux OS runtime security.
 
-> Experts in the field, with expertise in areas such as offensive security, Linux kernel tracing, production deployment, cyber security, threat detection, compliance, data analysis, and data science, will be responsible for assessing the maturity level of rules. These experts have a deep familiarity with Falco.
-
-> Rules maturity will adopt the [status](https://github.com/falcosecurity/evolution/blob/main/REPOSITORIES.md#status) levels used to indicate the maturity of each repository within The Falco Project, that is, "Stable", "Incubating", "Sandbox", "Deprecated". Each rule must go through the "Incubating" state before advancing to "Stable" as a minimum requirement. Only "Stable" rules will be enabled by default. 
-
-
-Rules maturity levels:
-
-- **Stable** (enabled by default) indicates that the rule has been thoroughly evaluated by experts in the field who have hands-on production experience. These experts have determined that the rule addresses a highly relevant threat and recommend that adopters adjust the rule to their specific environment. "Stable" rules embody the utmost best practices and demonstrate optimal robustness in relation to Falco's current capabilities.      
-- **Incubating** (disabled by default) indicates that rules have been identified by experts as catering to more specific use cases that may or may not be relevant for each adopter. However, these rules address relevant threats, provide some level of robustness guarantee, and adhere to best practices in rule writing.    
-- **Sandbox** (disabled by default), indicates that the rule is in an experimental stage. The potential for broader usefulness and relevance of "Sandbox" rules is currently being assessed. The rule can serve as an inspiration and adheres to the minimum acceptance criteria for rules.
-- **Deprecated** (disabled by default), indicates that after re-assessing the rule, it was deemed less applicable to the broader community, and each adopter needs to determine their relevance on their own. These rules are kept as examples, but they are no longer actively supported or tuned by The Falco Project.
-
-
-> Falco introduces a new key called "maturity" to each rule with levels including "Stable", "Incubating", "Sandbox" and "Deprecated" to guide the adoption process. This key reflects the robustness and relevance of each predefined rule in the [falcosecurity/rules](https://github.com/falcosecurity/rules/blob/main/rules/) repository, but it does not directly indicate the potential noise it may generate.    
+> Experts in the field, with expertise in areas such as offensive security, Linux kernel tracing, production deployment, cyber security, threat detection, compliance, data analysis, and data science, will be responsible for assessing the maturity level of rules. These experts have a deep familiarity with Falco. 
 
 
 ### Define Rule Contribution Process
 
 A guide will be established to facilitate the contribution of new rules or updates to existing ones. This guide will serve as an extension to the generic Falco [contributing guide](https://github.com/falcosecurity/.github/blob/main/CONTRIBUTING.md). This guide will outline clear acceptance criteria for each maturity level and establish minimum requirements for rule creation. These criteria will be utilized to assess the acceptance or rejection of a rule.
 
-This guide will also include information on how the community is intended to share rules. As a general principle, rhe project's main objective is to curate an optimal set of "Stable" rules that are included in the main [falco_rules.yaml](https://github.com/falcosecurity/rules/blob/main/rules/falco_rules.yaml) file and also published as OCI artifacts. However, there may be opportunities to create additional platforms for ad-hoc rules sharing that do not necessarily need to meet the strict criteria set by the Falco maintainers.
+This guide will also include information on how the community is intended to share rules. As a general principle, the project's main objective is to curate an optimal set of "Stable" rules that are included in the main [falco_rules.yaml](https://github.com/falcosecurity/rules/blob/main/rules/falco_rules.yaml) file and also published as OCI artifacts. However, there may be opportunities to create additional platforms for ad-hoc rules sharing that do not necessarily need to meet the strict criteria set by the Falco maintainers.
 
 
 The minimum criteria for rules creation shall include:
