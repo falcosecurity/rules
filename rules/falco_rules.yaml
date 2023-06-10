@@ -2856,6 +2856,7 @@
 
 - list: https_miner_domains
   items: [
+    "btm.antpool.com",
     "ca.minexmr.com",
     "cn.stratum.slushpool.com",
     "de.minexmr.com",
@@ -2864,16 +2865,16 @@
     "mine.xmrpool.net",
     "pool.minexmr.com",
     "sg.minexmr.com",
+    "ss.antpool.com",
+    "stratum-btm.antpool.com",
+    "stratum-dash.antpool.com",
     "stratum-eth.antpool.com",
     "stratum-ltc.antpool.com",
+    "stratum-xmc.antpool.com",
     "stratum-zec.antpool.com",
     "stratum.antpool.com",
-    "xmr.crypto-pool.fr",
-    "ss.antpool.com",
-    "stratum-dash.antpool.com",
-    "stratum-xmc.antpool.com",
-    "stratum-btm.antpool.com",
-    "btm.antpool.com"
+    "stratum.zetahash.com",
+    "xmr.crypto-pool.fr"
   ]
 
 - list: http_miner_domains
@@ -2884,6 +2885,9 @@
     "mine.moneropool.com",
     "mine.xmrpool.net",
     "pool.minexmr.com",
+    "pool.pkt.world",
+    "pool.pkteer.com",
+    "pool.pktpool.io",
     "sg.minexmr.com",
     "xmr.crypto-pool.fr"
   ]
