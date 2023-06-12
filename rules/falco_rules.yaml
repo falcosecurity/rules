@@ -496,30 +496,6 @@
     WARNING
   tags: [host, container, filesystem, mitre_discovery, T1546.004]
 
-# List of allowed container images that are known to execute binaries not part of their base image.
-# Users can use this list to better tune the rule below (i.e reducing false positives) by considering their workloads, 
-# since this requires application specific knowledge.
-- list: known_drop_and_execute_containers
-  items: []
-
-- rule: Drop and execute new binary in container
-  desc:
-    Detect if an executable not belonging to the base image of a container is being executed.
-    The drop and execute pattern can be observed very often after an attacker gained an initial foothold.
-    is_exe_upper_layer filter field only applies for container runtimes that use overlayfs as union mount filesystem.
-  condition: >
-    spawned_process
-    and container
-    and proc.is_exe_upper_layer=true 
-    and not container.image.repository in (known_drop_and_execute_containers)
-  output: > 
-    Executing binary not part of base image (user=%user.name user_loginuid=%user.loginuid user_uid=%user.uid comm=%proc.cmdline exe=%proc.exe container_id=%container.id
-    image=%container.image.repository proc.name=%proc.name proc.sname=%proc.sname proc.pname=%proc.pname proc.aname[2]=%proc.aname[2] exe_flags=%evt.arg.flags
-    proc.exe_ino=%proc.exe_ino proc.exe_ino.ctime=%proc.exe_ino.ctime proc.exe_ino.mtime=%proc.exe_ino.mtime proc.exe_ino.ctime_duration_proc_start=%proc.exe_ino.ctime_duration_proc_start
-    proc.exepath=%proc.exepath proc.cwd=%proc.cwd proc.tty=%proc.tty container.start_ts=%container.start_ts proc.sid=%proc.sid proc.vpgid=%proc.vpgid evt.res=%evt.res)
-  priority: CRITICAL 
-  tags: [container, mitre_persistence, TA0003]
-
 - macro: user_known_cron_jobs
   condition: (never_true)
 
@@ -3416,6 +3392,30 @@
   output: "File execution detected from /dev/shm (proc.cmdline=%proc.cmdline connection=%fd.name user.name=%user.name user.loginuid=%user.loginuid container.id=%container.id evt.type=%evt.type evt.res=%evt.res proc.pid=%proc.pid proc.cwd=%proc.cwd proc.ppid=%proc.ppid proc.pcmdline=%proc.pcmdline proc.sid=%proc.sid proc.exepath=%proc.exepath user.uid=%user.uid user.loginname=%user.loginname group.gid=%group.gid group.name=%group.name container.name=%container.name image=%container.image.repository)"
   priority: WARNING
   tags: [host, container, mitre_execution, mitre_defense_evasion, T1036.005, T1059.004]
+  
+# List of allowed container images that are known to execute binaries not part of their base image.
+# Users can use this list to better tune the rule below (i.e reducing false positives) by considering their workloads, 
+# since this requires application specific knowledge.
+- list: known_drop_and_execute_containers
+  items: []
+
+- rule: Drop and execute new binary in container
+  desc:
+    Detect if an executable not belonging to the base image of a container is being executed.
+    The drop and execute pattern can be observed very often after an attacker gained an initial foothold.
+    is_exe_upper_layer filter field only applies for container runtimes that use overlayfs as union mount filesystem.
+  condition: >
+    spawned_process
+    and container
+    and proc.is_exe_upper_layer=true 
+    and not container.image.repository in (known_drop_and_execute_containers)
+  output: > 
+    Executing binary not part of base image (user=%user.name user_loginuid=%user.loginuid user_uid=%user.uid comm=%proc.cmdline exe=%proc.exe container_id=%container.id
+    image=%container.image.repository proc.name=%proc.name proc.sname=%proc.sname proc.pname=%proc.pname proc.aname[2]=%proc.aname[2] exe_flags=%evt.arg.flags
+    proc.exe_ino=%proc.exe_ino proc.exe_ino.ctime=%proc.exe_ino.ctime proc.exe_ino.mtime=%proc.exe_ino.mtime proc.exe_ino.ctime_duration_proc_start=%proc.exe_ino.ctime_duration_proc_start
+    proc.exepath=%proc.exepath proc.cwd=%proc.cwd proc.tty=%proc.tty container.start_ts=%container.start_ts proc.sid=%proc.sid proc.vpgid=%proc.vpgid evt.res=%evt.res)
+  priority: CRITICAL 
+  tags: [container, mitre_persistence, TA0003]
 
 # Application rules have moved to application_rules.yaml. Please look
 # there if you want to enable them by adding to
