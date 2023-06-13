@@ -1534,7 +1534,7 @@
     and not user_known_db_spawned_processes
   output: >
     Database-related program spawned process other than itself (user=%user.name user_loginuid=%user.loginuid
-    program=%proc.cmdline pid=%proc.pid parent=%proc.pname container_id=%container.id image=%container.image.repository)
+    program=%proc.cmdline pid=%proc.pid parent=%proc.pname container_id=%container.id image=%container.image.repository exe_flags=%evt.arg.flags)
   priority: NOTICE
   tags: [host, container, process, database, mitre_execution, T1190]
 
@@ -1752,7 +1752,7 @@
   output: >
     Shell spawned by untrusted binary (user=%user.name user_loginuid=%user.loginuid shell=%proc.name parent=%proc.pname
     cmdline=%proc.cmdline pid=%proc.pid pcmdline=%proc.pcmdline gparent=%proc.aname[2] ggparent=%proc.aname[3]
-    aname[4]=%proc.aname[4] aname[5]=%proc.aname[5] aname[6]=%proc.aname[6] aname[7]=%proc.aname[7] container_id=%container.id image=%container.image.repository)
+    aname[4]=%proc.aname[4] aname[5]=%proc.aname[5] aname[6]=%proc.aname[6] aname[7]=%proc.aname[7] container_id=%container.id image=%container.image.repository exe_flags=%evt.arg.flags)
   priority: DEBUG
   tags: [host, container, process, shell, mitre_execution, T1059.004]
 
@@ -2057,7 +2057,7 @@
 - rule: System user interactive
   desc: an attempt to run interactive commands by a system (i.e. non-login) user
   condition: spawned_process and system_users and interactive and not user_known_system_user_login
-  output: "System user ran an interactive command (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid container_id=%container.id image=%container.image.repository)"
+  output: "System user ran an interactive command (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid container_id=%container.id image=%container.image.repository exe_flags=%evt.arg.flags)"
   priority: INFO
   tags: [host, container, users, mitre_execution, T1059]
 
@@ -2075,7 +2075,7 @@
     and not user_expected_terminal_shell_in_container_conditions
   output: >
     A shell was spawned in a container with an attached terminal (user=%user.name user_loginuid=%user.loginuid %container.info
-    shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline pid=%proc.pid terminal=%proc.tty container_id=%container.id image=%container.image.repository)
+    shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline pid=%proc.pid terminal=%proc.tty container_id=%container.id image=%container.image.repository exe_flags=%evt.arg.flags)
   priority: NOTICE
   tags: [container, shell, mitre_execution, T1059]
 
@@ -2190,7 +2190,7 @@
   enabled: false
   output: >
     Program run with disallowed HTTP_PROXY environment variable
-    (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid env=%proc.env parent=%proc.pname container_id=%container.id image=%container.image.repository)
+    (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid env=%proc.env parent=%proc.pname container_id=%container.id image=%container.image.repository exe_flags=%evt.arg.flags)
   priority: NOTICE
   tags: [host, container, users, mitre_command_and_control, T1090, T1204]
 
@@ -2348,7 +2348,7 @@
     not user_known_user_management_activities
   output: >
     User management binary command run outside of container
-    (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])
+    (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] exe_flags=%evt.arg.flags)
   priority: NOTICE
   tags: [host, container, users, software_mgmt, mitre_persistence, T1543, T1098]
 
@@ -2516,7 +2516,7 @@
     and not pkg_mgmt_in_kube_proxy
   output: >
     Package management process launched in container (user=%user.name user_loginuid=%user.loginuid
-    command=%proc.cmdline pid=%proc.pid container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
+    command=%proc.cmdline pid=%proc.pid container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag exe_flags=%evt.arg.flags)
   priority: ERROR
   tags: [container, process, software_mgmt, mitre_persistence, T1505]
 
@@ -2530,7 +2530,7 @@
     )
   output: >
     Netcat runs inside container that allows remote code execution (user=%user.name user_loginuid=%user.loginuid
-    command=%proc.cmdline pid=%proc.pid container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
+    command=%proc.cmdline pid=%proc.pid container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag exe_flags=%evt.arg.flags)
   priority: WARNING
   tags: [container, network, process, mitre_execution, T1059]
 
@@ -2543,7 +2543,7 @@
     spawned_process and container and network_tool_procs and not user_known_network_tool_activities
   output: >
     Network tool launched in container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid parent_process=%proc.pname
-    container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
+    container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag exe_flags=%evt.arg.flags)
   priority: NOTICE
   tags: [container, network, process, mitre_discovery, mitre_exfiltration, T1595, T1046]
 
@@ -2562,7 +2562,7 @@
     network_tool_procs and
     not user_known_network_tool_activities
   output: >
-    Network tool launched on host (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid parent_process=%proc.pname)
+    Network tool launched on host (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid parent_process=%proc.pname exe_flags=%evt.arg.flags)
   priority: NOTICE
   tags: [host, network, process, mitre_discovery, mitre_exfiltration, T1595, T1046]
 
@@ -2606,7 +2606,7 @@
   output: >
     Grep private keys or passwords activities found
     (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid container_id=%container.id container_name=%container.name
-    image=%container.image.repository:%container.image.tag)
+    image=%container.image.repository:%container.image.tag exe_flags=%evt.arg.flags)
   priority:
     WARNING
   tags: [host, container, process, filesystem, mitre_credential_access, T1552.001]
@@ -2657,7 +2657,7 @@
   desc: Detect process running to clear bulk data from disk
   condition: spawned_process and clear_data_procs and not user_known_remove_data_activities
   output: >
-    Bulk data has been removed from disk (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid file=%fd.name container_id=%container.id image=%container.image.repository)
+    Bulk data has been removed from disk (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid file=%fd.name container_id=%container.id image=%container.image.repository exe_flags=%evt.arg.flags)
   priority:
     WARNING
   tags: [host, container, process, filesystem, mitre_persistence, T1485]
@@ -2711,7 +2711,7 @@
     ((spawned_process and proc.name in (shred, rm, mv) and proc.args contains "bash_history") or
      (open_write and fd.name contains "bash_history" and evt.arg.flags contains "O_TRUNC"))
   output: >
-    Shell history had been deleted or renamed (user=%user.name user_loginuid=%user.loginuid type=%evt.type command=%proc.cmdline pid=%proc.pid fd.name=%fd.name name=%evt.arg.name path=%evt.arg.path oldpath=%evt.arg.oldpath %container.info)
+    Shell history had been deleted or renamed (user=%user.name user_loginuid=%user.loginuid type=%evt.type command=%proc.cmdline pid=%proc.pid fd.name=%fd.name name=%evt.arg.name path=%evt.arg.path oldpath=%evt.arg.oldpath exe_flags=%evt.arg.flags %container.info)
   priority:
     WARNING
   tags: [host, container, process, filesystem, mitre_defense_evasion, T1070]
@@ -2786,7 +2786,7 @@
     and not user_known_remote_file_copy_activities
   output: >
     Remote file copy tool launched in container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid parent_process=%proc.pname
-    container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
+    container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag exe_flags=%evt.arg.flags)
   priority: NOTICE
   tags: [container, network, process, mitre_lateral_movement, mitre_exfiltration, T1020, T1210]
 
@@ -2918,7 +2918,7 @@
 - rule: Detect crypto miners using the Stratum protocol
   desc: Miners typically specify the mining pool to connect to with a URI that begins with 'stratum+tcp'
   condition: spawned_process and (proc.cmdline contains "stratum+tcp" or proc.cmdline contains "stratum2+tcp" or proc.cmdline contains "stratum+ssl" or proc.cmdline contains "stratum2+ssl")
-  output: Possible miner running (command=%proc.cmdline pid=%proc.pid container=%container.info image=%container.image.repository)
+  output: Possible miner running (command=%proc.cmdline pid=%proc.pid container=%container.info image=%container.image.repository exe_flags=%evt.arg.flags)
   priority: CRITICAL
   tags: [host, container, process, mitre_execution, T1496]
 
@@ -3165,7 +3165,7 @@
   desc: Detected container running as root user
   condition: spawned_process and container and proc.vpid=1 and user.uid=0 and not user_known_run_as_root_container
   enabled: false
-  output: Container launched with root user privilege (uid=%user.uid container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
+  output: Container launched with root user privilege (uid=%user.uid container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag exe_flags=%evt.arg.flags)
   priority: INFO
   tags: [container, process, users, mitre_execution, T1610]
 
@@ -3174,7 +3174,7 @@
 - rule: Sudo Potential Privilege Escalation
   desc: Privilege escalation vulnerability affecting sudo (<= 1.9.5p2). Executing sudo using sudoedit -s or sudoedit -i command with command-line argument that ends with a single backslash character from an unprivileged user it's possible to elevate the user privileges to root.
   condition: spawned_process and user.uid != 0 and (proc.name=sudoedit or proc.name = sudo) and (proc.args contains -s or proc.args contains -i or proc.args contains --login) and (proc.args contains "\ " or proc.args endswith \)
-  output: "Detect Sudo Privilege Escalation Exploit (CVE-2021-3156) (user=%user.name parent=%proc.pname cmdline=%proc.cmdline pid=%proc.pid %container.info)"
+  output: "Detect Sudo Privilege Escalation Exploit (CVE-2021-3156) (user=%user.name parent=%proc.pname cmdline=%proc.cmdline pid=%proc.pid exe_flags=%evt.arg.flags %container.info)"
   priority: CRITICAL
   tags: [host, container, filesystem, users, mitre_privilege_escalation, T1548.003]
 
@@ -3184,7 +3184,7 @@
     spawned_process and container
     and container.privileged=true
     and proc.name=debugfs
-  output: Debugfs launched started in a privileged container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid %container.info image=%container.image.repository:%container.image.tag)
+  output: Debugfs launched started in a privileged container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid %container.info image=%container.image.repository:%container.image.tag exe_flags=%evt.arg.flags)
   priority: WARNING
   tags: [container, cis, process, mitre_execution, mitre_lateral_movement, T1611]
 
@@ -3214,7 +3214,7 @@
     and not known_gke_mount_in_privileged_containers
     and not known_aks_mount_in_privileged_containers
     and not user_known_mount_in_privileged_containers
-  output: Mount was executed inside a privileged container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid %container.info image=%container.image.repository:%container.image.tag)
+  output: Mount was executed inside a privileged container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid %container.info image=%container.image.repository:%container.image.tag exe_flags=%evt.arg.flags)
   priority: WARNING
   tags: [container, cis, filesystem, mitre_lateral_movement, T1611]
 
@@ -3259,7 +3259,7 @@
     not user_known_ingress_remote_file_copy_activities
   output: >
     Ingress remote file copy tool launched in container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid parent_process=%proc.pname
-    container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
+    container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag exe_flags=%evt.arg.flags)
   priority: NOTICE
   tags: [container, network, process, mitre_command_and_control, TA0011]
 
@@ -3270,7 +3270,7 @@
   condition:
     spawned_process and user.uid != 0 and proc.name=pkexec and proc.args = ''
   output:
-    "Detect Polkit pkexec Local Privilege Escalation Exploit (CVE-2021-4034) (user=%user.loginname uid=%user.loginuid command=%proc.cmdline pid=%proc.pid args=%proc.args)"
+    "Detect Polkit pkexec Local Privilege Escalation Exploit (CVE-2021-4034) (user=%user.loginname uid=%user.loginuid command=%proc.cmdline pid=%proc.pid args=%proc.args exe_flags=%evt.arg.flags)"
   priority: CRITICAL
   tags: [host, container, process, users, mitre_privilege_escalation, TA0004]
 
@@ -3374,7 +3374,7 @@
     spawned_process and
     ((grep_commands and private_aws_credentials) or
     (proc.name = "find" and proc.args endswith ".aws/credentials"))
-  output: Detected AWS credentials search activity (user.name=%user.name user.loginuid=%user.loginuid proc.cmdline=%proc.cmdline container.id=%container.id container_name=%container.name evt.type=%evt.type evt.res=%evt.res proc.pid=%proc.pid proc.cwd=%proc.cwd proc.ppid=%proc.ppid proc.pcmdline=%proc.pcmdline proc.sid=%proc.sid proc.exepath=%proc.exepath user.uid=%user.uid user.loginname=%user.loginname group.gid=%group.gid group.name=%group.name container.name=%container.name image=%container.image.repository:%container.image.tag)
+  output: Detected AWS credentials search activity (user.name=%user.name user.loginuid=%user.loginuid proc.cmdline=%proc.cmdline container.id=%container.id container_name=%container.name evt.type=%evt.type evt.res=%evt.res proc.pid=%proc.pid proc.cwd=%proc.cwd proc.ppid=%proc.ppid proc.pcmdline=%proc.pcmdline proc.sid=%proc.sid proc.exepath=%proc.exepath user.uid=%user.uid user.loginname=%user.loginname group.gid=%group.gid group.name=%group.name container.name=%container.name image=%container.image.repository:%container.image.tag exe_flags=%evt.arg.flags)
   priority: WARNING
   tags: [host, container, mitre_credential_access, process, aws, T1552]
 
@@ -3389,7 +3389,7 @@
     (shell_procs and proc.args startswith "/dev/shm") or 
     (proc.cwd startswith "/dev/shm/" and proc.args startswith "./" )) and 
     not container.image.repository in (falco_privileged_images, trusted_images)
-  output: "File execution detected from /dev/shm (proc.cmdline=%proc.cmdline connection=%fd.name user.name=%user.name user.loginuid=%user.loginuid container.id=%container.id evt.type=%evt.type evt.res=%evt.res proc.pid=%proc.pid proc.cwd=%proc.cwd proc.ppid=%proc.ppid proc.pcmdline=%proc.pcmdline proc.sid=%proc.sid proc.exepath=%proc.exepath user.uid=%user.uid user.loginname=%user.loginname group.gid=%group.gid group.name=%group.name container.name=%container.name image=%container.image.repository)"
+  output: "File execution detected from /dev/shm (proc.cmdline=%proc.cmdline connection=%fd.name user.name=%user.name user.loginuid=%user.loginuid container.id=%container.id evt.type=%evt.type evt.res=%evt.res proc.pid=%proc.pid proc.cwd=%proc.cwd proc.ppid=%proc.ppid proc.pcmdline=%proc.pcmdline proc.sid=%proc.sid proc.exepath=%proc.exepath user.uid=%user.uid user.loginname=%user.loginname group.gid=%group.gid group.name=%group.name container.name=%container.name image=%container.image.repository exe_flags=%evt.arg.flags)"
   priority: WARNING
   tags: [host, container, mitre_execution, mitre_defense_evasion, T1036.005, T1059.004]
   
