@@ -3426,23 +3426,20 @@
   condition: (proc.name contains NettyServer and proc.env contains ROCKETMQ)
 
 - macro: rocketmq_check_payload_for_conf_update
-  condition: (evt.type=read and evt.buffer contains 'code":25' and evt.buffer contains serializeTypeCurrentRPC and evt.buffer contains JSON)
+  condition: ((fd.typechar='4' or fd.typechar='6') and evt.type=read and evt.buffer contains 'code":25' and evt.buffer contains serializeTypeCurrentRPC and evt.buffer contains JSON)
 
 - rule: Apache Rocketmq CVE-2023-33246 Exploit Detection
   desc: >
     CVE-2023-33246 is exploited at the function used to update configuration & can be detected by looking at the buffer for broker code-25 and serializeTypeCurrentRPC function.
   condition: >
-    rocketmq_check_netty_server  and rocketmq_check_payload_for_conf_update
+    rocketmq_check_netty_server and rocketmq_check_payload_for_conf_update and evt.dir=<
   output: exploit detected CVE-2023-33246 (event=%evt.type server_ip=%fd.sip server_port=%fd.sport proto=%fd.l4proto parent=%proc.pname process=%proc.name command=%proc.cmdline container_id=%container.id)
   priority: CRITICAL
-  tags: [host, CVE_2023_33246, rocketmq, apache,Mitre_Initial_Access, Mitre_Execution,TA0001, TA0002, T1133, T1059]
+  tags: [host, container, CVE_2023_33246, rocketmq, apache,Mitre_Initial_Access, Mitre_Execution,TA0001, TA0002, T1133, T1059]
 
 
 - macro: rocketmq_check_env_variable
   condition: (proc.env contains ROCKETMQ)
-
-- macro: check_file_openat
-  condition: (fd.type=file and evt.type=openat)
 
 - macro: rocketmq_check_properties_file_write_conf
   condition: (fd.nameraw contains conf and fd.nameraw endswith '.properties')
@@ -3451,7 +3448,7 @@
   desc: >
     Look for the file ends with '.properties' created under folder 'CONF' upon exploit attempt
   condition: >
-    rocketmq_check_env_variable and check_file_openat and rocketmq_check_properties_file_write_conf
+    rocketmq_check_env_variable and open_write and rocketmq_check_properties_file_write_conf and evt.dir=<
   output: CVE-2023-33246 exploit attempt detected (event=%evt.type filepath=%fd.name server_ip=%fd.sip server_port=%fd.sport proto=%fd.l4proto parent=%proc.pname process=%proc.name command=%proc.cmdline container_id=%container.id)
   priority: WARNING
-  tags: [host, CVE_2023_33246, rocketmq, apache,Mitre_Initial_Access, Mitre_Execution,TA0001, TA0002, T1133, T1059]
+  tags: [host, container, CVE_2023_33246, rocketmq, apache,Mitre_Initial_Access, Mitre_Execution,TA0001, TA0002, T1133, T1059]
