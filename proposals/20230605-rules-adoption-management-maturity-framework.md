@@ -95,7 +95,7 @@ The minimum criteria for rules creation shall include:
 
 *Correctness*
 
-The rule must be both syntactically and grammatically correct and should evaluate to true during successful end-to-end tests. Furthermore, it needs to accurately detect the intended cyber threats, specifically the Tactics, Techniques, and Procedures (TTPs).
+The rule must be both syntactically and grammatically correct and should evaluate to true during successful end-to-end tests. Furthermore, it needs to accurately detect the intended cyber threats, specifically the Tactics, Techniques, and Procedures (TTPs) aligned with the [Mitre ATT&CK](https://attack.mitre.org/) framework. To ensure this, a new [Mitre Checker Module](https://github.com/falcosecurity/rules/issues/88) will be utilized to audit the correct Mitre tags and references.
 
 
 *Robustness*
