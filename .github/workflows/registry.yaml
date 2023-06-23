@@ -1,11 +1,12 @@
-name: CI
+name: Registry
 
 on:
   pull_request:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
-  check-registry:
+  validate:
     runs-on: ubuntu-latest
 
     steps:
@@ -20,6 +21,10 @@ jobs:
       - name: Build registry artifact tool
         working-directory: build/registry
         run: go build -o rules-registry ./...
+      
+      - name: Test registry artifact tool
+        working-directory: build/registry
+        run: go test ./... -cover
 
       - name: Check Registry validity
         run: build/registry/rules-registry check registry.yaml

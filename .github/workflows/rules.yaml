@@ -1,0 +1,154 @@
+name: Rules
+
+on:
+  pull_request:
+    branches:
+      - main
+      - release/*
+  push:
+    branches:
+      - main
+
+jobs:
+  # retrieves the changed rules files and the Falco versions to be used
+  get-values:
+    runs-on: ubuntu-latest
+    outputs:
+      changed-files: ${{ steps.set-changed-files.outputs.changed-files }}
+      falco-versions: ${{ steps.set-falco-versions.outputs.versions }}
+    steps:
+      - name: Checkout rules
+        uses: actions/checkout@v3
+
+      - name: Get changed files
+        id: changed-files
+        if: github.event_name == 'pull_request'
+        uses: jitterbit/get-changed-files@v1
+        with:
+          format: space-delimited
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Find changed rules files
+        id: set-changed-files
+        run: |
+          # if we skip changed-files because we're not in a pull-request,
+          # then we consider all the rules contained in the repo
+          all_files=${{ steps.changed-files.outputs.all }}
+          values=""
+          if [ -z $all_files ]; then
+            values=$(ls rules/*.yaml)
+          else
+            for changed_file in $all_files; do
+              if [[ ${changed_file} =~ ^rules/.* ]]; then
+                values="${values}${changed_file}"
+              fi
+            done
+          fi
+          echo "changed-files=$(echo "${values}" | jq -R -s -c 'split("\n")' | jq -c 'map(select(length > 0))')" >> $GITHUB_OUTPUT
+
+      - name: Read Falco versions
+        id: set-falco-versions
+        run: |
+          values=""
+          while read -r line
+          do
+            values="${values}${line}"$'\n'
+          done < "./.github/FALCO_VERSIONS"
+          echo "versions=$(echo "${values}" | jq -R -s -c 'split("\n")' | jq -c 'map(select(length > 0))')" >> $GITHUB_OUTPUT
+
+  validate:
+    if: needs.get-values.outputs.changed-files != '[]' && needs.get-values.outputs.changed-files != ''
+    needs: get-values
+    strategy:
+      fail-fast: false
+      matrix:
+        rules-file: ${{ fromJson(needs.get-values.outputs.changed-files) }}
+        falco-version: ${{ fromJson(needs.get-values.outputs.falco-versions) }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Golang
+        uses: actions/setup-go@v3
+        with:
+          go-version: '^1.19'
+
+      - name: Checkout rules
+        uses: actions/checkout@v3
+
+      - name: Build checker tool
+        working-directory: build/checker
+        run: go build -o rules-check
+      
+      - name: Test checker tool
+        working-directory: build/checker
+        run: go test ./... -cover
+
+      - name: Validate rules file
+        run: |
+          build/checker/rules-check \
+              validate \
+              --falco-image="falcosecurity/falco-no-driver:${{ matrix.falco-version }}" \
+              ${{ matrix.rules-file }}
+
+  check-version:
+    if: github.event_name == 'pull_request' && needs.get-values.outputs.changed-files != '[]' && needs.get-values.outputs.changed-files != ''
+    needs: get-values
+    env:
+      # note(jasondellaluce): using the most recent targeted Falco version
+      FALCO_VERSION: ${{ fromJson(needs.get-values.outputs.falco-versions)[0] }}
+    strategy:
+      fail-fast: false
+      matrix:
+        rules-file: ${{ fromJson(needs.get-values.outputs.changed-files) }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Golang
+        uses: actions/setup-go@v3
+        with:
+          go-version: '^1.19'
+
+      - name: Checkout rules
+        uses: actions/checkout@v3
+
+      - name: Get all git tags
+        run: git fetch --tags origin
+
+      - name: Get changed files
+        uses: jitterbit/get-changed-files@v1
+        id: changed
+        with:
+          format: space-delimited
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build checker tool
+        working-directory: build/checker
+        run: go build -o rules-check
+      
+      - name: Test checker tool
+        working-directory: build/checker
+        run: go test ./... -cover
+
+      - name: Compare changed files with previous versions
+        id: compare
+        run: |
+          ./.github/compare-rule-files.sh \
+              ${{ matrix.rules-file }} \
+              result.txt \
+              build/checker/rules-check \
+              "falcosecurity/falco-no-driver:$FALCO_VERSION"
+          if [ -s result.txt ]; then
+            echo "comment_file=result.txt" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Save PR info
+        if: steps.compare.outputs.comment_file != ''
+        run: |
+          mkdir -p ./pr
+          echo ${{ github.event.number }} > ./pr/NR
+          cp ${{ steps.compare.outputs.comment_file }} ./pr/COMMENT
+
+      - name: Upload PR info as artifact
+        uses: actions/upload-artifact@v2
+        if: steps.compare.outputs.comment_file != ''
+        with:
+          name: pr
+          path: pr/
