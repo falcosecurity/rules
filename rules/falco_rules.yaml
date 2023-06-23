@@ -83,7 +83,7 @@
   condition: (evt.type in (execve, execveat) and evt.dir=<)
 
 - macro: successful_spawned_process
-  condition: (evt.type in (execve, execveat) and evt.dir=< and evt.arg.res=0)  
+  condition: (evt.type in (execve, execveat) and evt.dir=< and evt.rawarg.res=0)  
 
 - macro: create_symlink
   condition: (evt.type in (symlink, symlinkat) and evt.dir=<)
