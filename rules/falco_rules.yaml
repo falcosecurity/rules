@@ -3198,8 +3198,8 @@
 
 - macro: known_aks_mount_in_privileged_containers
   condition:
-    (k8s.ns.name = kube-system and container.image.repository = mcr.microsoft.com/oss/kubernetes-csi/azuredisk-csi
-    or k8s.ns.name = system and container.image.repository = mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver)
+    ((k8s.ns.name = kube-system and container.image.repository in (mcr.microsoft.com/oss/kubernetes-csi/azuredisk-csi,mcr.microsoft.com/oss/kubernetes-csi/azurefile-csi))
+    or (k8s.ns.name = system and container.image.repository = mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver))
 
 - macro: user_known_mount_in_privileged_containers
   condition: (never_true)
