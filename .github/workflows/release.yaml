@@ -59,14 +59,11 @@ jobs:
 
       # Create a signature of the rules artifact as OCI artifact
       - name: Install Cosign
-        uses: sigstore/cosign-installer@main
+        uses: sigstore/cosign-installer@v3.1.0
         with:
-          cosign-release: 'v2.0.2'
+          cosign-release: 'v2.1.0'
       - run: cosign version
       - name: Sign the images with GitHub OIDC Token
-        env:
-          # Add support for OCI v1.1
-          COSIGN_EXPERIMENTAL: 1
         run: cosign sign --yes ${OCI_REGISTRY}/${{ github.repository }}/${ARTIFACT_NAME}@${{ steps.oci_build.outputs.ARTIFACT_DIGEST }}
 
       - name: Configure AWS credentials
