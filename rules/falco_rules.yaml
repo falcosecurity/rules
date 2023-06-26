@@ -3430,7 +3430,7 @@
 - rule: Fortra Goanywhere Managed File Transfer (MFT) CVE-2023-0669 Exploit Detection
   desc: Possible CVE-2023-0669 exploit observed from Request URI '/lic/accept' (License Response Servlet) with POST method having a serialized payload in the Body. 
   condition: >
-    evt.dir=< and check_goanywhereMFT_fingerprint and check_process_goanywhere and evt.args contains POST and evt.args contains /lic/accept and evt.args contains 'bundle='
+    evt.typ=read and evt.dir=< and check_goanywhereMFT_fingerprint and check_process_goanywhere and evt.args contains POST and evt.args contains /lic/accept and evt.args contains 'bundle='
   enabled: true
   output: "CVE-2023-0669 exploit attempt detected (user.name=%user.name user.loginuid=%user.loginuid proc.exeline=%proc.exeline proc.name=%proc.name proc.cwd=%proc.cwd container.id=%container.id evt.args=%evt.args)"
   priority: CRITICAL
@@ -3443,7 +3443,7 @@
 - rule: Fortra Goanywhere MFT Possible Command Injection Detection
   desc: Detecting possible command injection through Goanywhere MFT exploit (false positives may appear)
   condition: >
-    evt.dir=< and check_goanywhereMFT_fingerprint and check_process_goanywhere and shell_access and syscall.type=execve
+    syscall.type=execve and evt.dir=< and check_goanywhereMFT_fingerprint and check_process_goanywhere and shell_access 
   output: "Possible Command Injection through Goanywhere MFT (user.name=%user.name user.loginuid=%user.loginuid proc.exeline=%proc.exeline proc.name=%proc.pid proc.cwd=%proc.cwd container.id=%container.id)"
   priority: WARNING
   tags: [host, container, anomaly, CVE_2023_0669, goanywhere_mft, Mitre_Initial_Access, T1190]
