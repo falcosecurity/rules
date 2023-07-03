@@ -29,8 +29,8 @@ git checkout tags/$latest_tag
 $CHECKER_TOOL \
     compare \
     --falco-image=$FALCO_DOCKER_IMAGE \
-    $RULES_FILE \
-    tmp_rule_file.yaml \
+    -l $RULES_FILE \
+    -r tmp_rule_file.yaml \
 1>tmp_res.txt
 git switch --detach $cur_branch
 
