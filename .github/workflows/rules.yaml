@@ -87,7 +87,7 @@ jobs:
           build/checker/rules-check \
               validate \
               --falco-image="falcosecurity/falco-no-driver:${{ matrix.falco-version }}" \
-              ${{ matrix.rules-file }}
+              -r ${{ matrix.rules-file }}
 
   check-version:
     if: github.event_name == 'pull_request' && needs.get-values.outputs.changed-files != '[]' && needs.get-values.outputs.changed-files != ''
