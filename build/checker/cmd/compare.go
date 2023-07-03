@@ -152,36 +152,50 @@ func (f *falcoCompareOutput) RuleNames() []string {
 	return names
 }
 
-func getCompareOutput(falcoImage, ruleFile string) (*falcoCompareOutput, error) {
+func getCompareOutput(falcoImage, configFile string, ruleFiles, extraFiles []string) (*falcoCompareOutput, error) {
+	testOptions := []falco.TestOption{
+		falco.WithOutputJSON(),
+		falco.WithOutputJSON(),
+		falco.WithArgs("-L"),
+	}
+
+	for _, rf := range ruleFiles {
+		f := run.NewLocalFileAccessor(rf, rf)
+		testOptions = append(testOptions, falco.WithRules(f))
+	}
+
+	if len(configFile) > 0 {
+		f := run.NewLocalFileAccessor(configFile, configFile)
+		testOptions = append(testOptions, falco.WithConfig(f))
+	}
+
+	for _, ef := range extraFiles {
+		f := run.NewLocalFileAccessor(ef, ef)
+		testOptions = append(testOptions, falco.WithExtraFiles(f))
+	}
+
 	// run falco and collect/print validation issues
 	runner, err := run.NewDockerRunner(falcoImage, defaultFalcoDockerEntrypoint, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	// todo(jasondellaluce): we need to resolve plugin dependencies by
-	//   - running falcoctl before
-	//   - crafting a plugin config that loads the required plugins
-	res := falco.Test(
-		runner,
-		falco.WithRules(run.NewLocalFileAccessor(ruleFile, ruleFile)),
-		falco.WithOutputJSON(),
-		falco.WithArgs("-L"),
-	)
+	res := falco.Test(runner, testOptions...)
 
 	// collect errors
 	err = errAppend(err, res.Err())
 	if res.ExitCode() != 0 {
 		err = errAppend(err, fmt.Errorf("unexpected exit code (%d)", res.ExitCode()))
 	}
+
+	// unmarshal json output
+	var out falcoCompareOutput
+	err = json.Unmarshal(([]byte)(res.Stdout()), &out)
 	if err != nil {
 		logrus.Info(res.Stderr())
 		return nil, err
 	}
 
-	// unmarshal json output
-	var out falcoCompareOutput
-	err = json.Unmarshal(([]byte)(res.Stdout()), &out)
 	if err != nil {
 		return nil, err
 	}
@@ -442,8 +456,18 @@ var compareCmd = &cobra.Command{
 	// todo: load more than one rules files both on left and right
 	Short: "Compare two rules files and suggest version changes",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if len(args) < 2 {
-			return fmt.Errorf("you must specify at least two rules file")
+		leftRules, err := cmd.Flags().GetStringArray("left")
+		if err != nil {
+			return err
+		}
+
+		rightRules, err := cmd.Flags().GetStringArray("right")
+		if err != nil {
+			return err
+		}
+
+		if len(leftRules) == 0 || len(rightRules) == 0 {
+			return fmt.Errorf("you must specify at least one rules file for both the left-hand and right-hand sides of comparison")
 		}
 
 		falcoImage, err := cmd.Flags().GetString("falco-image")
@@ -451,12 +475,22 @@ var compareCmd = &cobra.Command{
 			return err
 		}
 
-		leftOutput, err := getCompareOutput(falcoImage, args[0])
+		falcoConfigPath, err := cmd.Flags().GetString("config")
 		if err != nil {
 			return err
 		}
 
-		rightOutput, err := getCompareOutput(falcoImage, args[1])
+		falcoFilesPaths, err := cmd.Flags().GetStringArray("file")
+		if err != nil {
+			return err
+		}
+
+		leftOutput, err := getCompareOutput(falcoImage, falcoConfigPath, leftRules, falcoFilesPaths)
+		if err != nil {
+			return err
+		}
+
+		rightOutput, err := getCompareOutput(falcoImage, falcoConfigPath, rightRules, falcoFilesPaths)
 		if err != nil {
 			return err
 		}
@@ -494,5 +528,9 @@ var compareCmd = &cobra.Command{
 
 func init() {
 	compareCmd.Flags().StringP("falco-image", "i", defaultFalcoDockerImage, "Docker image of Falco to be used for validation")
+	compareCmd.Flags().StringP("config", "c", "", "Config file to be used for running Falco")
+	compareCmd.Flags().StringArrayP("file", "f", []string{}, "Extra files required by Falco for running")
+	compareCmd.Flags().StringArrayP("left", "l", []string{}, "Rules files to be loaded for the left-hand side of the comparison")
+	compareCmd.Flags().StringArrayP("right", "r", []string{}, "Rules files to be loaded for the right-hand side of the comparison")
 	rootCmd.AddCommand(compareCmd)
 }
