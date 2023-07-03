@@ -24,11 +24,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func init() {
-	validateCmd.Flags().StringP("falco-image", "i", defaultFalcoDockerImage, "Docker image of Falco to be used for validation")
-	rootCmd.AddCommand(validateCmd)
-}
-
 var validateCmd = &cobra.Command{
 	Use:   "validate",
 	Short: "Validate one or more rules file with a given Falco version",
@@ -47,25 +42,47 @@ var validateCmd = &cobra.Command{
 			ruleFiles = append(ruleFiles, run.NewLocalFileAccessor(arg, arg))
 		}
 
-		// todo(jasondellaluce): we need to resolve plugin dependencies by
-		//   - running falcoctl before
-		//   - crafting a plugin config that loads the required plugins
+		falcoTestOptions := []falco.TestOption{
+			falco.WithOutputJSON(),
+			falco.WithRulesValidation(ruleFiles...),
+		}
+
+		falcoConfigPath, err := cmd.Flags().GetString("config")
+		if err != nil {
+			return err
+		}
+		if len(falcoConfigPath) > 0 {
+			config := run.NewLocalFileAccessor(falcoConfigPath, falcoConfigPath)
+			falcoTestOptions = append(falcoTestOptions, falco.WithConfig(config))
+		}
+
+		falcoFilesPaths, err := cmd.Flags().GetStringArray("file")
+		if err != nil {
+			return err
+		}
+		if len(falcoFilesPaths) > 0 {
+			for _, path := range falcoFilesPaths {
+				file := run.NewLocalFileAccessor(path, path)
+				falcoTestOptions = append(falcoTestOptions, falco.WithExtraFiles(file))
+			}
+		}
 
 		// run falco and collect/print validation issues
 		runner, err := run.NewDockerRunner(falcoImage, defaultFalcoDockerEntrypoint, nil)
 		if err != nil {
 			return err
 		}
-		res := falco.Test(
-			runner,
-			falco.WithOutputJSON(),
-			falco.WithRulesValidation(ruleFiles...),
-		)
-		for _, r := range res.RuleValidation().Results {
-			if !r.Successful || len(r.Errors) > 0 || len(r.Warnings) > 0 {
-				err = errAppend(err, fmt.Errorf("rules validation had warning or errors"))
-				fmt.Fprintln(cmd.OutOrStdout(), res.Stdout())
-				break
+
+		res := falco.Test(runner, falcoTestOptions...)
+		if res.RuleValidation() == nil {
+			err = errAppend(err, fmt.Errorf("rules validation command failed"))
+		} else {
+			for _, r := range res.RuleValidation().Results {
+				if !r.Successful || len(r.Errors) > 0 || len(r.Warnings) > 0 {
+					err = errAppend(err, fmt.Errorf("rules validation had warning or errors"))
+					fmt.Fprintln(cmd.OutOrStdout(), res.Stdout())
+					break
+				}
 			}
 		}
 
@@ -79,4 +96,11 @@ var validateCmd = &cobra.Command{
 		}
 		return err
 	},
+}
+
+func init() {
+	validateCmd.Flags().StringP("falco-image", "i", defaultFalcoDockerImage, "Docker image of Falco to be used for validation")
+	validateCmd.Flags().StringP("config", "c", "", "Config file to be used for running Falco")
+	validateCmd.Flags().StringArrayP("file", "f", []string{}, "Extra files required by Falco for running")
+	rootCmd.AddCommand(validateCmd)
 }
