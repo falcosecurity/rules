@@ -28,18 +28,24 @@ var validateCmd = &cobra.Command{
 	Use:   "validate",
 	Short: "Validate one or more rules file with a given Falco version",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if len(args) == 0 {
-			return fmt.Errorf("you must specify at least one rules file")
-		}
-
 		falcoImage, err := cmd.Flags().GetString("falco-image")
 		if err != nil {
 			return err
 		}
 
+		rulesFilesPaths, err := cmd.Flags().GetStringArray("rule")
+		if err != nil {
+			return err
+		}
+
+		if len(rulesFilesPaths) == 0 {
+			return fmt.Errorf("you must specify at least one rules file")
+		}
+
 		var ruleFiles []run.FileAccessor
-		for _, arg := range args {
-			ruleFiles = append(ruleFiles, run.NewLocalFileAccessor(arg, arg))
+		for _, rf := range rulesFilesPaths {
+			f := run.NewLocalFileAccessor(rf, rf)
+			ruleFiles = append(ruleFiles, f)
 		}
 
 		falcoTestOptions := []falco.TestOption{
@@ -102,5 +108,6 @@ func init() {
 	validateCmd.Flags().StringP("falco-image", "i", defaultFalcoDockerImage, "Docker image of Falco to be used for validation")
 	validateCmd.Flags().StringP("config", "c", "", "Config file to be used for running Falco")
 	validateCmd.Flags().StringArrayP("file", "f", []string{}, "Extra files required by Falco for running")
+	validateCmd.Flags().StringArrayP("rule", "r", []string{}, "Rules files to be validated by Falco")
 	rootCmd.AddCommand(validateCmd)
 }
