@@ -1,16 +1,18 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 RULES_FILE=$1
 RESULT_FILE=$2
 CHECKER_TOOL=$3
 FALCO_DOCKER_IMAGE=$4
 
+set -e pipefail
+
 rm -f $RESULT_FILE
 touch $RESULT_FILE
 
 cur_branch=`git rev-parse HEAD`
 echo Current branch is \"$cur_branch\"
-echo Checking version for $RULES_FILE...
+echo Checking version for rules file \"$RULES_FILE\"...
 cp $RULES_FILE tmp_rule_file.yaml
 
 rules_name=`echo $RULES_FILE | sed -re 's/rules\/(.*)_rules\.yaml/\1/'`
@@ -26,6 +28,7 @@ else
 fi
 
 git checkout tags/$latest_tag
+chmod +x $CHECKER_TOOL
 $CHECKER_TOOL \
     compare \
     --falco-image=$FALCO_DOCKER_IMAGE \
@@ -34,7 +37,7 @@ $CHECKER_TOOL \
 1>tmp_res.txt
 git switch --detach $cur_branch
 
-echo '##' $RULES_FILE >> $RESULT_FILE
+echo '##' $(basename $RULES_FILE) >> $RESULT_FILE
 echo Comparing \`$cur_branch\` with latest tag \`$latest_tag\` >> $RESULT_FILE
 echo "" >> $RESULT_FILE
 if [ -s tmp_res.txt ]
