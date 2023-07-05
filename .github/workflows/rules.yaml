@@ -143,12 +143,46 @@ jobs:
         if: steps.compare.outputs.comment_file != ''
         run: |
           mkdir -p ./pr
-          echo ${{ github.event.number }} > ./pr/NR
-          cp ${{ steps.compare.outputs.comment_file }} ./pr/COMMENT
+          cp ${{ steps.compare.outputs.comment_file }} ./pr/COMMENT-${{ strategy.job-index }}
 
       - name: Upload PR info as artifact
         uses: actions/upload-artifact@v2
         if: steps.compare.outputs.comment_file != ''
         with:
+          name: pr-${{ strategy.job-index }}
+          path: pr/
+          retention-days: 1
+
+  upload-pr-info:
+    needs: [get-values, check-version]
+    if: github.event_name == 'pull_request' && needs.get-values.outputs.changed-files != '[]' && needs.get-values.outputs.changed-files != ''
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download PR infos
+        uses: actions/download-artifact@v3
+        with:
+          path: tmp-artifacts
+      
+      - name: Save PR info
+        run: |
+          mkdir -p ./pr
+          echo ${{ github.event.number }} > ./pr/NR
+          touch ./pr/COMMENT
+          echo "# Rules files suggestions" >> ./pr/COMMENT
+          echo "" >> ./pr/COMMENT
+          files=$(find ./tmp-artifacts/)
+          for file in $files; do
+            if [[ $file =~ "COMMENT" ]]; then
+              cat $file >> ./pr/COMMENT
+            fi
+          done
+          echo Uploading PR info...
+          cat ./pr/COMMENT
+          echo ""
+
+      - name: Upload PR info as artifact
+        uses: actions/upload-artifact@v2
+        with:
           name: pr
           path: pr/
+          retention-days: 1
