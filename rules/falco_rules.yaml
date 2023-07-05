@@ -1422,7 +1422,6 @@
 #
 # In this file, it just takes one of the macros in the base rule
 # and repeats it.
-
 - macro: user_read_sensitive_file_conditions
   condition: cmp_cp_by_passwd
 
