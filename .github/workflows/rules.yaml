@@ -23,7 +23,7 @@ jobs:
       - name: Get changed files
         id: changed-files
         if: github.event_name == 'pull_request'
-        uses: jitterbit/get-changed-files@v1
+        uses: Ana06/get-changed-files@v2.2.0
         with:
           format: space-delimited
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -33,7 +33,7 @@ jobs:
         run: |
           # if we skip changed-files because we're not in a pull-request,
           # then we consider all the rules contained in the repo
-          all_files=${{ steps.changed-files.outputs.all }}
+          all_files="${{ steps.changed-files.outputs.all }}"
           values=""
           if [ -z $all_files ]; then
             values=$(ls rules/*.yaml)
@@ -113,7 +113,7 @@ jobs:
         run: git fetch --tags origin
 
       - name: Get changed files
-        uses: jitterbit/get-changed-files@v1
+        uses: Ana06/get-changed-files@v2.2.0
         id: changed
         with:
           format: space-delimited
