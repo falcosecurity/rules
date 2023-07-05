@@ -48,5 +48,16 @@ else
 fi
 echo "" >> $RESULT_FILE
 
+if $(git branch --show-current | grep -q "release/"); then
+    if $(cat $RESULT_FILE | grep -q "\*\*Minor\*\* changes") || $(cat $RESULT_FILE | grep -q "\*\*Major\*\* changes"); then
+        echo "**Notes**:" >> $RESULT_FILE
+        echo "" >> $RESULT_FILE
+        echo "This PR proposes merging major or minor changes into a release branch. Please make sure this is intentional. cc @falcosecurity/rules-maintainers" >> $RESULT_FILE
+        echo "" >> $RESULT_FILE
+        echo "/hold" >> $RESULT_FILE
+        echo "" >> $RESULT_FILE
+    fi
+fi
+
 rm -f tmp_rule_file.yaml
 rm -f tmp_res.txt
