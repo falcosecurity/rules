@@ -1607,7 +1607,7 @@
     Namespace change (setns) by unexpected program (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid
     parent=%proc.pname %container.info container_id=%container.id image=%container.image.repository:%container.image.tag)
   priority: NOTICE
-  tags: [maturity_sandbox, host, container, process, mitre_privilege_escalation, mitre_lateral_movement, T1611]
+  tags: [maturity_incubating, host, container, process, mitre_privilege_escalation, mitre_lateral_movement, T1611]
 
 # The binaries in this list and their descendents are *not* allowed
 # spawn shells. This includes the binaries spawning shells directly as
@@ -2741,7 +2741,7 @@
     command=%proc.cmdline pid=%proc.pid container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority:
     NOTICE
-  tags: [maturity_sandbox, host, container, process, users, mitre_persistence, T1548.001]
+  tags: [maturity_incubating, host, container, process, users, mitre_persistence, T1548.001]
 
 - list: exclude_hidden_directories
   items: [/root/.cassandra]
@@ -2997,7 +2997,7 @@
      image=%container.image.repository namespace=%k8s.ns.name
      fd.rip.name=%fd.rip.name fd.lip.name=%fd.lip.name fd.cip.name=%fd.cip.name fd.sip.name=%fd.sip.name)
   priority: WARNING
-  tags: [maturity_sandbox, container, network, mitre_discovery, T1046]
+  tags: [maturity_incubating, container, network, mitre_discovery, T1046]
 
 - list: allowed_image
   items: [] # add image to monitor, i.e.: bitnami/nginx
