@@ -20,7 +20,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/falcosecurity/falcoctl/pkg/index"
+	"github.com/falcosecurity/falcoctl/pkg/index/index"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -62,7 +62,7 @@ func Test_upsertIndex(t *testing.T) {
 			upsertIndex(r, tt.ociArtifacts, i)
 
 			if !reflect.DeepEqual(i, expectedIndex) {
-				t.Errorf("index() = %v, want %v", i, expectedIndex)
+				t.Errorf("index() = %#v, want %v", i, expectedIndex)
 			}
 		})
 	}

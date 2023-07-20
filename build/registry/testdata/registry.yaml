@@ -11,6 +11,10 @@ rulesfiles:
     keywords:
       - falco
     url: https://github.com/falcosecurity/rules/blob/main/rules/falco_rules.yaml
+    signature:
+      cosign:
+        certificate-oidc-issuer: https://token.actions.githubusercontent.com
+        certificate-identity-regexp: https://github.com/falcosecurity/rules/
   - name: applications
     description: Application rules
     authors: The Falco Authors
@@ -21,3 +25,7 @@ rulesfiles:
     path: rules/application_rules.yaml
     url: https://github.com/falcosecurity/rules/blob/main/rules/application_rules.yaml
     license: apache-2.0
+    signature:
+      cosign:
+        certificate-oidc-issuer: https://token.actions.githubusercontent.com
+        certificate-identity-regexp: https://github.com/falcosecurity/rules/

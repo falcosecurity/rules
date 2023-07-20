@@ -21,7 +21,7 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/falcosecurity/falcoctl/pkg/index"
+	"github.com/falcosecurity/falcoctl/pkg/index/index"
 	"gopkg.in/yaml.v2"
 )
 
