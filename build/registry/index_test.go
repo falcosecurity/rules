@@ -32,11 +32,25 @@ func Test_upsertIndex(t *testing.T) {
 		indexPath         string
 		expectedIndexPath string
 	}{
-		{"missing", "testdata/registry.yaml", map[string]string{"falco": "ghcr.io/falcosecurity/rules/falco"}, "testdata/index1.yaml", "testdata/index_expected1.yaml"},
-		{"already_present", "testdata/registry.yaml", map[string]string{"falco": "ghcr.io/falcosecurity/rules/falco"}, "testdata/index2.yaml", "testdata/index2.yaml"},
+		{
+			"missing",
+			"testdata/registry.yaml",
+			map[string]string{"falco": "ghcr.io/falcosecurity/rules/falco"},
+			"testdata/index1.yaml",
+			"testdata/index_expected1.yaml",
+		},
+		{
+			"already_present",
+			"testdata/registry.yaml",
+			map[string]string{"falco": "ghcr.io/falcosecurity/rules/falco"},
+			"testdata/index2.yaml",
+			"testdata/index2.yaml",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			i := index.New(GHOrg)
 			assert.NoError(t, i.Read(tt.indexPath))
 			expectedIndex := index.New(GHOrg)
@@ -51,5 +65,22 @@ func Test_upsertIndex(t *testing.T) {
 				t.Errorf("index() = %v, want %v", i, expectedIndex)
 			}
 		})
+	}
+}
+
+func TestPluginRulesToIndexEntrySignature(t *testing.T) {
+	t.Parallel()
+
+	signature := &index.Signature{
+		Cosign: &index.CosignSignature{},
+	}
+
+	expected := signature
+
+	p := Rulesfile{Signature: signature}
+
+	entry := pluginRulesToIndexEntry(p, "", "")
+	if !reflect.DeepEqual(entry.Signature, expected) {
+		t.Fatalf("Index entry signature: expected %#v, got %v", expected, entry.Signature)
 	}
 }

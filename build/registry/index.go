@@ -40,6 +40,7 @@ func pluginRulesToIndexEntry(rf Rulesfile, registry, repo string) *index.Entry {
 		License:     rf.License,
 		Maintainers: rf.Maintainers,
 		Sources:     []string{rf.URL},
+		Signature:   rf.Signature,
 	}
 }
 
