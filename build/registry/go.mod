@@ -3,7 +3,7 @@ module registry
 go 1.19
 
 require (
-	github.com/aws/aws-sdk-go v1.44.183
+	github.com/aws/aws-sdk-go v1.44.288
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/falcosecurity/falcoctl v0.5.1
 	github.com/spf13/cobra v1.7.0
