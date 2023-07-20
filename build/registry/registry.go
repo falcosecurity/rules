@@ -21,6 +21,7 @@ import (
 	"os"
 	"regexp"
 
+	"github.com/falcosecurity/falcoctl/pkg/index"
 	"gopkg.in/yaml.v2"
 )
 
@@ -37,12 +38,13 @@ type Rulesfile struct {
 		Email string `yaml:"email"`
 		Name  string `yaml:"name"`
 	} `yaml:"maintainers"`
-	Keywords []string `yaml:"keywords"`
-	Path     string   `yaml:"path"`
-	URL      string   `yaml:"url"`
-	License  string   `yaml:"license"`
-	Reserved bool     `yaml:"reserved"`
-	Archived bool     `yaml:"archived"`
+	Keywords  []string         `yaml:"keywords"`
+	Path      string           `yaml:"path"`
+	URL       string           `yaml:"url"`
+	License   string           `yaml:"license"`
+	Reserved  bool             `yaml:"reserved"`
+	Archived  bool             `yaml:"archived"`
+	Signature *index.Signature `yaml:"signature,omitempty"`
 }
 
 type Registry struct {
