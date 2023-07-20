@@ -47,3 +47,7 @@
       name: The Falco Authors
   sources:
     - https://github.com/falcosecurity/rules/blob/main/rules/falco_rules.yaml
+  signature:
+    cosign:
+      certificate-oidc-issuer: https://token.actions.githubusercontent.com
+      certificate-identity-regexp: https://github.com/falcosecurity/rules/
