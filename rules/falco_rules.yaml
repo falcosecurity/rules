@@ -2535,7 +2535,7 @@
     rule as it utilizes a different evt.type.
   condition: >
     spawned_process and container and
-    ((proc.name = "nc" and (proc.args contains "-e" or proc.args contains "-c")) or
+    ((proc.name = "nc" and (proc.cmdline contains " -e" or proc.cmdline contains " -c")) or
      (proc.name = "ncat" and (proc.args contains "--sh-exec" or proc.args contains "--exec" or proc.args contains "-e "
                               or proc.args contains "-c " or proc.args contains "--lua-exec"))
     )
