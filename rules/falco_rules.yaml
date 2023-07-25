@@ -2329,7 +2329,7 @@
     Unexpected setuid call by non-sudo, non-root program (user=%user.name user_loginuid=%user.loginuid cur_uid=%user.uid parent=%proc.pname
     command=%proc.cmdline pid=%proc.pid uid=%evt.arg.uid container_id=%container.id image=%container.image.repository)
   priority: NOTICE
-  tags: [host, container, users, mitre_privilege_escalation, T1548.001]
+  tags: [maturity_incubating, host, container, users, mitre_privilege_escalation, T1548.001]
 
 - macro: user_known_user_management_activities
   condition: (never_true)
@@ -2535,7 +2535,7 @@
     Package management process launched in container (user=%user.name user_loginuid=%user.loginuid
     command=%proc.cmdline pid=%proc.pid container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag exe_flags=%evt.arg.flags)
   priority: ERROR
-  tags: [container, process, software_mgmt, mitre_persistence, T1505]
+  tags: [maturity_incubating, container, process, software_mgmt, mitre_persistence, T1505]
 
 - rule: Netcat Remote Code Execution in Container
   desc: > 
@@ -2633,7 +2633,7 @@
     image=%container.image.repository:%container.image.tag exe_flags=%evt.arg.flags)
   priority:
     WARNING
-  tags: [host, container, process, filesystem, mitre_credential_access, T1552.001]
+  tags: [maturity_incubating, host, container, process, filesystem, mitre_credential_access, T1552.001]
 
 - list: log_directories
   items: [/var/log, /dev/log]
@@ -2725,7 +2725,7 @@
     Shell history had been deleted or renamed (user=%user.name user_loginuid=%user.loginuid type=%evt.type command=%proc.cmdline pid=%proc.pid fd.name=%fd.name name=%evt.arg.name path=%evt.arg.path oldpath=%evt.arg.oldpath %container.info)
   priority:
     WARNING
-  tags: [host, container, process, filesystem, mitre_defense_evasion, T1070]
+  tags: [maturity_incubating, host, container, process, filesystem, mitre_defense_evasion, T1070]
 
 # This rule is deprecated and will/should never be triggered. Keep it here for backport compatibility.
 # Rule Delete or rename shell history is the preferred rule to use now.
@@ -3446,7 +3446,7 @@
     (proc.name = "find" and proc.args endswith ".aws/credentials"))
   output: Detected AWS credentials search activity (user.name=%user.name user.loginuid=%user.loginuid proc.cmdline=%proc.cmdline container.id=%container.id container_name=%container.name evt.type=%evt.type evt.res=%evt.res proc.pid=%proc.pid proc.cwd=%proc.cwd proc.ppid=%proc.ppid proc.pcmdline=%proc.pcmdline proc.sid=%proc.sid proc.exepath=%proc.exepath user.uid=%user.uid user.loginname=%user.loginname group.gid=%group.gid group.name=%group.name container.name=%container.name image=%container.image.repository:%container.image.tag exe_flags=%evt.arg.flags)
   priority: WARNING
-  tags: [host, container, mitre_credential_access, process, aws, T1552]
+  tags: [maturity_incubating, host, container, process, aws, mitre_credential_access, T1552]
 
 - rule: Execution from /dev/shm
   desc: This rule detects file execution from the /dev/shm directory, a common tactic for threat actors to stash their readable+writable+(sometimes)executable files.
