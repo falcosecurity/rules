@@ -1522,7 +1522,7 @@
   condition: (proc.aname[2]=rabbitmqctl and proc.cmdline startswith "sh -c ")
 
 - macro: run_by_appdynamics
-  condition: (proc.pname=java and proc.pcmdline startswith "java -jar -Dappdynamics")
+  condition: (proc.pexe endswith java and proc.pcmdline contains " -jar -Dappdynamics")
 
 - macro: user_known_db_spawned_processes
   condition: (never_true)
@@ -1627,31 +1627,31 @@
     ]
 
 - macro: parent_java_running_zookeeper
-  condition: (proc.pname=java and proc.pcmdline contains org.apache.zookeeper.server)
+  condition: (proc.pexe endswith java and proc.pcmdline contains org.apache.zookeeper.server)
 
 - macro: parent_java_running_kafka
-  condition: (proc.pname=java and proc.pcmdline contains kafka.Kafka)
+  condition: (proc.pexe endswith java and proc.pcmdline contains kafka.Kafka)
 
 - macro: parent_java_running_elasticsearch
-  condition: (proc.pname=java and proc.pcmdline contains org.elasticsearch.bootstrap.Elasticsearch)
+  condition: (proc.pexe endswith java and proc.pcmdline contains org.elasticsearch.bootstrap.Elasticsearch)
 
 - macro: parent_java_running_activemq
-  condition: (proc.pname=java and proc.pcmdline contains activemq.jar)
+  condition: (proc.pexe endswith java and proc.pcmdline contains activemq.jar)
 
 - macro: parent_java_running_cassandra
-  condition: (proc.pname=java and (proc.pcmdline contains "-Dcassandra.config.loader" or proc.pcmdline contains org.apache.cassandra.service.CassandraDaemon))
+  condition: (proc.pexe endswith java and (proc.pcmdline contains "-Dcassandra.config.loader" or proc.pcmdline contains org.apache.cassandra.service.CassandraDaemon))
 
 - macro: parent_java_running_jboss_wildfly
-  condition: (proc.pname=java and proc.pcmdline contains org.jboss)
+  condition: (proc.pexe endswith java and proc.pcmdline contains org.jboss)
 
 - macro: parent_java_running_glassfish
-  condition: (proc.pname=java and proc.pcmdline contains com.sun.enterprise.glassfish)
+  condition: (proc.pexe endswith java and proc.pcmdline contains com.sun.enterprise.glassfish)
 
 - macro: parent_java_running_hadoop
-  condition: (proc.pname=java and proc.pcmdline contains org.apache.hadoop)
+  condition: (proc.pexe endswith java and proc.pcmdline contains org.apache.hadoop)
 
 - macro: parent_java_running_datastax
-  condition: (proc.pname=java and proc.pcmdline contains com.datastax)
+  condition: (proc.pexe endswith java and proc.pcmdline contains com.datastax)
 
 - macro: nginx_starting_nginx
   condition: (proc.pname=nginx and proc.cmdline contains "/usr/sbin/nginx -c /etc/nginx/nginx.conf")
@@ -1698,7 +1698,7 @@
 #
 # Like for node, we make this case opt-in.
 - macro: possibly_parent_java_running_tomcat
-  condition: (never_true and proc.pname=java and proc.pcmdline contains org.apache.catalina.startup.Bootstrap)
+  condition: (never_true and proc.pexe endswith java and proc.pcmdline contains org.apache.catalina.startup.Bootstrap)
 
 - macro: protected_shell_spawner
   condition: >
