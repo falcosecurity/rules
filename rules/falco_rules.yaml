@@ -2459,7 +2459,10 @@
   condition: (never_true)
 
 - rule: Contact K8S API Server From Container
-  desc: Detect attempts to contact the K8S API Server from a container
+  desc: >
+    Detect attempts to contact the K8S API Server from a container by non-profiled users. 
+    Kubernetes APIs allow configuring the Kubernetes cluster management lifecycle. 
+    Detecting possible unauthorized access is crucial.
   condition: >
     evt.type=connect and evt.dir=< and
     (fd.typechar=4 or fd.typechar=6) and
@@ -2467,9 +2470,12 @@
     not k8s_containers and
     k8s_api_server and
     not user_known_contact_k8s_api_server_activities
-  output: Unexpected connection to K8s API Server from container (command=%proc.cmdline pid=%proc.pid %container.info image=%container.image.repository:%container.image.tag connection=%fd.name)
+  output: >
+    Unexpected connection to K8s API Server from container (proc_exepath=%proc.exepath parent=%proc.pname 
+    command=%proc.cmdline pid=%proc.pid container_info=%container.info image=%container.image.repository:%container.image.tag 
+    namespace=%k8s.ns.name pod_name=%k8s.pod.name connection=%fd.name terminal=%proc.tty)
   priority: NOTICE
-  tags: [network, k8s, container, mitre_discovery, T1565]
+  tags: [maturity_stable, container, network, k8s, mitre_discovery, T1565]
 
 # In a local/user rules file, list the container images that are
 # allowed to contact NodePort services from within a container. This
@@ -3204,14 +3210,20 @@
   tags: [host, container, filesystem, users, mitre_privilege_escalation, T1548.003]
 
 - rule: Debugfs Launched in Privileged Container
-  desc: Detect file system debugger debugfs launched inside a privileged container which might lead to container escape.
+  desc: > 
+    Detect file system debugger debugfs launched inside a privileged container which might 
+    lead to container escape.
   condition: >
     spawned_process and container
     and container.privileged=true
     and proc.name=debugfs
-  output: Debugfs launched started in a privileged container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid %container.info image=%container.image.repository:%container.image.tag exe_flags=%evt.arg.flags)
+  output: > 
+    Debugfs launched started in a privileged container (user=%user.name user_uid=%user.uid 
+    user_loginuid=%user.loginuid parent=%proc.pname command=%proc.cmdline pid=%proc.pid 
+    container_info=%container.info image=%container.image.repository:%container.image.tag 
+    namespace=%k8s.ns.name pod_name=%k8s.pod.name exe_flags=%evt.arg.flags terminal=%proc.tty)
   priority: WARNING
-  tags: [container, cis, process, mitre_execution, mitre_lateral_movement, T1611]
+  tags: [maturity_stable, container, cis, process, mitre_privilege_escalation, T1611]
 
 - macro: mount_info
   condition: (proc.args="" or proc.args intersects ("-V", "-l", "-h"))
@@ -3299,15 +3311,21 @@
   priority: CRITICAL
   tags: [host, container, process, users, mitre_privilege_escalation, TA0004]
 
-
 - rule: Detect release_agent File Container Escapes
-  desc: "This rule detect an attempt to exploit a container escape using release_agent file. By running a container with certains capabilities, a privileged user can modify release_agent file and escape from the container"
+  desc: > 
+    Detect an attempt to exploit a container escape using release_agent file. 
+    By running a container with certains capabilities, a privileged user can modify 
+    release_agent file and escape from the container.
   condition:
     open_write and container and fd.name endswith release_agent and (user.uid=0 or thread.cap_effective contains CAP_DAC_OVERRIDE) and thread.cap_effective contains CAP_SYS_ADMIN
-  output:
-    "Detect an attempt to exploit a container escape using release_agent file (user=%user.name user_loginuid=%user.loginuid filename=%fd.name %container.info image=%container.image.repository:%container.image.tag cap_effective=%thread.cap_effective)"
+  output: >
+    Detect an attempt to exploit a container escape using release_agent file (user=%user.name 
+    user_uid=%user.uid user_loginuid=%user.loginuid filename=%fd.name parent=%proc.pname 
+    cmdline=%proc.cmdline terminal=%proc.tty container_info=%container.info 
+    image=%container.image.repository:%container.image.tag namespace=%k8s.ns.name 
+    pod_name=%k8s.pod.name cap_effective=%thread.cap_effective)
   priority: CRITICAL
-  tags: [container, process, mitre_privilege_escalation, mitre_lateral_movement, T1611]
+  tags: [maturity_stable, container, process, mitre_privilege_escalation, T1611]
 
 # Rule for detecting potential Log4Shell (CVE-2021-44228) exploitation
 # Note: Not compatible with Java 17+, which uses read() syscalls
@@ -3369,21 +3387,33 @@
     evt.arg.request contains PTRACE_SETREGS)
 
 - rule: PTRACE attached to process
-  desc: "This rule detects an attempt to inject code into a process using PTRACE."
+  desc: > 
+    Detect an attempt to inject potentially malicious code into a process using PTRACE in order to evade 
+    process-based defenses or elevate privileges. Common anti-patterns are debuggers. Additionally, profiling 
+    your environment via the known_ptrace_procs template macro can reduce noise. 
+    A successful ptrace syscall generates multiple logs at once.
   condition: ptrace_attach_or_injection and proc_name_exists and not known_ptrace_procs
   output: > 
-    Detected ptrace PTRACE_ATTACH attempt (proc.cmdline=%proc.cmdline container=%container.info evt.type=%evt.type evt.arg.request=%evt.arg.request proc.pid=%proc.pid proc.cwd=%proc.cwd proc.ppid=%proc.ppid
-    proc.pcmdline=%proc.pcmdline proc.sid=%proc.sid proc.exepath=%proc.exepath user.uid=%user.uid user.loginuid=%user.loginuid user.loginname=%user.loginname user.name=%user.name group.gid=%group.gid
-    group.name=%group.name container.id=%container.id container.name=%container.name image=%container.image.repository)
+    Detected ptrace PTRACE_ATTACH attempt (user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid 
+    proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline proc_pcmdline=%proc.pcmdline 
+    pid=%proc.pid image=%container.image.repository:%container.image.tag namespace=%k8s.ns.name 
+    pod_name=%k8s.pod.name exe_flags=%evt.arg.flags terminal=%proc.tty)
   priority: WARNING
-  tags: [host, container, process, mitre_execution, mitre_privilege_escalation, T1055.008]
+  tags: [maturity_stable, host, container, process, mitre_privilege_escalation, T1055.008]
   
 - rule: PTRACE anti-debug attempt
-  desc: "Detect usage of the PTRACE system call with the PTRACE_TRACEME argument, indicating a program actively attempting to avoid debuggers attaching to the process. This behavior is typically indicative of malware activity."
+  desc: > 
+    Detect usage of the PTRACE system call with the PTRACE_TRACEME argument, indicating a program actively attempting 
+    to avoid debuggers attaching to the process. This behavior is typically indicative of malware activity.
+    Read more about PTRACE in the "PTRACE attached to process" rule.
   condition: evt.type=ptrace and evt.dir=> and evt.arg.request contains PTRACE_TRACEME and proc_name_exists
-  output: Detected potential PTRACE_TRACEME anti-debug attempt (proc.cmdline=%proc.cmdline container=%container.info evt.type=%evt.type evt.arg.request=%evt.arg.request proc.pid=%proc.pid proc.cwd=%proc.cwd proc.ppid=%proc.ppid proc.pcmdline=%proc.pcmdline proc.sid=%proc.sid proc.exepath=%proc.exepath user.uid=%user.uid user.loginuid=%user.loginuid user.loginname=%user.loginname user.name=%user.name group.gid=%group.gid group.name=%group.name container.id=%container.id container.name=%container.name image=%container.image.repository)
+  output: > 
+    Detected potential PTRACE_TRACEME anti-debug attempt (user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid 
+    proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline proc_pcmdline=%proc.pcmdline 
+    pid=%proc.pid image=%container.image.repository:%container.image.tag namespace=%k8s.ns.name 
+    pod_name=%k8s.pod.name exe_flags=%evt.arg.flags terminal=%proc.tty)
   priority: NOTICE
-  tags: [host, container, process, mitre_defense_evasion, T1622]
+  tags: [maturity_stable, host, container, process, mitre_defense_evasion, T1622]
 
 - macro: private_aws_credentials
   condition: >
