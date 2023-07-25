@@ -2153,7 +2153,7 @@
 # sockfamily ip is to exclude certain processes (like 'groups') that communicate on unix-domain sockets
 # systemd can listen on ports to launch things like sshd on demand
 - rule: System procs network activity
-  desc: any network activity performed by system binaries that are not expected to send or receive any network traffic
+  desc: Any network activity performed by system binaries that are not expected to send or receive any network traffic.
   condition: >
     (fd.sockfamily = ip and (system_procs or proc.name in (shell_binaries)))
     and (inbound_outbound)
@@ -2164,7 +2164,7 @@
     Known system binary sent/received network traffic
     (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid connection=%fd.name container_id=%container.id image=%container.image.repository)
   priority: NOTICE
-  tags: [host, container, network, mitre_exfiltration, T1059, TA0011]
+  tags: [maturity_sandbox, host, network, process, mitre_execution, T1059]
 
 # This list allows easily whitelisting system proc names that are
 # expected to communicate on the network.
@@ -2494,9 +2494,10 @@
 - rule: Unexpected K8s NodePort Connection
   desc: Detect attempts to use K8s NodePorts from a container
   condition: (inbound_outbound) and fd.sport >= 30000 and fd.sport <= 32767 and container and not nodeport_containers
+  enabled: false
   output: Unexpected K8s NodePort Connection (command=%proc.cmdline pid=%proc.pid connection=%fd.name container_id=%container.id image=%container.image.repository)
   priority: NOTICE
-  tags: [network, k8s, container, mitre_persistence, T1205.001]
+  tags: [maturity_sandbox, network, k8s, container, mitre_persistence, T1205.001]
 
 - list: network_tool_binaries
   items: [nc, ncat, netcat, nmap, dig, tcpdump, tshark, ngrep, telnet, mitmproxy, socat, zmap]
@@ -2569,7 +2570,7 @@
     Network tool launched in container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid parent_process=%proc.pname
     container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag exe_flags=%evt.arg.flags)
   priority: NOTICE
-  tags: [container, network, process, mitre_discovery, mitre_exfiltration, T1595, T1046]
+  tags: [maturity_sandbox, container, network, process, mitre_execution, T1059]
 
 # This rule is not enabled by default, as there are legitimate use
 # cases for these tools on hosts. If you want to enable it, modify the
@@ -2588,7 +2589,7 @@
   output: >
     Network tool launched on host (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid parent_process=%proc.pname exe_flags=%evt.arg.flags)
   priority: NOTICE
-  tags: [host, network, process, mitre_discovery, mitre_exfiltration, T1595, T1046]
+  tags: [maturity_sandbox, host, network, process, mitre_execution, T1059]
 
 - list: grep_binaries
   items: [grep, egrep, fgrep]
