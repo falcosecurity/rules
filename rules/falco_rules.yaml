@@ -911,7 +911,7 @@
     File below a known binary directory opened for writing (user=%user.name user_loginuid=%user.loginuid
     command=%proc.cmdline pid=%proc.pid file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline gparent=%proc.aname[2] container_id=%container.id image=%container.image.repository)
   priority: ERROR
-  tags: [host, container, filesystem, mitre_persistence, T1543]
+  tags: [maturity_sandbox, host, container, filesystem, mitre_persistence, T1543]
 
 # If you'd like to generally monitor a wider set of directories on top
 # of the ones covered by the rule Write below binary dir, you can use
@@ -966,7 +966,7 @@
     File below a monitored directory opened for writing (user=%user.name user_loginuid=%user.loginuid
     command=%proc.cmdline pid=%proc.pid file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline gparent=%proc.aname[2] container_id=%container.id image=%container.image.repository)
   priority: ERROR
-  tags: [host, container, filesystem, mitre_persistence, T1543]
+  tags: [maturity_sandbox, host, container, filesystem, mitre_persistence, T1543]
 
 # ******************************************************************************
 # * "Directory traversal monitored file read" requires FALCO_ENGINE_VERSION 13 *
@@ -1290,7 +1290,7 @@
   condition: write_etc_common
   output: "File below /etc opened for writing (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid parent=%proc.pname pcmdline=%proc.pcmdline file=%fd.name program=%proc.name gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] container_id=%container.id image=%container.image.repository)"
   priority: ERROR
-  tags: [host, container, filesystem, mitre_persistence, T1098]
+  tags: [maturity_sandbox, host, container, filesystem, mitre_persistence, T1098]
 
 - list: known_root_files
   items: [/root/.monit.state, /root/.auth_tokens, /root/.bash_history, /root/.ash_history, /root/.aws/credentials,
@@ -1387,7 +1387,7 @@
     and not user_known_write_below_root_activities
   output: "File below / or /root opened for writing (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid parent=%proc.pname file=%fd.name program=%proc.name container_id=%container.id image=%container.image.repository)"
   priority: ERROR
-  tags: [host, container, filesystem, mitre_persistence, TA0003]
+  tags: [maturity_sandbox, host, container, filesystem, mitre_persistence, TA0003]
 
 - macro: cmp_cp_by_passwd
   condition: proc.name in (cmp, cp) and proc.pname in (passwd, run-parts)
@@ -1502,7 +1502,7 @@
     and not user_known_write_rpm_database_activities
   output: "Rpm database opened for writing by a non-rpm program (command=%proc.cmdline pid=%proc.pid file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline container_id=%container.id image=%container.image.repository)"
   priority: ERROR
-  tags: [host, container, filesystem, software_mgmt, mitre_persistence, T1072]
+  tags: [maturity_sandbox, host, container, filesystem, software_mgmt, mitre_persistence, T1072]
 
 - macro: postgres_running_wal_e
   condition: (proc.pname=postgres and (proc.cmdline startswith "sh -c envdir /etc/wal-e.d/env /usr/local/bin/wal-e" or proc.cmdline startswith "sh -c envdir \"/run/etc/wal-e.d/env\" wal-g wal-push"))
@@ -1553,7 +1553,7 @@
     File below known binary directory renamed/removed (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid
     pcmdline=%proc.pcmdline operation=%evt.type file=%fd.name %evt.args container_id=%container.id image=%container.image.repository)
   priority: ERROR
-  tags: [host, container, filesystem, mitre_persistence, T1222.002]
+  tags: [maturity_sandbox, host, container, filesystem, mitre_persistence, T1222.002]
 
 - macro: user_known_mkdir_bin_dir_activities
   condition: (never_true)
@@ -1570,7 +1570,7 @@
     Directory below known binary directory created (user=%user.name user_loginuid=%user.loginuid
     command=%proc.cmdline pid=%proc.pid directory=%evt.arg.path container_id=%container.id image=%container.image.repository)
   priority: ERROR
-  tags: [host, container, filesystem, mitre_persistence, T1222.002]
+  tags: [maturity_sandbox, host, container, filesystem, mitre_persistence, T1222.002]
 
 # This list allows for easy additions to the set of commands allowed
 # to change thread namespace without having to copy and override the
@@ -2385,7 +2385,7 @@
     and not user_known_create_files_below_dev_activities
   output: "File created below /dev by untrusted program (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid file=%fd.name container_id=%container.id image=%container.image.repository)"
   priority: ERROR
-  tags: [host, container, filesystem, mitre_persistence, T1543, T1083]
+  tags: [maturity_sandbox, host, container, filesystem, mitre_persistence, T1543, T1083]
 
 
 # In a local/user rules file, you could override this macro to
