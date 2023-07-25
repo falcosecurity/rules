@@ -980,11 +980,12 @@
   condition: (open_read or open_file_failed) and (etc_dir or user_ssh_directory or fd.name startswith /root/.ssh or fd.name contains "id_rsa") and directory_traversal and not proc.pname in (shell_binaries)
   enabled: true
   output: >
-    Read monitored file via directory traversal (username=%user.name useruid=%user.uid user_loginuid=%user.loginuid program=%proc.name exe=%proc.exepath
-    command=%proc.cmdline pid=%proc.pid parent=%proc.pname file=%fd.name fileraw=%fd.nameraw parent=%proc.pname
-    gparent=%proc.aname[2] container_id=%container.id image=%container.image.repository returncode=%evt.res cwd=%proc.cwd)
+    Read monitored file via directory traversal (user=%user.name uid=%user.uid user_loginuid=%user.loginuid 
+    process=%proc.name proc_exepath=%proc.exepath command=%proc.cmdline pid=%proc.pid parent=%proc.pname 
+    file=%fd.name fileraw=%fd.nameraw gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] 
+    terminal=%proc.tty container_id=%container.id image=%container.image.repository namespace=%k8s.ns.name pod_name=%k8s.pod.name)
   priority: WARNING
-  tags: [host, container, filesystem, mitre_discovery, mitre_exfiltration, mitre_credential_access, T1555, T1212, T1020, T1552, T1083]
+  tags: [maturity_stable, host, container, filesystem, mitre_credential_access, T1555]
 
 # The rule below is disabled by default as many system management tools
 # like ansible, etc can read these files/paths. Enable it using this macro.
@@ -1396,15 +1397,17 @@
 
 - rule: Read sensitive file trusted after startup
   desc: >
-    an attempt to read any sensitive file (e.g. files containing user/password/authentication
+    An attempt to read any sensitive file (e.g. files containing user/password/authentication
     information) by a trusted program after startup. Trusted programs might read these files
-    at startup to load initial state, but not afterwards.
+    at startup to load initial state, but not afterwards. Can be customized as needed.
   condition: sensitive_files and open_read and server_procs and not proc_is_new and proc.name!="sshd" and not user_known_read_sensitive_files_activities
   output: >
-    Sensitive file opened for reading by trusted program after startup (user=%user.name user_loginuid=%user.loginuid
-    command=%proc.cmdline pid=%proc.pid parent=%proc.pname file=%fd.name parent=%proc.pname gparent=%proc.aname[2] container_id=%container.id image=%container.image.repository)
+    Sensitive file opened for reading by trusted program after startup (user=%user.name uid=%user.uid user_loginuid=%user.loginuid 
+    process=%proc.name proc_exepath=%proc.exepath command=%proc.cmdline pid=%proc.pid parent=%proc.pname 
+    file=%fd.name gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] terminal=%proc.tty 
+    container_id=%container.id image=%container.image.repository namespace=%k8s.ns.name pod_name=%k8s.pod.name)
   priority: WARNING
-  tags: [host, container, filesystem, mitre_credential_access, T1555, T1212, T1020, T1552, T1083]
+  tags: [maturity_stable, host, container, filesystem, mitre_credential_access, T1555]
 
 - list: read_sensitive_file_binaries
   items: [
@@ -1443,8 +1446,8 @@
 
 - rule: Read sensitive file untrusted
   desc: >
-    an attempt to read any sensitive file (e.g. files containing user/password/authentication
-    information). Exceptions are made for known trusted programs.
+    An attempt to read any sensitive file (e.g. files containing user/password/authentication
+    information). Exceptions are made for known trusted programs. Can be customized as needed.
   condition: >
     sensitive_files and open_read
     and proc_name_exists
@@ -1470,10 +1473,12 @@
     and not user_known_read_sensitive_files_activities
     and not user_read_sensitive_file_containers
   output: >
-    Sensitive file opened for reading by non-trusted program (user=%user.name user_loginuid=%user.loginuid program=%proc.name
-    command=%proc.cmdline pid=%proc.pid file=%fd.name parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] container_id=%container.id image=%container.image.repository)
+    Sensitive file opened for reading by non-trusted program (user=%user.name uid=%user.uid user_loginuid=%user.loginuid 
+    process=%proc.name proc_exepath=%proc.exepath command=%proc.cmdline pid=%proc.pid parent=%proc.pname 
+    file=%fd.name gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] terminal=%proc.tty container_id=%container.id 
+    image=%container.image.repository namespace=%k8s.ns.name pod_name=%k8s.pod.name)
   priority: WARNING
-  tags: [host, container, filesystem, mitre_credential_access, mitre_discovery, T1555, T1212, T1020, T1552, T1083]
+  tags: [maturity_stable, host, container, filesystem, mitre_credential_access, T1555]
 
 - macro: amazon_linux_running_python_yum
   condition: >
@@ -2810,24 +2815,34 @@
   tags: [container, network, process, mitre_lateral_movement, mitre_exfiltration, T1020, T1210]
 
 - rule: Create Symlink Over Sensitive Files
-  desc: Detect symlink created over sensitive files
+  desc: > 
+    Detect symlinks created over a curated list of sensitive files or subdirectories under /etc/ or 
+    root directories. Can be customized as needed.
   condition: >
     create_symlink and
     (evt.arg.target in (sensitive_file_names) or evt.arg.target in (sensitive_directory_names))
   output: >
-    Symlinks created over sensitive files (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid target=%evt.arg.target linkpath=%evt.arg.linkpath parent_process=%proc.pname)
+    Symlinks created over sensitive files (user=%user.name uid=%user.uid user_loginuid=%user.loginuid 
+    proc_exepath=%proc.exepath command=%proc.cmdline pid=%proc.pid target=%evt.arg.target 
+    linkpath=%evt.arg.linkpath parent_process=%proc.pname terminal=%proc.tty container_id=%container.id 
+    image=%container.image.repository namespace=%k8s.ns.name pod_name=%k8s.pod.name)
   priority: WARNING
-  tags: [host, container, filesystem, mitre_exfiltration, mitre_credential_access, T1020, T1083, T1212, T1552, T1555]
+  tags: [maturity_stable, host, container, filesystem, mitre_credential_access, T1555]
 
 - rule: Create Hardlink Over Sensitive Files
-  desc: Detect hardlink created over sensitive files
+  desc: > 
+    Detect hardlink created over a curated list of sensitive files or subdirectories under /etc/ or 
+    root directories. Can be customized as needed.
   condition: >
     create_hardlink and
     (evt.arg.oldpath in (sensitive_file_names))
   output: >
-    Hardlinks created over sensitive files (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid target=%evt.arg.oldpath linkpath=%evt.arg.newpath parent_process=%proc.pname)
+    Hardlinks created over sensitive files (user=%user.name uid=%user.uid user_loginuid=%user.loginuid 
+    proc_exepath=%proc.exepath command=%proc.cmdline pid=%proc.pid target=%evt.arg.oldpath 
+    linkpath=%evt.arg.newpath parent_process=%proc.pname terminal=%proc.tty container_id=%container.id 
+    image=%container.image.repository namespace=%k8s.ns.name pod_name=%k8s.pod.name)
   priority: WARNING
-  tags: [host, container, filesystem, mitre_exfiltration, mitre_credential_access, T1020, T1083, T1212, T1552, T1555]
+  tags: [maturity_stable, host, container, filesystem, mitre_credential_access, T1555]
 
 - list: miner_ports
   items: [
