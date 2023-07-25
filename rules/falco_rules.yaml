@@ -478,7 +478,7 @@
     a shell configuration file has been modified (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid pcmdline=%proc.pcmdline file=%fd.name container_id=%container.id image=%container.image.repository)
   priority:
     WARNING
-  tags: [host, container, filesystem, mitre_persistence, T1546.004]
+  tags: [maturity_incubating, host, container, filesystem, mitre_persistence, T1546.004]
 
 # This rule is not enabled by default, as there are many legitimate
 # readers of shell config files.
@@ -1960,7 +1960,7 @@
     and not redhat_image
   output: Privileged container started (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid %container.info image=%container.image.repository:%container.image.tag)
   priority: INFO
-  tags: [container, cis, mitre_privilege_escalation, mitre_lateral_movement, T1610]
+  tags: [maturity_incubating, container, cis, mitre_execution, T1610]
 
 # These capabilities were used in the past to escape from containers
 - macro: excessively_capable_container
@@ -1984,7 +1984,7 @@
     and not user_privileged_containers
   output: Excessively capable container started (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid %container.info image=%container.image.repository:%container.image.tag cap_permitted=%thread.cap_permitted)
   priority: INFO
-  tags: [container, cis, mitre_privilege_escalation, mitre_lateral_movement, T1610]
+  tags: [maturity_incubating, container, cis, mitre_execution, T1610]
 
 
 # For now, only considering a full mount of /etc as
@@ -2030,7 +2030,7 @@
     and not user_sensitive_mount_containers
   output: Container with sensitive mount started (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid %container.info image=%container.image.repository:%container.image.tag mounts=%container.mounts)
   priority: INFO
-  tags: [container, cis, mitre_lateral_movement, T1610]
+  tags: [maturity_sandbox, container, cis, mitre_execution, T1610]
 
 # In a local/user rules file, you could override this macro to
 # explicitly enumerate the container images that you want to run in
@@ -2812,7 +2812,7 @@
     Remote file copy tool launched in container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid parent_process=%proc.pname
     container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag exe_flags=%evt.arg.flags)
   priority: NOTICE
-  tags: [container, network, process, mitre_lateral_movement, mitre_exfiltration, T1020, T1210]
+  tags: [maturity_incubating, container, network, process, mitre_lateral_movement, mitre_exfiltration, T1020, T1210]
 
 - rule: Create Symlink Over Sensitive Files
   desc: > 
@@ -3313,7 +3313,7 @@
     Ingress remote file copy tool launched in container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid parent_process=%proc.pname
     container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag exe_flags=%evt.arg.flags)
   priority: NOTICE
-  tags: [container, network, process, mitre_command_and_control, TA0011]
+  tags: [maturity_sandbox, container, network, process, mitre_command_and_control, TA0011]
 
 # This rule helps detect CVE-2021-4034:
 # A privilege escalation to root through memory corruption
