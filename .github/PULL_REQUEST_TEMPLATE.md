@@ -1,14 +1,16 @@
 <!--  Thanks for sending a pull request!  Here are some tips for you:
 
-1. If this is your first time, please read our contributor guidelines in the [CONTRIBUTING.md](https://github.com/falcosecurity/.github/blob/master/CONTRIBUTING.md) file and learn how to compile Falco from source [here](https://falco.org/docs/source).
+1. This repo contains a dedicated [contributing guide](https://github.com/falcosecurity/rules/blob/main/CONTRIBUTING.md) that highlights the rules maturity framework definitions as well as the criteria for rules acceptance. Please read it carefully before submitting your PR.
 2. Please label this pull request according to what type of issue you are addressing.
-3. Please add a release note!
-4. If the PR is unfinished while opening it specify a wip in the title before the actual title, for example, "wip: my awesome feature"
+3. If the PR adds or changes one or more rules, please ensure they conform to https://falco.org/docs/rules/style-guide/ and select the appropriate maturity levels.
+4. If the PR is unfinished while opening it specify a wip in the title before the actual title, for example, "wip: my awesome rule"
 -->
 
 **What type of PR is this?**
 
 > Uncomment one (or more) `/kind <>` lines:
+
+> /kind feature
 
 > /kind bug
 
@@ -19,8 +21,6 @@
 > /kind documentation
 
 > /kind failing-test
-
-> /kind feature
 
 
 <!--
@@ -43,6 +43,22 @@ Please remove the leading whitespace before the `/kind <>` you uncommented.
 Please remove the leading whitespace before the `/area <>` you uncommented.
 -->
 
+**Proposed rule [maturity level](https://github.com/falcosecurity/rules/blob/main/CONTRIBUTING.md#maturity-levels)**
+
+> Uncomment one (or more) `/area <>` lines (only for PRs that add or modify rules):
+
+> /area maturity-stable
+
+> /area maturity-incubating
+
+> /area maturity-sandbox
+
+> /area maturity-deprecated
+
+<!--
+Please remove the leading whitespace before the `/area <>` you uncommented.
+-->
+
 **What this PR does / why we need it**:
 
 **Which issue(s) this PR fixes**:
@@ -50,7 +66,7 @@ Please remove the leading whitespace before the `/area <>` you uncommented.
 <!--
 Automatically closes linked issue when PR is merged.
 Usage: `Fixes #<issue number>`, or `Fixes (paste link of issue)`.
-If PR is `kind/failing-tests` or `kind/flaky-test`, please post the related issues/tests in a comment and do not use `Fixes`.
+If PR is `kind/failing-tests`, please post the related issues/tests in a comment and do not use `Fixes`.
 -->
 
 Fixes #
