@@ -31,6 +31,10 @@ jobs:
           pip install -r rules_inventory/scripts/requirements.txt
           python rules_inventory/scripts/rules_overview_generator.py --rules_file=rules/falco_rules.yaml > docs/index.md
           
+      - name: Disable Table Of Content for overview
+        run: |
+          sed -i '1s/^/---\nhide:\n- toc\n---\n\n/' docs/index.md
+
       - run: pip install -r requirements.txt
       
       - run: mkdocs build
