@@ -17,7 +17,7 @@ All rules must be licensed under the [Apache 2.0 License](./LICENSE).
 
 The rules maturity framework was introduced based on this [proposal](proposals/20230605-rules-adoption-management-maturity-framework.md). As specified in the tags section of the [Style Guide of Falco Rules](https://falco.org/docs/rules/style-guide/#tags), every rule upstreamed to The Falco Project must include a maturity level as its first tag.
 
-A new rule typically starts as `maturity_sandbo` and, in some cases, as `maturity_incubating`. However, it cannot immediately be at the `maturity_stable` level.
+A new rule typically starts as `maturity_sandbox` and, in some cases, as `maturity_incubating`. However, it cannot immediately be at the `maturity_stable` level.
 
 Only rules at the `maturity_stable` level are enabled by default.
 
@@ -26,7 +26,7 @@ Falco offers configurability through the [falco.yaml](https://github.com/falcose
 
 ## Maturity Levels
 
-The levels (the maturity tag must be the first Falco tag):
+The levels (the maturity tag must be the first one in the rule's `tags` array):
 
 - **maturity_stable** (enabled by default) indicates that the rule has undergone thorough evaluation by experts with hands-on production experience. These experts have determined that the rules embody best practices and exhibit optimal robustness, making it more difficult for attackers to bypass Falco. These rules are highly relevant for addressing broader threats and are recommended for customization to specific environments if necessary. They primarily focus on universal system-level detections, such as generic reverse shells or container escapes, which establish a solid baseline for threat detection across diverse industries. This inherent bias against including more application-specific detections is due to their potential lack of broad relevance or applicability. However, to mitigate this bias, a grey area will be reserved, enabling case-by-case judgments to be made.
 - **maturity_incubating** (disabled by default) indicates that the rules address relevant threats, provide a certain level of robustness guarantee, and adhere to best practices in rule writing. Furthermore, it signifies that the rules have been identified by experts as catering to more specific use cases, which may or may not be relevant for each adopter. This category is expected to include a larger number of application-specific rules.   
