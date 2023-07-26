@@ -890,7 +890,7 @@
     Repository files get updated (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid pcmdline=%proc.pcmdline file=%fd.name newpath=%evt.arg.newpath container_id=%container.id image=%container.image.repository)
   priority:
     NOTICE
-  tags: [host, container, filesystem, mitre_persistence, T1072]
+  tags: [maturity_sandbox, host, container, filesystem, mitre_persistence, T1072]
 
 # Users should overwrite this macro to specify conditions under which a
 # write under the binary dir is ignored. For example, it may be okay to
@@ -1541,7 +1541,7 @@
     Database-related program spawned process other than itself (user=%user.name user_loginuid=%user.loginuid
     program=%proc.cmdline pid=%proc.pid parent=%proc.pname container_id=%container.id image=%container.image.repository exe_flags=%evt.arg.flags)
   priority: NOTICE
-  tags: [host, container, process, database, mitre_execution, T1190]
+  tags: [maturity_incubating, host, container, process, database, mitre_execution, T1190]
 
 - macro: user_known_modify_bin_dir_activities
   condition: (never_true)
@@ -2056,7 +2056,7 @@
   condition: container_started and container and not allowed_containers
   output: Container started and not in allowed list (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid %container.info image=%container.image.repository:%container.image.tag)
   priority: WARNING
-  tags: [container, mitre_lateral_movement, T1610]
+  tags: [maturity_sandbox, container, mitre_lateral_movement, T1610]
 
 - macro: user_known_system_user_login
   condition: (never_true)
@@ -2357,7 +2357,7 @@
 
 - rule: User mgmt binaries
   desc: >
-    activity by any programs that can manage users, passwords, or permissions. sudo and su are excluded.
+    Activity by any programs that can manage users, passwords, or permissions. sudo and su are excluded.
     Activity in containers is also excluded--some containers create custom users on top
     of a base linux distribution at startup.
     Some innocuous command lines that don't actually change anything are excluded.
@@ -2379,7 +2379,7 @@
     User management binary command run outside of container
     (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] exe_flags=%evt.arg.flags)
   priority: NOTICE
-  tags: [host, container, users, software_mgmt, mitre_persistence, T1543, T1098]
+  tags: [maturity_sandbox, host, container, users, software_mgmt, mitre_persistence, T1098]
 
 - list: allowed_dev_files
   items: [
@@ -2766,7 +2766,7 @@
     Shell history had been deleted or renamed (user=%user.name user_loginuid=%user.loginuid type=%evt.type command=%proc.cmdline pid=%proc.pid fd.name=%fd.name name=%evt.arg.name path=%evt.arg.path oldpath=%evt.arg.oldpath exe_flags=%evt.arg.flags %container.info)
   priority:
     WARNING
-  tags: [host, container, process, filesystem, mitre_defense_evasion, T1070]
+  tags: [maturity_incubating, host, container, process, filesystem, mitre_defense_evasion, T1070]
 
 - list: user_known_chmod_applications
   items: [hyperkube, kubelet, k3s-agent]
@@ -2982,7 +2982,7 @@
   condition: spawned_process and (proc.cmdline contains "stratum+tcp" or proc.cmdline contains "stratum2+tcp" or proc.cmdline contains "stratum+ssl" or proc.cmdline contains "stratum2+ssl")
   output: Possible miner running (command=%proc.cmdline pid=%proc.pid container=%container.info image=%container.image.repository exe_flags=%evt.arg.flags)
   priority: CRITICAL
-  tags: [host, container, process, mitre_execution, T1496]
+  tags: [maturity_sandbox, host, container, process, mitre_execution, T1496]
 
 - list: k8s_client_binaries
   items: [docker, kubectl, crictl]
@@ -3016,7 +3016,7 @@
   condition: spawned_process and container and not user_known_k8s_client_container_parens and proc.name in (k8s_client_binaries)
   output: "Docker or kubernetes client executed in container (user=%user.name user_loginuid=%user.loginuid %container.info parent=%proc.pname cmdline=%proc.cmdline pid=%proc.pid image=%container.image.repository:%container.image.tag)"
   priority: WARNING
-  tags: [container, mitre_execution, T1610]
+  tags: [maturity_sandbox, container, mitre_execution, T1610]
 
 - list: user_known_packet_socket_binaries
   items: []
@@ -3256,7 +3256,7 @@
   condition: spawned_process and user.uid != 0 and (proc.name=sudoedit or proc.name = sudo) and (proc.args contains -s or proc.args contains -i or proc.args contains --login) and (proc.args contains "\ " or proc.args endswith \)
   output: "Detect Sudo Privilege Escalation Exploit (CVE-2021-3156) (user=%user.name parent=%proc.pname cmdline=%proc.cmdline pid=%proc.pid exe_flags=%evt.arg.flags %container.info)"
   priority: CRITICAL
-  tags: [host, container, filesystem, users, mitre_privilege_escalation, T1548.003]
+  tags: [maturity_sandbox, host, container, filesystem, users, mitre_privilege_escalation, T1548.003]
 
 - rule: Debugfs Launched in Privileged Container
   desc: > 
@@ -3302,7 +3302,7 @@
     and not user_known_mount_in_privileged_containers
   output: Mount was executed inside a privileged container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid %container.info image=%container.image.repository:%container.image.tag exe_flags=%evt.arg.flags)
   priority: WARNING
-  tags: [container, cis, filesystem, mitre_lateral_movement, T1611]
+  tags: [maturity_incubating, container, cis, filesystem, mitre_lateral_movement, T1611]
 
 - list: user_known_userfaultfd_processes
   items: []
@@ -3316,7 +3316,7 @@
     not proc.name in (user_known_userfaultfd_processes)
   output: An userfaultfd syscall was successfully executed by an unprivileged user (user=%user.name user_loginuid=%user.loginuid process=%proc.name command=%proc.cmdline pid=%proc.pid %container.info image=%container.image.repository:%container.image.tag)
   priority: CRITICAL
-  tags: [host, container, process, mitre_defense_evasion, TA0005]
+  tags: [maturity_sandbox, host, container, process, mitre_defense_evasion, TA0005]
 
 - list: ingress_remote_file_copy_binaries
   items: [wget]
@@ -3358,7 +3358,7 @@
   output:
     "Detect Polkit pkexec Local Privilege Escalation Exploit (CVE-2021-4034) (user=%user.loginname uid=%user.loginuid command=%proc.cmdline pid=%proc.pid args=%proc.args exe_flags=%evt.arg.flags)"
   priority: CRITICAL
-  tags: [host, container, process, users, mitre_privilege_escalation, TA0004]
+  tags: [maturity_sandbox, host, container, process, users, mitre_privilege_escalation, TA0004]
 
 - rule: Detect release_agent File Container Escapes
   desc: > 
@@ -3418,7 +3418,7 @@
     Environment variables were retrieved from /proc files (user=%user.name user_loginuid=%user.loginuid program=%proc.name
     command=%proc.cmdline pid=%proc.pid file=%fd.name parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] container_id=%container.id image=%container.image.repository)
   priority: WARNING
-  tags: [container, filesystem, process, mitre_credential_access, mitre_discovery, T1083]
+  tags: [maturity_incubating, container, filesystem, process, mitre_discovery, T1083]
 
 - list: known_ptrace_binaries
   items: []
@@ -3495,7 +3495,7 @@
     not container.image.repository in (falco_privileged_images, trusted_images)
   output: "File execution detected from /dev/shm (proc.cmdline=%proc.cmdline connection=%fd.name user.name=%user.name user.loginuid=%user.loginuid container.id=%container.id evt.type=%evt.type evt.res=%evt.res proc.pid=%proc.pid proc.cwd=%proc.cwd proc.ppid=%proc.ppid proc.pcmdline=%proc.pcmdline proc.sid=%proc.sid proc.exepath=%proc.exepath user.uid=%user.uid user.loginname=%user.loginname group.gid=%group.gid group.name=%group.name container.name=%container.name image=%container.image.repository exe_flags=%evt.arg.flags)"
   priority: WARNING
-  tags: [host, container, mitre_execution, mitre_defense_evasion, T1036.005, T1059.004]
+  tags: [maturity_sandbox, host, container, mitre_execution, T1059.004]
   
 # List of allowed container images that are known to execute binaries not part of their base image.
 - list: known_drop_and_execute_containers
