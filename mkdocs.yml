@@ -1,6 +1,6 @@
 site_name: Falcosecurity Rules
 site_url: https://github.com/falcosecurity/rules
 nav:
-    - Home: overview.md
+    - Home: index.md
 
 theme: material
