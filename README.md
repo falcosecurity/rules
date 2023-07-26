@@ -4,11 +4,23 @@
 
 Note: *This repository has been created upon this [proposal](https://github.com/falcosecurity/falco/blob/master/proposals/20221129-artifacts-distribution.md#move-falco-rules-to-their-own-repo).*
 
-This repository contains the [Rules Files Registry](#registry) and *rules files* officially maintained by the Falcosecurity organization. [Rules](https://falco.org/docs/rules) tell [Falco](https://github.com/falcosecurity/falco) what to do. Please refer to the [official documentation](https://falco.org/docs/rules) to better understand the rules' concepts. 
+This repository maintains the default *rules files* officially owned by the Falcosecurity organization as well as the Falco Rules Files Registry. 
 
-## Registry
+## Falco Rules
 
-The Registry contains metadata and information about rules files distributed by the Falcosecurity organization. These rules are developed for Falco and made available to the community. 
+Rules tell [Falco](https://github.com/falcosecurity/falco) what to do. These rules are pre-defined detections for various security threats, abnormal behaviors, and compliance-related monitoring. Adopters can customize these rules to their specific needs or use them as examples. Please refer to the [official documentation](https://falco.org/docs/rules) to better understand the rules' concepts.
+
+The `main` branch contains the most up-to-date state of development. All rules files are located under the [rules folder](rules/). Please refer to our [Release Process](./RELEASE.md) to understand how rules are released. Stable rules are released and published only when a new release gets tagged. This means that rules in the `main` branch can become incompatible with the latest stable Falco release if, for example, new output fields are introduced.
+
+### Default Rules
+
+The [falco_rules.yaml](rules/falco_rules.yaml) file contains Falco's default rules, categorized by the maturity level `maturity_stable` based on the [Rules Maturity Framework](CONTRIBUTING.md#rules-maturity-framework). Stable rules are enabled by default. Additionally, the file includes incubating and sandbox rules that are not enabled by default and may require engineering effort for [effective adoption](CONTRIBUTING.md#justification-of-rules-maturity-framework-for-falco-adoption). All rules in [falco_rules.yaml](rules/falco_rules.yaml) are solely based on syscalls and container events. For an up-to-date overview table linking to the respective Mitre Attack resources and more, please refer to the [rules overview](rules_inventory/rules_overview.md) document. Lastly, you can find Falco plugins rules in the respective [plugins](https://github.com/falcosecurity/plugins) repos' subfolder.
+
+Interested in contributing your custom rules? Visit the [contributing](#contributing) section below and join the Falco community now!
+
+## Falco Rules Files Registry
+
+The Falco Rules Files Registry contains metadata and information about rules files distributed by the Falcosecurity organization. The registry serves as an additional method of making the rules files available to the community, complementing the process of retrieving the rules files from this repository. 
 
 Note: _Currently, the registry includes only rules for the syscall call data source; for other data sources see the [plugins repository](https://github.com/falcosecurity/plugins)._
 
@@ -48,17 +60,9 @@ Please refer to the automatically generated [rules_inventory/rules_overview.md](
 
 -->
 
-## Hosted Rules
-
-Another purpose of this repository is to host and maintain the rules owned by the Falcosecurity organization. All the rules are contained inside the [rules](https://github.com/falcosecurity/rules/tree/main/rules) folder.
-
-The `main` branch contains the most up-to-date state of development. Please check our [Release Process](./RELEASE.md) to know how rules are released. Stable builds are released and published only when a new release gets tagged.
-
-If you wish to contribute your rules to the Falcosecurity organization, you just need to open a Pull Request to add them inside the `rules` folder. In order to be hosted in this repository, rules must be licensed under the [Apache 2.0 License](./LICENSE). 
-
 ## Contributing
 
-If you want to help and wish to contribute, please review our [contribution guidelines](https://github.com/falcosecurity/.github/blob/master/CONTRIBUTING.md). Code contributions are always encouraged and welcome!
+If you are interested in helping and wish to contribute, we kindly request that you review our general [contribution guidelines](https://github.com/falcosecurity/.github/blob/master/CONTRIBUTING.md) and, more specifically, the dedicated [rules contributing guide](CONTRIBUTING.md) hosted in this repository. Please be aware that our reviewers will ensure compliance with the rules' acceptance criteria.
 
 ## License
 
