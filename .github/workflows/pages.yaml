@@ -1,0 +1,41 @@
+name: Deploy Github Pages
+on:
+  push:
+    branches: [main]
+      
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  deploy-pages:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
+      
+      - name: Generate inventory
+        run: |
+          python rules_inventory/scripts/rules_overview_generator.py --rules_file=rules/falco_rules.yaml > docs/overview.md
+          
+      - run: pip install -r requirements.txt
+      
+      - run: mkdocs build
+      
+      - uses: actions/upload-pages-artifact@v1
+        with:
+          path: 'site'
+
+      - id: deployment
+        uses: actions/deploy-pages@v1
