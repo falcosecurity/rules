@@ -12,9 +12,14 @@ Rules tell [Falco](https://github.com/falcosecurity/falco) what to do. These rul
 
 The `main` branch contains the most up-to-date state of development. All rules files are located under the [rules folder](rules/). Please refer to our [Release Process](./RELEASE.md) to understand how rules are released. Stable rules are released and published only when a new release gets tagged. This means that rules in the `main` branch can become incompatible with the latest stable Falco release if, for example, new output fields are introduced.
 
+Links:
+- [Getting Started with Falco Rules - Official Documentation](https://falco.org/docs/rules)
+- [Rules Overview Document](https://falcosecurity.github.io/rules/)
+- [Rules Maturity Framework and Adoption](CONTRIBUTING.md#rules-maturity-framework)
+
 ### Default Rules
 
-The [falco_rules.yaml](rules/falco_rules.yaml) file contains Falco's default rules, categorized by the maturity level `maturity_stable` based on the [Rules Maturity Framework](CONTRIBUTING.md#rules-maturity-framework). Stable rules are enabled by default. Additionally, the file includes incubating and sandbox rules that are not enabled by default and may require engineering effort for [effective adoption](CONTRIBUTING.md#justification-of-rules-maturity-framework-for-falco-adoption). All rules in [falco_rules.yaml](rules/falco_rules.yaml) are solely based on syscalls and container events. For an up-to-date overview table linking to the respective Mitre Attack resources and more, please refer to the [rules overview](https://falcosecurity.github.io/rules/overview/) document. Lastly, you can find Falco plugins rules in the respective [plugins](https://github.com/falcosecurity/plugins) repos' subfolder.
+The [falco_rules.yaml](rules/falco_rules.yaml) file contains Falco's default rules, categorized by the maturity level `maturity_stable` based on the [Rules Maturity Framework](CONTRIBUTING.md#rules-maturity-framework). Stable rules are enabled by default. Additionally, the file includes incubating and sandbox rules that are not enabled by default and may require engineering effort for [effective adoption](CONTRIBUTING.md#justification-of-rules-maturity-framework-for-falco-adoption). All rules in [falco_rules.yaml](rules/falco_rules.yaml) are solely based on syscalls and container events. For an up-to-date overview table linking to the respective Mitre Attack resources and more, please refer to the [rules overview](https://falcosecurity.github.io/rules/) document. Lastly, you can find Falco plugins rules in the respective [plugins](https://github.com/falcosecurity/plugins) repos' subfolder.
 
 Interested in contributing your custom rules? Visit the [contributing](#contributing) section below and join the Falco community now!
 
