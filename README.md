@@ -14,7 +14,7 @@ The `main` branch contains the most up-to-date state of development. All rules f
 
 ### Default Rules
 
-The [falco_rules.yaml](rules/falco_rules.yaml) file contains Falco's default rules, categorized by the maturity level `maturity_stable` based on the [Rules Maturity Framework](CONTRIBUTING.md#rules-maturity-framework). Stable rules are enabled by default. Additionally, the file includes incubating and sandbox rules that are not enabled by default and may require engineering effort for [effective adoption](CONTRIBUTING.md#justification-of-rules-maturity-framework-for-falco-adoption). All rules in [falco_rules.yaml](rules/falco_rules.yaml) are solely based on syscalls and container events. For an up-to-date overview table linking to the respective Mitre Attack resources and more, please refer to the [rules overview](rules_inventory/rules_overview.md) document. Lastly, you can find Falco plugins rules in the respective [plugins](https://github.com/falcosecurity/plugins) repos' subfolder.
+The [falco_rules.yaml](rules/falco_rules.yaml) file contains Falco's default rules, categorized by the maturity level `maturity_stable` based on the [Rules Maturity Framework](CONTRIBUTING.md#rules-maturity-framework). Stable rules are enabled by default. Additionally, the file includes incubating and sandbox rules that are not enabled by default and may require engineering effort for [effective adoption](CONTRIBUTING.md#justification-of-rules-maturity-framework-for-falco-adoption). All rules in [falco_rules.yaml](rules/falco_rules.yaml) are solely based on syscalls and container events. For an up-to-date overview table linking to the respective Mitre Attack resources and more, please refer to the [rules overview](https://falcosecurity.github.io/rules/overview/) document. Lastly, you can find Falco plugins rules in the respective [plugins](https://github.com/falcosecurity/plugins) repos' subfolder.
 
 Interested in contributing your custom rules? Visit the [contributing](#contributing) section below and join the Falco community now!
 
@@ -56,7 +56,7 @@ You can find the full registry specification here: *(coming soon...)*
 
 ### Registered Rules
 
-Please refer to the automatically generated [rules_inventory/rules_overview.md](https://github.com/falcosecurity/rules/blob/main/rules_inventory/rules_overview.md#falco-rules---detailed-overview) file for a detailed list of all the rules currently registered.
+Please refer to the automatically generated [rules overview](https://falcosecurity.github.io/rules/overview/) document file for a detailed list of all the rules currently registered.
 
 -->
 
