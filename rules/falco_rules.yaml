@@ -2082,7 +2082,7 @@
     parent=%proc.pname command=%proc.cmdline exe_flags=%evt.arg.flags pid=%proc.pid terminal=%proc.tty container_id=%container.id 
     image=%container.image.repository namespace=%k8s.ns.name pod_name=%k8s.pod.name)
   priority: INFO
-  tags: [maturity_stable, host, container, users, mitre_execution, T1059]
+  tags: [maturity_stable, host, container, users, mitre_execution, T1059, NIST_800-53_AC-2]
 
 # In some cases, a shell is expected to be run in a container. For example, configuration
 # management software may do this, which is expected.
@@ -2515,7 +2515,7 @@
   enabled: false
   output: Unexpected K8s NodePort Connection (command=%proc.cmdline pid=%proc.pid connection=%fd.name container_id=%container.id image=%container.image.repository)
   priority: NOTICE
-  tags: [maturity_sandbox, network, k8s, container, mitre_persistence, T1205.001]
+  tags: [maturity_sandbox, network, k8s, container, mitre_persistence, T1205.001, NIST_800-53_AC-6]
 
 - list: network_tool_binaries
   items: [nc, ncat, netcat, nmap, dig, tcpdump, tshark, ngrep, telnet, mitmproxy, socat, zmap]
@@ -2690,7 +2690,7 @@
     image=%container.image.repository namespace=%k8s.ns.name pod_name=%k8s.pod.name)
   priority:
     WARNING
-  tags: [maturity_stable, host, container, filesystem, mitre_defense_evasion, T1070]
+  tags: [maturity_stable, host, container, filesystem, mitre_defense_evasion, T1070, NIST_800-53_AU-10]
 
 - list: data_remove_commands
   items: [shred, mkfs, mke2fs]
@@ -3101,7 +3101,7 @@
     (command=%proc.cmdline pid=%proc.pid connection=%fd.name user=%user.name user_loginuid=%user.loginuid container_id=%container.id
     image=%container.image.repository)
   priority: WARNING
-  tags: [maturity_sandbox, container, network, mitre_discovery, TA0011]
+  tags: [maturity_sandbox, container, network, mitre_discovery, TA0011, NIST_800-53_CM-7]
 
 - macro: user_known_stand_streams_redirect_activities
   condition: (never_true)
