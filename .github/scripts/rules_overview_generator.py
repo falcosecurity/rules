@@ -74,16 +74,14 @@ def print_markdown(df):
     df_deprecated = df_overview[(df_overview['maturity'] == 'maturity_deprecated')]
 
     print('# Falco Rules Overview\n')
-    print('This auto-generated document is based on the [main](https://github.com/falcosecurity/rules/blob/main/rules/) branch of the official Falco rules repository.\
+    print('This auto-generated document is based on the [falco_rules.yaml](https://github.com/falcosecurity/rules/blob/main/rules/falco_rules.yaml) file from the main branch of the official Falco [rules repository](https://github.com/falcosecurity/rules/tree/main).\
         Last Updated: {}.\n'.format(datetime.date.today()))
-    print('The Falco project ships with [{} rules](https://github.com/falcosecurity/rules/blob/main/rules/falco_rules.yaml), of \
-        which [{} rules](https://github.com/falcosecurity/rules/blob/main/rules/falco_rules.yaml) are enabled by default and tagged with \
+    print('The Falco project ships with {} [rules](https://github.com/falcosecurity/rules/blob/main/rules/falco_rules.yaml), of \
+        which {} rules are enabled by default and tagged with \
         [maturity_stable](https://github.com/falcosecurity/rules/blob/main/CONTRIBUTING.md#rules-maturity-framework).\
-        These rules are contributed by the community. This document aims to provide a comprehensive overview of syscall and \
-            container event-based rules while offering resources to drive future improvements.\n'.format(n_rules, len(df_stable)))
-    print('Table of Content:\n - [Stable Falco Rules](#stable-falco-rules)\n - [Incubating Falco Rules](#incubating-falco-rules)\
-        \n - [Sandbox Falco Rules](#sandbox-falco-rules)\n - [Deprecated Falco Rules](#deprecated-falco-rules)\
-        \n - [Falco Rules Stats](#falco-rules-stats)\n')
+        These rules are contributed by the community. This document aims to provide a comprehensive overview of the syscall and \
+            container event-based default rules while offering resources to drive future improvements.\n'.format(n_rules, len(df_stable)))
+    print('\n[Stable Falco Rules](#stable-falco-rules) | [Incubating Falco Rules](#incubating-falco-rules) | [Sandbox Falco Rules](#sandbox-falco-rules) | [Deprecated Falco Rules](#deprecated-falco-rules) | [Falco Rules Stats](#falco-rules-stats)\n')
     
     print('\n## Stable Falco Rules\n')
     print('\n{} stable Falco rules ({:.2f}% of rules) are enabled by default:\n'.format(len(df_stable), (100.0 * len(df_stable) / n_rules)))
