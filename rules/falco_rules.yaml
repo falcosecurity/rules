@@ -1967,7 +1967,7 @@
     and not redhat_image
   output: Privileged container started (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid %container.info image=%container.image.repository:%container.image.tag)
   priority: INFO
-  tags: [maturity_incubating, container, cis, mitre_execution, T1610]
+  tags: [maturity_incubating, container, cis, mitre_execution, T1610, PCI_DSS_10.2.5]
 
 # These capabilities were used in the past to escape from containers
 - macro: excessively_capable_container
@@ -3065,7 +3065,7 @@
      image=%container.image.repository namespace=%k8s.ns.name
      fd.rip.name=%fd.rip.name fd.lip.name=%fd.lip.name fd.cip.name=%fd.cip.name fd.sip.name=%fd.sip.name)
   priority: WARNING
-  tags: [maturity_incubating, container, network, mitre_discovery, T1046]
+  tags: [maturity_incubating, container, network, mitre_discovery, T1046, PCI_DSS_6.4.2]
 
 - list: allowed_image
   items: [] # add image to monitor, i.e.: bitnami/nginx
@@ -3525,7 +3525,7 @@
     proc.cwd=%proc.cwd terminal=%proc.tty container.start_ts=%container.start_ts proc.sid=%proc.sid proc.vpgid=%proc.vpgid 
     proc.vpid=%proc.vpid evt.res=%evt.res)
   priority: CRITICAL
-  tags: [maturity_stable, container, process, mitre_persistence, TA0003]
+  tags: [maturity_stable, container, process, mitre_persistence, TA0003, PCI_DSS_11.5.1]
 
 # Application rules have moved to application_rules.yaml. Please look
 # there if you want to enable them by adding to
