@@ -375,7 +375,7 @@
 # the overridden macro, the condition would look something like
 # "fd.sip="a.b.c.d" or fd.sip="e.f.g.h" or ..."
 - macro: allowed_ssh_hosts
-  condition: ssh_port
+  condition: (never_true)
 
 - rule: Disallowed SSH Connection
   desc: Detect any new ssh connection to a host other than those in an allowed group of hosts
@@ -2201,7 +2201,7 @@
 # The trailing space is intentional so avoid matching on prefixes of
 # the actual proxy.
 - macro: allowed_ssh_proxy_env
-  condition: (always_true)
+  condition: (never_true)
 
 - list: http_proxy_binaries
   items: [curl, wget]
@@ -2415,7 +2415,7 @@
 # (container.image.repository = vendor/container-1 or
 # container.image.repository = vendor/container-2 or ...)
 - macro: ec2_metadata_containers
-  condition: container
+  condition: (never_true)
 
 # On EC2 instances, 169.254.169.254 is a special IP used to fetch
 # metadata about the instance. It may be desirable to prevent access
@@ -2507,7 +2507,7 @@
 #
 # By default, all containers are allowed to contact NodePort services.
 - macro: nodeport_containers
-  condition: container
+  condition: (never_true)
 
 - rule: Unexpected K8s NodePort Connection
   desc: Detect attempts to use K8s NodePorts from a container
@@ -3137,7 +3137,7 @@
 # These two rules are not enabled by default.
 
 - macro: user_known_container_drift_activities
-  condition: (always_true)
+  condition: (never_true)
 
 - rule: Container Drift Detected (chmod)
   desc: New executable created in a container due to chmod
