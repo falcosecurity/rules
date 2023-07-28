@@ -50,8 +50,26 @@
 - macro: open_file_failed
   condition: (evt.type in (open,openat,openat2) and fd.typechar='f' and fd.num=-1 and evt.res startswith E)
 
+# This macro `never_true` is used as placeholder for tuning negative logical sub-expressions, for example
+# - macro: allowed_ssh_hosts
+#   condition: (never_true)
+# can be used in a rules' expression with double negation `and not allowed_ssh_hosts` which effectively evaluates
+# to true and does nothing, the perfect empty template for `logical` cases as opposed to list templates.
+# When tuning the rule you can override the macro with something useful, e.g.
+# - macro: allowed_ssh_hosts
+#   condition: (evt.hostname contains xyz)
+
 - macro: never_true
   condition: (evt.num=0)
+
+# This macro `always_true` is the flip side of the macro `never_true` and currently is commented out as
+# it is not used. You can use it as placeholder for a positive logical sub-expression tuning template
+# macro, e.g. `and custom_procs`, where
+# - macro: custom_procs
+#   condition: (always_true)
+# later you can customize, override the macros to something like
+# - macro: custom_procs
+#   condition: (proc.name in (custom1, custom2, custom3))
 
 # - macro: always_true
 #   condition: (evt.num>=0)
