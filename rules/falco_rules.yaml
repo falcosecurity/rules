@@ -383,7 +383,7 @@
   enabled: false
   output: Disallowed SSH Connection (command=%proc.cmdline pid=%proc.pid connection=%fd.name user=%user.name user_loginuid=%user.loginuid container_id=%container.id image=%container.image.repository)
   priority: NOTICE
-  tags: [maturity_sandbox, host, container, network, mitre_command_and_control, mitre_lateral_movement, T1021.004]
+  tags: [maturity_sandbox, host, container, network, mitre_lateral_movement, T1021.004]
 
 # These rules and supporting macros are more of an example for how to
 # use the fd.*ip and fd.*ip.name fields to match connection
@@ -512,7 +512,7 @@
     file=%fd.name container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority:
     NOTICE
-  tags: [maturity_sandbox, host, container, filesystem, mitre_persistence, T1053.003]
+  tags: [maturity_sandbox, host, container, filesystem, mitre_execution, T1053.003]
 
 # Use this to test whether the event occurred within a container.
 
@@ -890,7 +890,7 @@
     Repository files get updated (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid pcmdline=%proc.pcmdline file=%fd.name newpath=%evt.arg.newpath container_id=%container.id image=%container.image.repository)
   priority:
     NOTICE
-  tags: [maturity_sandbox, host, container, filesystem, mitre_persistence, T1072]
+  tags: [maturity_sandbox, host, container, filesystem, mitre_execution, T1072]
 
 # Users should overwrite this macro to specify conditions under which a
 # write under the binary dir is ignored. For example, it may be okay to
@@ -1004,7 +1004,7 @@
     ssh-related file/directory read by non-ssh program (user=%user.name user_loginuid=%user.loginuid
     command=%proc.cmdline pid=%proc.pid file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline container_id=%container.id image=%container.image.repository)
   priority: ERROR
-  tags: [maturity_sandbox, host, container, filesystem, mitre_discovery, T1005]
+  tags: [maturity_sandbox, host, container, filesystem, mitre_collection, T1005]
 
 - list: safe_etc_dirs
   items: [/etc/cassandra, /etc/ssl/certs/java, /etc/logstash, /etc/nginx/conf.d, /etc/container_environment, /etc/hrmconfig, /etc/fluent/configs.d. /etc/alertmanager]
@@ -1553,7 +1553,7 @@
     File below known binary directory renamed/removed (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid
     pcmdline=%proc.pcmdline operation=%evt.type file=%fd.name %evt.args container_id=%container.id image=%container.image.repository)
   priority: ERROR
-  tags: [maturity_sandbox, host, container, filesystem, mitre_persistence, T1222.002]
+  tags: [maturity_sandbox, host, container, filesystem, mitre_defense_evasion, T1222.002]
 
 - macro: user_known_mkdir_bin_dir_activities
   condition: (never_true)
@@ -1612,7 +1612,7 @@
     Namespace change (setns) by unexpected program (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid
     parent=%proc.pname %container.info container_id=%container.id image=%container.image.repository:%container.image.tag)
   priority: NOTICE
-  tags: [maturity_incubating, host, container, process, mitre_privilege_escalation, mitre_lateral_movement, T1611]
+  tags: [maturity_incubating, host, container, process, mitre_privilege_escalation, T1611]
 
 # The binaries in this list and their descendents are *not* allowed
 # spawn shells. This includes the binaries spawning shells directly as
@@ -2221,7 +2221,7 @@
     Program run with disallowed HTTP_PROXY environment variable
     (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid env=%proc.env parent=%proc.pname container_id=%container.id image=%container.image.repository exe_flags=%evt.arg.flags)
   priority: NOTICE
-  tags: [maturity_sandbox, host, container, users, mitre_command_and_control, T1090, T1204]
+  tags: [maturity_sandbox, host, container, users, mitre_execution, T1204]
 
 # In some environments, any attempt by a interpreted program (perl,
 # python, ruby, etc) to listen for incoming connections or perform
@@ -2403,7 +2403,7 @@
     and not user_known_create_files_below_dev_activities
   output: "File created below /dev by untrusted program (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid file=%fd.name container_id=%container.id image=%container.image.repository)"
   priority: ERROR
-  tags: [maturity_sandbox, host, container, filesystem, mitre_persistence, T1543, T1083]
+  tags: [maturity_sandbox, host, container, filesystem, mitre_persistence, T1543]
 
 
 # In a local/user rules file, you could override this macro to
@@ -2426,7 +2426,7 @@
   output: Outbound connection to EC2 instance metadata service (command=%proc.cmdline pid=%proc.pid connection=%fd.name %container.info image=%container.image.repository:%container.image.tag)
   priority: NOTICE
   enabled: false
-  tags: [maturity_sandbox, network, aws, container, mitre_discovery, T1565]
+  tags: [maturity_sandbox, network, aws, container, mitre_credential_access, T1552.005]
 
 
 # This rule is not enabled by default, since this rule is for cloud environment(GCP, AWS and Azure) only.
@@ -2793,7 +2793,7 @@
     command=%proc.cmdline pid=%proc.pid container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority:
     NOTICE
-  tags: [maturity_incubating, host, container, process, users, mitre_persistence, T1548.001]
+  tags: [maturity_incubating, host, container, process, users, mitre_privilege_escalation, T1548.001]
 
 - list: exclude_hidden_directories
   items: [/root/.cassandra]
@@ -2816,7 +2816,7 @@
     file=%fd.name newpath=%evt.arg.newpath container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority:
     NOTICE
-  tags: [maturity_sandbox, host, container, filesystem, mitre_persistence, T1564.001]
+  tags: [maturity_sandbox, host, container, filesystem, mitre_defense_evasion, T1564.001]
 
 - list: remote_file_copy_binaries
   items: [rsync, scp, sftp, dcp]
@@ -2840,7 +2840,7 @@
     Remote file copy tool launched in container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid parent_process=%proc.pname
     container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag exe_flags=%evt.arg.flags)
   priority: NOTICE
-  tags: [maturity_incubating, container, network, process, mitre_lateral_movement, mitre_exfiltration, T1020, T1210]
+  tags: [maturity_incubating, container, network, process, mitre_exfiltration, T1020]
 
 - rule: Create Symlink Over Sensitive Files
   desc: > 
@@ -2975,14 +2975,14 @@
   enabled: false
   output: Outbound connection to IP/Port flagged by https://cryptoioc.ch (command=%proc.cmdline pid=%proc.pid port=%fd.rport ip=%fd.rip container=%container.info image=%container.image.repository)
   priority: CRITICAL
-  tags: [maturity_sandbox, host, container, network, mitre_execution, T1496]
+  tags: [maturity_sandbox, host, container, network, mitre_impact, T1496]
 
 - rule: Detect crypto miners using the Stratum protocol
   desc: Miners typically specify the mining pool to connect to with a URI that begins with 'stratum+tcp'
   condition: spawned_process and (proc.cmdline contains "stratum+tcp" or proc.cmdline contains "stratum2+tcp" or proc.cmdline contains "stratum+ssl" or proc.cmdline contains "stratum2+ssl")
   output: Possible miner running (command=%proc.cmdline pid=%proc.pid container=%container.info image=%container.image.repository exe_flags=%evt.arg.flags)
   priority: CRITICAL
-  tags: [maturity_sandbox, host, container, process, mitre_execution, T1496]
+  tags: [maturity_sandbox, host, container, process, mitre_impact, T1496]
 
 - list: k8s_client_binaries
   items: [docker, kubectl, crictl]
@@ -3302,7 +3302,7 @@
     and not user_known_mount_in_privileged_containers
   output: Mount was executed inside a privileged container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid %container.info image=%container.image.repository:%container.image.tag exe_flags=%evt.arg.flags)
   priority: WARNING
-  tags: [maturity_incubating, container, cis, filesystem, mitre_lateral_movement, T1611]
+  tags: [maturity_incubating, container, cis, filesystem, mitre_privilege_escalation, T1611]
 
 - list: user_known_userfaultfd_processes
   items: []
