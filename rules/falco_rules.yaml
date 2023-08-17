@@ -3024,6 +3024,19 @@
 - macro: dup
   condition: evt.type in (dup, dup2, dup3)
 
+# As of engine version 20 this rule can be improved by using the fd.types[]
+# field so it only triggers once when all three of std{out,err,in} are
+# redirected.
+#
+# - list: ip_sockets
+#   items: ["ipv4", "ipv6"]
+#
+# - rule: Redirect STDOUT/STDIN to Network Connection in Container once
+#   condition: dup and container and evt.rawres in (0, 1, 2) and fd.type in (ip_sockets) and fd.types[0] in (ip_sockets) and fd.types[1] in (ip_sockets) and fd.types[2] in (ip_sockets) and not user_known_stand_streams_redirect_activities
+#
+# The following rule has not been changed by default as existing users could be
+# relying on the rule triggering when any of std{out,err,in} are redirected.
+
 - rule: Redirect STDOUT/STDIN to Network Connection in Container
   desc: >
     Detect redirecting stdout/stdin to network connection in container (potential reverse shell 
