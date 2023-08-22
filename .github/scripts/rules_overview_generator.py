@@ -9,7 +9,7 @@ import re
 """
 Usage:
 pip install -r .github/scripts/requirements.txt
-python .github/scripts/rules_overview_generator.py --rules_file=rules/falco_rules.yaml > docs/index.md
+python .github/scripts/rules_overview_generator.py --rules_dir=rules > docs/index.md
 """
 
 BASE_MITRE_URL_TECHNIQUE="https://attack.mitre.org/techniques/"
@@ -20,49 +20,55 @@ COLUMNS=['maturity', 'rule', 'desc', 'workload', 'mitre_phase', 'mitre_ttp', 'ex
 
 def arg_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--rules_file', help='Path to falco rules yaml file')
+    parser.add_argument('--rules_dir', help='Path to falco rules directory containing all rules yaml files.')
     return parser.parse_args()
 
-def rules_to_df(rules_file):
+def rules_to_df(rules_dir):
     l = []
-    with open(rules_file, 'r') as f:
-        items = yaml.safe_load(f)
-        for item in items:
-            if 'rule' in item and 'tags' in item:
-                if len(item['tags']) > 0:
-                    item['maturity'], item['workload'], item['mitre_phase'], item['mitre_ttp'], item['compliance_pci_dss'], item['compliance_nist'], item['extra_tags'] = [], [], [], [], [], [], []
-                    for i in item['tags']:
-                        if i.startswith('maturity_'):
-                            item['maturity'].append(i) # should be just one per rule, be resilient and treat as list as well
-                        elif i.startswith('PCI_DSS_'):
-                            item['compliance_pci_dss'].append('[{}]({})'.format(i, BASE_PCI_DSS))
-                        elif i.startswith('NIST_800-53_'):
-                            # NIST links: revisit in the future, could be fragile
-                            item['compliance_nist'].append('[{}]({}{}/{})'.format(i, BASE_NIST, re.search('NIST_800-53_(.*)-', i, re.IGNORECASE).group(1).lower(), \
-                                i.replace('NIST_800-53_', '').lower()))
-                        elif i in ['host', 'container']:
-                            item['workload'].append(i)
-                        elif i.startswith('mitre_'):
-                            item['mitre_phase'].append(i)
-                        elif i.startswith('T'):
-                            if i.startswith('TA'):
-                                item['mitre_ttp'].append('[{}]({}{})'.format(i, BASE_MITRE_URL_TACTIC, i.replace('.', '/')))
+    for rules_filename in os.listdir(rules_dir):
+        if not 'falco_rules' in rules_filename:
+            continue
+        with open(os.path.join(rules_dir, rules_filename), 'r') as f:
+            items = yaml.safe_load(f)
+            for item in items:
+                if 'rule' in item and 'tags' in item:
+                    if len(item['tags']) > 0:
+                        item['maturity'], item['workload'], item['mitre_phase'], item['mitre_ttp'], item['compliance_pci_dss'], item['compliance_nist'], item['extra_tags'] = [], [], [], [], [], [], []
+                        for i in item['tags']:
+                            if i.startswith('maturity_'):
+                                item['maturity'].append(i) # should be just one per rule, be resilient and treat as list as well
+                            elif i.startswith('PCI_DSS_'):
+                                item['compliance_pci_dss'].append('[{}]({})'.format(i, BASE_PCI_DSS))
+                            elif i.startswith('NIST_800-53_'):
+                                # NIST links: revisit in the future, could be fragile
+                                item['compliance_nist'].append('[{}]({}{}/{})'.format(i, BASE_NIST, re.search('NIST_800-53_(.*)-', i, re.IGNORECASE).group(1).lower(), \
+                                    i.replace('NIST_800-53_', '').lower()))
+                            elif i in ['host', 'container']:
+                                item['workload'].append(i)
+                            elif i.startswith('mitre_'):
+                                item['mitre_phase'].append(i)
+                            elif i.startswith('T'):
+                                if i.startswith('TA'):
+                                    item['mitre_ttp'].append('[{}]({}{})'.format(i, BASE_MITRE_URL_TACTIC, i.replace('.', '/')))
+                                else:
+                                    item['mitre_ttp'].append('[{}]({}{})'.format(i, BASE_MITRE_URL_TECHNIQUE, i.replace('.', '/')))
                             else:
-                                item['mitre_ttp'].append('[{}]({}{})'.format(i, BASE_MITRE_URL_TECHNIQUE, i.replace('.', '/')))
-                        else:
-                            item['extra_tags'].append(i) 
-                    item['workload'].sort()
-                    item['mitre_phase'].sort()
-                    item['mitre_ttp'].sort()
-                    item['compliance_pci_dss'].sort()
-                    item['compliance_nist'].sort()
-                    item['mitre_phase_list'] = item['mitre_phase']
-                    item['extra_tags_list'] = item['extra_tags']
-                    item['compliance_pci_dss_list'] = item['compliance_pci_dss']
-                    item['compliance_nist_list'] = item['compliance_nist']
-                    item['enabled'] = (item['enabled'] if 'enabled' in item else True) 
-                    l.append([', '.join(item[x]) if x in ['maturity', 'workload', 'mitre_phase', 'mitre_ttp', 'compliance_pci_dss', 'compliance_nist', 'extra_tags'] else item[x] for x in COLUMNS])
-        df = pd.DataFrame.from_records(l, columns=COLUMNS)
+                                item['extra_tags'].append(i) 
+                        item['workload'].sort()
+                        item['mitre_phase'].sort()
+                        item['mitre_ttp'].sort()
+                        item['compliance_pci_dss'].sort()
+                        item['compliance_nist'].sort()
+                        item['mitre_phase_list'] = item['mitre_phase']
+                        item['extra_tags_list'] = item['extra_tags']
+                        item['compliance_pci_dss_list'] = item['compliance_pci_dss']
+                        item['compliance_nist_list'] = item['compliance_nist']
+                        item['enabled'] = (item['enabled'] if 'enabled' in item else True) 
+                        l.append([', '.join(item[x]) if x in ['maturity', 'workload', 'mitre_phase', 'mitre_ttp', 'compliance_pci_dss', 'compliance_nist', 'extra_tags'] else item[x] for x in COLUMNS])
+
+    if not l:
+        sys.exit('No valid rules in any of the falco_rules.* files in the rules_dir or no falco_rules.* files in the rules_dir in the first place, exiting ...')
+    df = pd.DataFrame.from_records(l, columns=COLUMNS)
     return df.sort_values(by=['maturity','rule'], inplace=False)
 
 def print_markdown(df):
@@ -74,7 +80,7 @@ def print_markdown(df):
     df_deprecated = df_overview[(df_overview['maturity'] == 'maturity_deprecated')]
 
     print('# Falco Rules Overview\n')
-    print('This auto-generated document is based on the [falco_rules.yaml](https://github.com/falcosecurity/rules/blob/main/rules/falco_rules.yaml) file from the main branch of the official Falco [rules repository](https://github.com/falcosecurity/rules/tree/main).\
+    print('This auto-generated document is derived from the `falco_rules.*` yaml files within the [rules](https://github.com/falcosecurity/rules/blob/main/rules/) directory of the main branch in the official Falco [rules repository](https://github.com/falcosecurity/rules/tree/main).\
         Last Updated: {}.\n'.format(datetime.date.today()))
     print('The Falco project ships with {} [rules](https://github.com/falcosecurity/rules/blob/main/rules/falco_rules.yaml), of \
         which {} rules are enabled by default and tagged with \
@@ -128,12 +134,9 @@ def print_markdown(df):
     
 if __name__ == '__main__':
     args_parsed = arg_parser()
-    rules_file = args_parsed.rules_file
+    rules_dir = args_parsed.rules_dir
     
-    if not rules_file:
-        sys.exit('No rules file provided via --rules_file arg, exiting ...')
-    
-    if not os.path.isfile(rules_file):
-        sys.exit('Provided rules file \"{}\" does not exist, exiting ...'.format(rules_file))
+    if not rules_dir or not os.path.isdir(rules_dir):
+        sys.exit('No valid rules directory provided via --rules_dir arg, exiting ...')
 
-    print_markdown(rules_to_df(rules_file))
+    print_markdown(rules_to_df(rules_dir))
