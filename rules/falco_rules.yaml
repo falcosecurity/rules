@@ -526,7 +526,7 @@
   output: Cron jobs were scheduled to run (file=%fd.name evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
   priority:
     NOTICE
-  tags: [maturity_sandbox, host, container, filesystem, mitre_execution, T1053.003]
+  tags: [maturity_incubating, host, container, filesystem, mitre_execution, T1053.003]
 
 # Use this to test whether the event occurred within a container.
 
@@ -1007,7 +1007,7 @@
   enabled: false
   output: ssh-related file/directory read by non-ssh program (file=%fd.name pcmdline=%proc.pcmdline evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
   priority: ERROR
-  tags: [maturity_sandbox, host, container, filesystem, mitre_collection, T1005]
+  tags: [maturity_incubating, host, container, filesystem, mitre_collection, T1005]
 
 - list: safe_etc_dirs
   items: [/etc/cassandra, /etc/ssl/certs/java, /etc/logstash, /etc/nginx/conf.d, /etc/container_environment, /etc/hrmconfig, /etc/fluent/configs.d. /etc/alertmanager]
@@ -2156,7 +2156,7 @@
     and not user_expected_system_procs_network_activity_conditions
   output: Known system binary sent/received network traffic (connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
   priority: NOTICE
-  tags: [maturity_sandbox, host, network, process, mitre_execution, T1059]
+  tags: [maturity_incubating, host, network, process, mitre_execution, T1059]
 
 # This list allows easily whitelisting system proc names that are
 # expected to communicate on the network.
@@ -2193,7 +2193,7 @@
   enabled: false
   output: Program run with disallowed HTTP_PROXY environment variable (env=%proc.env evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
   priority: NOTICE
-  tags: [maturity_sandbox, host, container, users, mitre_execution, T1204]
+  tags: [maturity_incubating, host, container, users, mitre_execution, T1204]
 
 # In some environments, any attempt by a interpreted program (perl,
 # python, ruby, etc) to listen for incoming connections or perform
@@ -2253,7 +2253,7 @@
   enabled: false
   output: Unexpected UDP Traffic Seen (connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
   priority: NOTICE
-  tags: [maturity_sandbox, host, container, network, mitre_exfiltration, TA0011]
+  tags: [maturity_incubating, host, container, network, mitre_exfiltration, TA0011]
 
 # With the current restriction on system calls handled by falco
 # (e.g. excluding read/write/sendto/recvfrom/etc, this rule won't
@@ -2341,7 +2341,7 @@
     not user_known_user_management_activities
   output: User management binary command run outside of container (gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
   priority: NOTICE
-  tags: [maturity_sandbox, host, container, users, software_mgmt, mitre_persistence, T1098]
+  tags: [maturity_incubating, host, container, users, software_mgmt, mitre_persistence, T1098]
 
 - list: allowed_dev_files
   items: [
@@ -2365,7 +2365,7 @@
     and not user_known_create_files_below_dev_activities
   output: File created below /dev by untrusted program (file=%fd.name evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
   priority: ERROR
-  tags: [maturity_sandbox, host, container, filesystem, mitre_persistence, T1543]
+  tags: [maturity_incubating, host, container, filesystem, mitre_persistence, T1543]
 
 
 # In a local/user rules file, you could override this macro to
@@ -2388,7 +2388,7 @@
   output: Outbound connection to EC2 instance metadata service (connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
   priority: NOTICE
   enabled: false
-  tags: [maturity_sandbox, network, aws, container, mitre_credential_access, T1552.005]
+  tags: [maturity_incubating, network, aws, container, mitre_credential_access, T1552.005]
 
 
 # This rule is not enabled by default, since this rule is for cloud environment(GCP, AWS and Azure) only.
@@ -2405,7 +2405,7 @@
   enabled: false
   output: Outbound connection to cloud instance metadata service (connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
   priority: NOTICE
-  tags: [maturity_sandbox, network, container, mitre_discovery, T1565]
+  tags: [maturity_incubating, network, container, mitre_discovery, T1565]
 
 # Containers from IBM Cloud
 - list: ibm_cloud_containers
@@ -2539,7 +2539,7 @@
     spawned_process and container and network_tool_procs and not user_known_network_tool_activities
   output: Network tool launched in container (evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
   priority: NOTICE
-  tags: [maturity_sandbox, container, network, process, mitre_execution, T1059]
+  tags: [maturity_incubating, container, network, process, mitre_execution, T1059]
 
 # This rule is not enabled by default, as there are legitimate use
 # cases for these tools on hosts. If you want to enable it, modify the
@@ -2557,7 +2557,7 @@
     not user_known_network_tool_activities
   output: Network tool launched on host (evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags)
   priority: NOTICE
-  tags: [maturity_sandbox, host, network, process, mitre_execution, T1059]
+  tags: [maturity_incubating, host, network, process, mitre_execution, T1059]
 
 - list: grep_binaries
   items: [grep, egrep, fgrep]
@@ -3261,7 +3261,7 @@
     not user_known_ingress_remote_file_copy_activities
   output: Ingress remote file copy tool launched in container (evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
   priority: NOTICE
-  tags: [maturity_sandbox, container, network, process, mitre_command_and_control, TA0011]
+  tags: [maturity_incubating, container, network, process, mitre_command_and_control, TA0011]
 
 # This rule helps detect CVE-2021-4034:
 # A privilege escalation to root through memory corruption
@@ -3392,8 +3392,8 @@
     not container.image.repository in (falco_privileged_images, trusted_images)
   output: File execution detected from /dev/shm (evt_res=%evt.res file=%fd.name proc_cwd=%proc.cwd proc_pcmdline=%proc.pcmdline user_loginname=%user.loginname group_gid=%group.gid group_name=%group.name evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
   priority: WARNING
-  tags: [maturity_sandbox, host, container, mitre_execution, T1059.004]
-  
+  tags: [maturity_incubating, host, container, mitre_execution, T1059.004]
+
 # List of allowed container images that are known to execute binaries not part of their base image.
 - list: known_drop_and_execute_containers
   items: []
