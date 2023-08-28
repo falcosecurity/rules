@@ -521,7 +521,9 @@
   condition: (never_true)
 
 - rule: Schedule Cron Jobs
-  desc: Detect cron jobs scheduled
+  desc: >
+    Detect scheduled cron jobs; this is a highly generic detection and certainly needs adjustments and profiling in your environment before 
+    operationalization. Simultaneously, exploiting the functionality of cron jobs is among one of the oldest TTPs used by adversaries.
   condition: >
     ((open_write and fd.name startswith /etc/cron) or
      (spawned_process and proc.name = "crontab")) and
@@ -1002,7 +1004,13 @@
   condition: (never_true)
 
 - rule: Read ssh information
-  desc: Any attempt to read files below ssh directories by non-ssh programs
+  desc: > 
+    This rule identifies attempts to read files within ssh directories using programs that are not related to ssh. It's a simple and 
+    versatile detection method that works well alongside more specific rules focused on sensitive file access. You have a couple of 
+    options for using this rule effectively: you can adjust the specialized rules to cover all the important scenarios and ensure 
+    precedence in rule smatching for those, or you can analyze the combined view of ssh-related file access across various rules on 
+    your downstream computing platform. Just like with other rules, you can narrow down monitoring to specific processes, or you can 
+    limit it to interactive access only.
   condition: >
     ((open_read or open_directory) and
      (user_ssh_directory or fd.name startswith /root/.ssh) and
@@ -2174,7 +2182,10 @@
 # sockfamily ip is to exclude certain processes (like 'groups') that communicate on unix-domain sockets
 # systemd can listen on ports to launch things like sshd on demand
 - rule: System procs network activity
-  desc: Any network activity performed by system binaries that are not expected to send or receive any network traffic.
+  desc: >
+    Detect any unexpected network activity performed by system binaries that typically shouldn't perform network activity, including 
+    coreutils binaries (like sleep, mkdir, who, date, and others) or user management binaries (such as login, systemd, usermod, deluser, 
+    adduser, chpasswd, and others). This serves as a valuable baseline detection for network-related activities.
   condition: >
     (fd.sockfamily = ip and (system_procs or proc.name in (shell_binaries)))
     and (inbound_outbound)
@@ -2211,14 +2222,17 @@
   condition: (proc.name in (http_proxy_binaries))
 
 - rule: Program run with disallowed http proxy env
-  desc: An attempt to run a program with a disallowed HTTP_PROXY environment variable
+  desc: >
+    Detect curl or wget usage with HTTP_PROXY environment variable. Attackers can manipulate the HTTP_PROXY variable's 
+    value to redirect application's internal HTTP requests. This could expose sensitive information like authentication 
+    keys and private data.
   condition: >
     spawned_process and
     http_proxy_procs and
     not allowed_ssh_proxy_env and
     proc.env icontains HTTP_PROXY
   enabled: false
-  output: Program run with disallowed HTTP_PROXY environment variable (env=%proc.env evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
+  output: Curl or wget run with disallowed HTTP_PROXY environment variable (env=%proc.env evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
   priority: NOTICE
   tags: [maturity_sandbox, host, container, users, mitre_execution, T1204]
 
@@ -2275,7 +2289,9 @@
   condition: fd.port in (expected_udp_ports)
 
 - rule: Unexpected UDP Traffic
-  desc: UDP traffic not on port 53 (DNS) or other commonly used ports
+  desc: > 
+    Detecting UDP traffic on ports other than 53 (DNS) or other commonly used ports. Misusing UDP is a known TTP among attackers. 
+    Monitoring unusual network activity is highly valuable but often generates significant noise, as is the case with this detection.
   condition: (inbound_outbound) and fd.l4proto=udp and not expected_udp_traffic
   enabled: false
   output: Unexpected UDP Traffic Seen (connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
@@ -2351,10 +2367,10 @@
 
 - rule: User mgmt binaries
   desc: >
-    Activity by any programs that can manage users, passwords, or permissions. sudo and su are excluded.
-    Activity in containers is also excluded--some containers create custom users on top
-    of a base linux distribution at startup.
-    Some innocuous command lines that don't actually change anything are excluded.
+    Detect activity by any programs that can manage users, passwords, or permissions (such as login, systemd, usermod, deluser, adduser, 
+    chpasswd, and others). sudo and su are excluded. Activity in containers is also excluded -- some containers create custom users on 
+    top of a base linux distribution at startup. Some innocuous command lines that don't actually change anything are excluded. You might 
+    want to consider applying this rule to container actions as well.
   condition: >
     spawned_process and proc.name in (user_mgmt_binaries) and
     not proc.name in (su, sudo, lastlog, nologin, unix_chkpwd) and not container and
@@ -2385,7 +2401,10 @@
 # (we may need to add additional checks against false positives, see:
 # https://bugs.launchpad.net/ubuntu/+source/rkhunter/+bug/86153)
 - rule: Create files below dev
-  desc: creating any files below /dev other than known programs that manage devices. Some rootkits hide files in /dev.
+  desc: > 
+    Detect the creation of files under /dev except for authorized device management programs. This can reveal rootkits hiding 
+    files in /dev. Additionally, consider the "Execution from /dev/shm" rule. The upstream rule already covers some tuning 
+    scenarios that you can further expand upon.
   condition: >
     fd.directory = /dev and
     (evt.type = creat or (evt.type in (open,openat,openat2) and evt.arg.flags contains O_CREAT))
@@ -2413,7 +2432,9 @@
 # metadata about the instance. It may be desirable to prevent access
 # to this IP from containers.
 - rule: Contact EC2 Instance Metadata Service From Container
-  desc: Detect attempts to contact the EC2 Instance Metadata Service from a container
+  desc: > 
+    Detects attempts to communicate with the EC2 Instance Metadata Service from a container. This detection is narrowly focused 
+    and might not apply to your environment. In addition, it could generate noise and require fine-tuning.
   condition: outbound and fd.sip="169.254.169.254" and container and not ec2_metadata_containers
   output: Outbound connection to EC2 instance metadata service (connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
   priority: NOTICE
@@ -2430,7 +2451,9 @@
 # On GCP, AWS and Azure, 169.254.169.254 is a special IP used to fetch
 # metadata about the instance. The metadata could be used to get credentials by attackers.
 - rule: Contact cloud metadata service from container
-  desc: Detect attempts to contact the Cloud Instance Metadata Service from a container
+  desc: > 
+    Detects attempts to communicate with the Cloud Instance Metadata Service from a container. This detection is narrowly focused 
+    and might not apply to your environment. In addition, it could generate noise and require fine-tuning.
   condition: outbound and fd.sip="169.254.169.254" and container and not user_known_metadata_access
   enabled: false
   output: Outbound connection to cloud instance metadata service (connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
@@ -2571,7 +2594,10 @@
   condition: (never_true)
 
 - rule: Launch Suspicious Network Tool in Container
-  desc: Detect network tools launched inside container
+  desc: >
+    Detect network tools (like netcat, nmap, tcpdump, socat, and more) launched within containers without any additional filters. 
+    This serves as a valuable general detection, but it's recommended to invest engineering effort to fine-tune it and prevent a 
+    high volume of legitimate logs. This rule complements the more specific "Netcat Remote Code Execution in Container" rule.
   condition: >
     spawned_process and container and network_tool_procs and not user_known_network_tool_activities
   output: Network tool launched in container (evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
@@ -2585,7 +2611,10 @@
   condition: (never_true)
 
 - rule: Launch Suspicious Network Tool on Host
-  desc: Detect network tools launched on the host
+  desc: >
+    Detect network tools (like netcat, nmap, tcpdump, socat, and more) launched within containers without any additional filters. 
+    This serves as a valuable general detection, but it's recommended to invest engineering effort to fine-tune it and prevent a 
+    high volume of legitimate logs. The host equivalent of "Launch Suspicious Network Tool in Container.".
   condition: >
     spawned_process and
     not container and
@@ -3307,7 +3336,10 @@
               proc.cmdline contains " --remote-name ")
 
 - rule: Launch Ingress Remote File Copy Tools in Container
-  desc: Detect ingress remote file copy tools launched in container
+  desc: > 
+    Detect ingress remote file copy tools (such as curl or wget) launched inside containers. This rule can be 
+    considered a valuable auditing tool, but it has the potential to generate notable noise and requires careful 
+    profiling before full operationalization.
   condition: >
     spawned_process and
     container and
@@ -3441,7 +3473,11 @@
   tags: [maturity_incubating, host, container, process, aws, mitre_credential_access, T1552]
 
 - rule: Execution from /dev/shm
-  desc: This rule detects file execution from the /dev/shm directory, a common tactic for threat actors to stash their readable+writable+(sometimes)executable files.
+  desc: > 
+    This rule detects file execution in the /dev/shm directory, a tactic often used by threat actors to store their readable, writable, and 
+    occasionally executable files. /dev/shm acts as a link to the host or other containers, creating vulnerabilities for their compromise 
+    as well. Notably, /dev/shm remains unchanged even after a container restart. Consider this rule alongside the newer 
+    "Drop and execute new binary in container" rule.
   condition: >
     spawned_process and 
     (proc.exe startswith "/dev/shm/" or 
