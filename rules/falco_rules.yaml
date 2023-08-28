@@ -483,7 +483,11 @@
   condition: (never_true)
 
 - rule: Modify Shell Configuration File
-  desc: Detect attempt to modify shell configuration files
+  desc: > 
+    Detect attempts to modify shell configuration files, primarily aimed at establishing persistence by automatically inserting 
+    commands into scripts executed by shells. The upstream rule excludes shell processes because they often create unnecessary noise.
+    However, this might lead to missed detections. To customize the rule for your situation, you can fine-tune it using enhanced profiling. 
+    For example, you might want to only consider interactive shell processes (where proc.tty != 0).
   condition: >
     open_write and
     (fd.filename in (shell_config_filenames) or
@@ -1524,8 +1528,9 @@
 
 - rule: DB program spawned process
   desc: >
-    a database-server related program spawned a new process other than itself.
-    This shouldn\'t occur and is a follow on from some SQL injection attacks.
+    A program related to the database server creates an unexpected child process (other than itself). 
+    This is not supposed to happen and often follows SQL injection attacks. This behavioral detection could 
+    indicate potential unauthorized data extraction or tampering with the database.
   condition: >
     proc.pname in (db_server_binaries)
     and spawned_process
@@ -1578,8 +1583,10 @@
 
 - rule: Change thread namespace
   desc: >
-    an attempt to change a program/thread\'s namespace (commonly done
-    as a part of creating a container) by calling setns.
+    An attempt to alter a program/thread's namespace (often performed while creating a container) through the setns call. 
+    Conversely, the same syscall netns is activated when an unauthorized attempt is made to break out from the container 
+    to the host, for example, when using commands like `nsenter --target 1` and similar ones. Recommending to profile your 
+    environment and refine this rule for effective operationalization.
   condition: >
     evt.type=setns and evt.dir=<
     and proc_name_exists
@@ -1941,7 +1948,11 @@
   condition: (never_true)
 
 - rule: Launch Privileged Container
-  desc: Detect the initial process started in a privileged container. Exceptions are made for known trusted images.
+  desc: > 
+    Detect the initial process initiation within a privileged container, with exemptions for known and trusted images. 
+    This rule primarily serves as an excellent auditing mechanism since highly privileged containers, when compromised, 
+    can result in significant harm. For instance, if another rule triggers within such a privileged container, it could be 
+    seen as more suspicious, prompting a closer inspection.
   condition: >
     container_started and container
     and container.privileged=true
@@ -1966,7 +1977,11 @@
     or thread.cap_permitted contains CAP_BPF)
 
 - rule: Launch Excessively Capable Container
-  desc: Detect container started with a powerful set of capabilities. Exceptions are made for known trusted images.
+  desc: > 
+    Identify containers that start with a powerful set of capabilities, with exceptions for recognized trusted images. 
+    Similar to the "Launch Privileged Container" rule, this functions as a robust auditing rule. Compromised highly privileged 
+    containers can lead to substantial harm. For instance, if another rule is triggered within such a container, it might 
+    raise suspicion, prompting closer scrutiny.
   condition: >
     container_started and container
     and excessively_capable_container
@@ -2296,8 +2311,11 @@
 # sshd, mail programs attempt to setuid to root even when running as non-root. Excluding here to avoid meaningless FPs
 - rule: Non sudo setuid
   desc: >
-    an attempt to change users by calling setuid. sudo/su are excluded. users "root" and "nobody"
-    suing to itself are also excluded, as setuid calls typically involve dropping privileges.
+    Detect attempts to change users through the use of setuid, with exceptions for sudo/su. 
+    The users "root" and "nobody" using setuid on themselves are also excluded, as setuid calls in these cases 
+    typically involve reducing privileges. By setting the setuid bit, an attacker could execute code in a 
+    different user's context, potentially with higher privileges. One drawback is the potential for noise, 
+    as many applications legitimately use this approach.
   condition: >
     evt.type=setuid and evt.dir=>
     and (known_user_in_container or not container)
@@ -2500,7 +2518,11 @@
     or container.image.repository = "k8s.gcr.io/kube-proxy")
 
 - rule: Launch Package Management Process in Container
-  desc: Package management process ran inside container
+  desc: > 
+    Detect package management processes executed within containers. An excellent auditing rule to monitor general drifts 
+    in containers. Particularly useful for newer rules like "Drop and execute new binary in container" during incident 
+    response investigations. This helps identify common anti-patterns of ad-hoc debugging. Simultaneously, to maintain 
+    optimal hygiene, it's recommended to prevent container drifts and instead opt for redeploying new containers.
   condition: >
     spawned_process
     and container
@@ -2584,7 +2606,10 @@
 
 - rule: Search Private Keys or Passwords
   desc: >
-    Detect grep private keys or passwords activity.
+    Detect attempts to search for private keys or passwords using the grep or find command. This is often seen with 
+    unsophisticated attackers, as there are many ways to access files using bash built-ins that could go unnoticed. 
+    Regardless, this serves as a solid baseline detection that can be tailored to cover these gaps while maintaining 
+    an acceptable noise level.
   condition: >
     (spawned_process and
      ((grep_commands and private_key_or_password) or
@@ -2685,7 +2710,10 @@
   condition: (evt.arg.name startswith /var/lib/docker or fd.name startswith /var/lib/docker)
 
 - rule: Delete or rename shell history
-  desc: Detect shell history deletion
+  desc: > 
+    Detect shell history deletion, frequently used by unsophisticated adversaries to eliminate evidence. 
+    Note that it can also trigger when exiting a Terminal shell, such as with `kubectl exec`, which 
+    may introduce some noise.
   condition: >
     (modify_shell_history or truncate_shell_history) and
        not var_lib_docker_filepath and
@@ -2718,9 +2746,10 @@
 
 - rule: Set Setuid or Setgid bit
   desc: >
-    When the setuid or setgid bits are set for an application,
-    this means that the application will run with the privileges of the owning user or group respectively.
-    Detect setuid or setgid bits set via chmod
+    This rule is focused on detecting the use of setuid or setgid bits set via chmod. These bits, when set for an application, 
+    result in the application running with the privileges of the owning user or group. By enabling the setuid or setgid bits, 
+    an attacker could run code in a different user's context, possibly with elevated privileges. However, there's a trade-off 
+    with noise, given that numerous applications legitimately run chmod. This rule is related to the "Non sudo setuid" rule.
   condition: >
     chmod and (evt.arg.mode contains "S_ISUID" or evt.arg.mode contains "S_ISGID")
     and not proc.name in (user_known_chmod_applications)
@@ -2765,7 +2794,9 @@
   condition: (never_true)
 
 - rule: Launch Remote File Copy Tools in Container
-  desc: Detect remote file copy tools launched in container
+  desc: > 
+    Detect remote file copy tools (like rsync, scp, sftp, dcp) launched within a container, potentially indicating data 
+    exfiltration. Suggest refining this rule to accommodate legitimate use cases.
   condition: >
     spawned_process
     and container
@@ -2974,7 +3005,10 @@
 # # Check logs running
 
 - rule: Network Connection outside Local Subnet
-  desc: Detect traffic to image outside local subnet.
+  desc: > 
+    Detect network traffic (inbound or outbound) from a container to a destination outside the local subnet. 
+    To operationalize this rule, profile your environment and update the template macro namespace_scope_network_only_subnet. 
+    Customizing network-related rules usually demands substantial engineering effort to ensure their functionality.
   condition: >
     inbound_outbound and
     container and
@@ -3207,7 +3241,10 @@
   condition: (never_true)
 
 - rule: Mount Launched in Privileged Container
-  desc: Detect file system mount happened inside a privileged container which might lead to container escape.
+  desc: > 
+    Detect filesystem mounts (using the mount binary) within a privileged container. Due to the elevated privileges, 
+    this action could be one of the TTPs used in an attempt to escape from a container to the host. This type of action 
+    is often preceded by reconnaissance activities, for which you can also create custom rules.
   condition: >
     spawned_process and container
     and container.privileged=true
@@ -3317,7 +3354,10 @@
   items: [scsi_id, argoexec]
 
 - rule: Read environment variable from /proc files
-  desc: An attempt to read process environment variables from /proc files
+  desc: > 
+    An attempt to read process environment variables from /proc files. The consequences are akin to accessing traditional 
+    sensitive files, as sensitive data, including secrets, might be stored in environment variables. Understanding your 
+    environment, such as identifying critical namespaces can enhance the rule's effectiveness.
   condition: >
     open_read and container and (fd.name glob /proc/*/environ)
     and not proc.name in (known_binaries_to_read_environment_variables_from_proc_files)
@@ -3370,7 +3410,11 @@
     proc.args icontains "secretaccesskey")
 
 - rule: Find AWS Credentials
-  desc: Find or grep AWS credentials
+  desc: >
+    Detect attempts to search for private keys or passwords using the grep or find command, particularly targeting standard 
+    AWS credential locations. This is often seen with unsophisticated attackers, as there are many ways to access files 
+    using bash built-ins that could go unnoticed. Regardless, this serves as a solid baseline detection that can be tailored 
+    to cover these gaps while maintaining an acceptable noise level. This rule complements the rule "Search Private Keys or Passwords".
   condition: >
     spawned_process and
     ((grep_commands and private_aws_credentials) or
