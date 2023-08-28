@@ -987,9 +987,9 @@
 
 - rule: Directory traversal monitored file read
   desc: >
-    Web applications can be vulnerable to directory traversal attacks that allow accessing files outside of the web app's root directory (e.g. Arbitrary File Read bugs).
-    System directories like /etc are typically accessed via absolute paths. Access patterns outside of this (here path traversal) can be regarded as suspicious.
-    This rule includes failed file open attempts.
+    Web applications can be vulnerable to directory traversal attacks that allow accessing files outside of the web app's root directory 
+    (e.g. Arbitrary File Read bugs). System directories like /etc are typically accessed via absolute paths. Access patterns outside of this 
+    (here path traversal) can be regarded as suspicious. This rule includes failed file open attempts.
   condition: (open_read or open_file_failed) and (etc_dir or user_ssh_directory or fd.name startswith /root/.ssh or fd.name contains "id_rsa") and directory_traversal and not proc.pname in (shell_binaries)
   enabled: true
   output: Read monitored file via directory traversal (file=%fd.name fileraw=%fd.nameraw gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
@@ -1407,6 +1407,10 @@
     An attempt to read any sensitive file (e.g. files containing user/password/authentication
     information) by a trusted program after startup. Trusted programs might read these files
     at startup to load initial state, but not afterwards. Can be customized as needed.
+    In modern containerized cloud infrastructures, accessing traditional Linux sensitive files 
+    might be less relevant, yet it remains valuable for baseline detections. While we provide additional 
+    rules for SSH or cloud vendor-specific credentials, you can significantly enhance your security 
+    program by crafting custom rules for critical application credentials unique to your environment.
   condition: sensitive_files and open_read and server_procs and not proc_is_new and proc.name!="sshd" and not user_known_read_sensitive_files_activities
   output: Sensitive file opened for reading by trusted program after startup (file=%fd.name pcmdline=%proc.pcmdline gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
   priority: WARNING
@@ -1451,6 +1455,10 @@
   desc: >
     An attempt to read any sensitive file (e.g. files containing user/password/authentication
     information). Exceptions are made for known trusted programs. Can be customized as needed.
+    In modern containerized cloud infrastructures, accessing traditional Linux sensitive files 
+    might be less relevant, yet it remains valuable for baseline detections. While we provide additional 
+    rules for SSH or cloud vendor-specific credentials, you can significantly enhance your security 
+    program by crafting custom rules for critical application credentials unique to your environment.
   condition: >
     sensitive_files and open_read
     and proc_name_exists
@@ -1718,12 +1726,15 @@
 # spawn shells.
 - rule: Run shell untrusted
   desc: > 
-    An attempt to spawn a shell below a non-shell application. The non-shell applications that are monitored are defined in the 'protected_shell_spawner' macro, 
-    with 'protected_shell_spawning_binaries' being the list you can easily customize. For Java parent processes, please note that Java often has a custom process name. 
-    Therefore, rely more on 'proc.exe' to define Java applications. This rule can be noisier, as you can see in the exhaustive existing tuning. However, given it is 
-    very behavior-driven and broad, it is universally relevant to catch general Remote Code Execution (RCE). Allocate time to tune this rule for your use cases and 
-    reduce noise. Tuning suggestions include looking at the duration of the parent process ('proc.ppid.duration') to define your long-running app processes. Checking 
-    for newer fields such as 'proc.vpgid.name' and 'proc.vpgid.exe' instead of the direct parent process being a non-shell application could make the rule more robust.
+    An attempt to spawn a shell below a non-shell application. The non-shell applications that are monitored are 
+    defined in the protected_shell_spawner macro, with 'protected_shell_spawning_binaries' being the list you can 
+    easily customize. For Java parent processes, please note that Java often has a custom process name. Therefore, 
+    rely more on proc.exe to define Java applications. This rule can be noisier, as you can see in the exhaustive 
+    existing tuning. However, given it is very behavior-driven and broad, it is universally relevant to catch 
+    general Remote Code Execution (RCE). Allocate time to tune this rule for your use cases and reduce noise. 
+    Tuning suggestions include looking at the duration of the parent process (proc.ppid.duration) to define your 
+    long-running app processes. Checking for newer fields such as proc.vpgid.name and proc.vpgid.exe instead of the 
+    direct parent process being a non-shell application could make the rule more robust.
   condition: >
     spawned_process
     and shell_procs
@@ -2089,7 +2100,8 @@
     A shell was used as the entrypoint/exec point into a container with an attached terminal. Parent process may have 
     legitimately already exited and be null (read container_entrypoint macro). Common when using 'kubectl exec' in Kubernetes. 
     Correlate with k8saudit exec logs if possible to find user or serviceaccount token used (fuzzy correlation by namespace and pod name). 
-    Rather than considering it a standalone rule, it may be best used when checking for other triggered rules in this container/tty.
+    Rather than considering it a standalone rule, it may be best used as generic auditing rule while examining other triggered 
+    rules in this container/tty.
   condition: >
     spawned_process and container
     and shell_procs and proc.tty != 0
@@ -2463,9 +2475,12 @@
 
 - rule: Contact K8S API Server From Container
   desc: >
-    Detect attempts to contact the K8S API Server from a container by non-profiled users. 
-    Kubernetes APIs allow configuring the Kubernetes cluster management lifecycle. 
-    Detecting possible unauthorized access is crucial.
+    Detect attempts to communicate with the K8S API Server from a container by non-profiled users. Kubernetes APIs play a 
+    pivotal role in configuring the cluster management lifecycle. Detecting potential unauthorized access to the API server 
+    is of utmost importance. Audit your complete infrastructure and pinpoint any potential machines from which the API server 
+    might be accessible based on your network layout. If Falco can't operate on all these machines, consider analyzing the 
+    Kubernetes audit logs (typically drained from control nodes, and Falco offers a k8saudit plugin) as an additional data 
+    source for detections within the control plane.
   condition: >
     evt.type=connect and evt.dir=< and
     (fd.typechar=4 or fd.typechar=6) and
@@ -2809,7 +2824,8 @@
 - rule: Create Symlink Over Sensitive Files
   desc: > 
     Detect symlinks created over a curated list of sensitive files or subdirectories under /etc/ or 
-    root directories. Can be customized as needed.
+    root directories. Can be customized as needed. Refer to further and equivalent guidance within the 
+    rule "Read sensitive file untrusted".
   condition: >
     create_symlink and
     (evt.arg.target in (sensitive_file_names) or evt.arg.target in (sensitive_directory_names))
@@ -2820,7 +2836,8 @@
 - rule: Create Hardlink Over Sensitive Files
   desc: > 
     Detect hardlink created over a curated list of sensitive files or subdirectories under /etc/ or 
-    root directories. Can be customized as needed.
+    root directories. Can be customized as needed. Refer to further and equivalent guidance within the 
+    rule "Read sensitive file untrusted".
   condition: >
     create_hardlink and
     (evt.arg.oldpath in (sensitive_file_names))
