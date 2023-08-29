@@ -80,13 +80,10 @@ def print_markdown(df):
     df_deprecated = df_overview[(df_overview['maturity'] == 'maturity_deprecated')]
 
     print('# Falco Rules Overview\n')
-    print('This auto-generated document is derived from the `falco_rules.*` yaml files within the [rules](https://github.com/falcosecurity/rules/blob/main/rules/) directory of the main branch in the official Falco [rules repository](https://github.com/falcosecurity/rules/tree/main).\
-        Last Updated: {}.\n'.format(datetime.date.today()))
-    print('The Falco project ships with {} [rules](https://github.com/falcosecurity/rules/blob/main/rules/falco_rules.yaml), of \
-        which {} rules are enabled by default and tagged with \
-        [maturity_stable](https://github.com/falcosecurity/rules/blob/main/CONTRIBUTING.md#rules-maturity-framework).\
-        These rules are contributed by the community. This document aims to provide a comprehensive overview of the syscall and \
-            container event-based default rules while offering resources to drive future improvements.\n'.format(n_rules, len(df_stable)))
+    print('Last Updated: {}\n'.format(datetime.date.today()))
+    print('This auto-generated document is derived from the `falco_rules.*` yaml files within the [rules](https://github.com/falcosecurity/rules/blob/main/rules/) directory of the main branch in the official Falco [rules repository](https://github.com/falcosecurity/rules/tree/main).\n')
+    print('The Falco project maintains a total of {} [rules](https://github.com/falcosecurity/rules/blob/main/rules/), of which {} rules are included in the default Falco package and labeled with [maturity_stable](https://github.com/falcosecurity/rules/blob/main/CONTRIBUTING.md#rules-maturity-framework). Rules at the remaining maturity levels may need extra customization to ensure effective adoption. Consequently, certain rules are intentionally disabled by default, irrespective of their maturity level.\n'.format(n_rules, len(df_stable)))
+    print('This document provides an extensive overview of community-contributed syscall and container event-based rules. It offers resources for learning about these rules, promoting successful adoption, and driving future enhancements.\n')
     print('\n[Stable Falco Rules](#stable-falco-rules) | [Incubating Falco Rules](#incubating-falco-rules) | [Sandbox Falco Rules](#sandbox-falco-rules) | [Deprecated Falco Rules](#deprecated-falco-rules) | [Falco Rules Stats](#falco-rules-stats)\n')
     
     print('\n## Stable Falco Rules\n')
