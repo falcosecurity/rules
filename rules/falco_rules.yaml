@@ -2387,7 +2387,7 @@
     not user_known_user_management_activities
   output: User management binary command run outside of container (gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
   priority: NOTICE
-  tags: [maturity_incubating, host, container, users, software_mgmt, mitre_persistence, T1098]
+  tags: [maturity_incubating, host, users, software_mgmt, mitre_persistence, T1098]
 
 - list: allowed_dev_files
   items: [
@@ -2414,7 +2414,7 @@
     and not user_known_create_files_below_dev_activities
   output: File created below /dev by untrusted program (file=%fd.name evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
   priority: ERROR
-  tags: [maturity_incubating, host, container, filesystem, mitre_persistence, T1543]
+  tags: [maturity_incubating, host, filesystem, mitre_persistence, T1543]
 
 
 # In a local/user rules file, you could override this macro to
