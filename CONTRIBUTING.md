@@ -15,29 +15,49 @@ All rules must be licensed under the [Apache 2.0 License](./LICENSE).
 
 # Rules Maturity Framework
 
-The rules maturity framework was introduced based on this [proposal](proposals/20230605-rules-adoption-management-maturity-framework.md). As specified in the tags section of the [Style Guide of Falco Rules](https://falco.org/docs/rules/style-guide/#tags), every rule upstreamed to The Falco Project must include a maturity level as its first tag.
+The rules maturity framework was introduced based on this [proposal](proposals/20230605-rules-adoption-management-maturity-framework.md). 
+
+At a high level, the Falco project maintains community-contributed syscall and container event-based [rules](https://github.com/falcosecurity/rules/blob/main/rules/), with `maturity_stable` tagged rules being included in the default Falco package. Rules at the remaining maturity levels may need extra customization to ensure effective adoption. Consequently, certain rules are intentionally disabled by default, irrespective of their maturity level.
+
+The next sections will dive deeper into how the framework works and offer guidance on selecting a maturity level for specific rules.
+
+## Overall Guidelines
+
+As specified in the tags section of the [Style Guide of Falco Rules](https://falco.org/docs/rules/style-guide/#tags), every rule upstreamed to The Falco Project must include a maturity level as its first tag.
 
 A new rule typically starts as `maturity_sandbox` and, in some cases, as `maturity_incubating`. However, it cannot immediately be at the `maturity_stable` level.
 
-Only rules at the `maturity_stable` level are enabled by default.
+Only rules at the `maturity_stable` level are distributed with the Falco package by default and live in the established `falco_rules.yaml` file. All other rules at the remaining maturity levels can be found in the Falco rules file according to their level. These rules can be used by adopters if they choose to do so. They are made available to the adopter through the same means as the `falco_rules.yaml` file, either by directly retrieving them from this repository or by fetching them via `falcoctl`. Adopters have the flexibility to choose how they want to tailor the upstream rules to their needs.
 
-Falco offers configurability through the [falco.yaml](https://github.com/falcosecurity/falco/blob/master/falco.yaml) file, enabling support for the unique use cases of adopters. This configurability allows adopters to determine which rules should be loaded based on tags and other properties of the rules.
+Rules files:
+
+```
+falco_rules.yaml
+falco_rules.incubating.yaml
+falco_rules.sandbox.yaml
+falco_rules.deprecated.yaml
+```
+
+Falco offers configurability through the [falco.yaml](https://github.com/falcosecurity/falco/blob/master/falco.yaml) file, enabling support for the unique use cases of adopters. This configurability allows adopters to determine which rules should be loaded based on tags and other properties of the rules. With Falco 0.36 and beyond, it's now possible to apply multiple rules that match the same event, eliminating concerns about rule prioritization based on the "first match wins" principle.
+
+Special note regarding *plugins* rules: The rules for different Falco [plugins](https://github.com/falcosecurity/plugins) are currently not integrated into this rules maturity framework.
 
 
 ## Maturity Levels
 
-The levels (the maturity tag must be the first one in the rule's `tags` array):
+The levels:
 
-- **maturity_stable** (enabled by default) indicates that the rule has undergone thorough evaluation by experts with hands-on production experience. These experts have determined that the rules embody best practices and exhibit optimal robustness, making it more difficult for attackers to bypass Falco. These rules are highly relevant for addressing broader threats and are recommended for customization to specific environments if necessary. They primarily focus on universal system-level detections, such as generic reverse shells or container escapes, which establish a solid baseline for threat detection across diverse industries. This inherent bias against including more application-specific detections is due to their potential lack of broad relevance or applicability. However, to mitigate this bias, a grey area will be reserved, enabling case-by-case judgments to be made.
-- **maturity_incubating** (disabled by default) indicates that the rules address relevant threats, provide a certain level of robustness guarantee, and adhere to best practices in rule writing. Furthermore, it signifies that the rules have been identified by experts as catering to more specific use cases, which may or may not be relevant for each adopter. This category is expected to include a larger number of application-specific rules.   
-- **maturity_sandbox** (disabled by default) indicates that the rule is in an experimental stage. The potential for broader usefulness and relevance of "sandbox" rules is currently being assessed. These rules can serve as inspiration and adhere to the minimum acceptance criteria for rules.
-- **maturity_deprecated** (disabled by default), indicates that, upon re-assessment, the rule was deemed less applicable to the broader community. Each adopter needs to determine the relevance of these rules on their own. They are kept as examples but are no longer actively supported or tuned by The Falco Project.
+- **maturity_stable** indicates that the rule has undergone thorough evaluation by experts with hands-on production experience. These experts have determined that the rules embody best practices and exhibit optimal robustness, making it more difficult for attackers to bypass Falco. These rules are highly relevant for addressing broader threats and are recommended for customization to specific environments if necessary. They primarily focus on universal system-level detections, such as generic reverse shells or container escapes, which establish a solid baseline for threat detection across diverse industries. This inherent bias against including more application-specific detections is due to their potential lack of broad relevance or applicability. However, to mitigate this bias, the maintainers reserve the right to make judgments on a case-by-case basis.
+- **maturity_incubating** indicates that the rules address relevant threats, provide a certain level of robustness guarantee, and adhere to best practices in rule writing. Furthermore, it signifies that the rules have been identified by experts as catering to more specific use cases, which may or may not be relevant for each adopter. This category is expected to include a larger number of application-specific rules.   
+- **maturity_sandbox** indicates that the rule is in an experimental stage. The potential for broader usefulness and relevance of "sandbox" rules is currently being assessed. These rules can serve as inspiration and adhere to the minimum acceptance criteria for rules.
+- **maturity_deprecated** indicates that, upon re-assessment, the rule was deemed less applicable to the broader community. Each adopter needs to determine the relevance of these rules on their own. They are kept as examples but are no longer actively supported or tuned by The Falco Project.
 
-The rules maturity tag reflects the robustness, relevance, applicability, and stability of each predefined rule in the [falcosecurity/rules](https://github.com/falcosecurity/rules/blob/main/rules/) repository. It serves as general guidance to determine which rules may provide the highest return on investment. 
+The rules maturity tag reflects the robustness, relevance, applicability, and stability of each predefined rule in the [falcosecurity/rules](https://github.com/falcosecurity/rules/blob/main/rules/) repository. It serves as general guidance to determine which rules may provide the highest return on investment.
 
 ## Justification of Rules Maturity Framework for Falco Adoption
 
-A rules maturity framework has been introduced for Falco users to facilitate the adoption of non-custom rules more effectively. This framework ensures a smooth transition for adopters, whether they use rules generically or for specific use cases. A smooth adoption process is defined by making it easy for adopters to understand each rule and also gain an understanding of not just what the rule is doing, but also how beneficial it can be under various circumstances. Additionally, adopters should have a clear idea of which rules can likely be adopted as-is versus which rules may require significant engineering efforts to evaluate and adopt.
+A rules maturity framework has been introduced for Falco users to facilitate the adoption of non-custom rules more effectively. This framework ensures a smooth transition for adopters, whether they use rules generically or for specific use cases. A smooth adoption process is defined by making it easy for adopters to understand each rule and also gain an understanding of not just what the rule is doing, but also how beneficial it can be under various circumstances. 
+Additionally, due to this framework, adopters should find themselves with a clearer understanding of which rules can likely be adopted as-is versus which rules may require significant engineering efforts to evaluate and adopt.
 
 The rules maturity framework aligns with the [status](https://github.com/falcosecurity/evolution/blob/main/REPOSITORIES.md#status) levels used within The Falco Project repositories, namely "Stable", "Incubating", "Sandbox" and "Deprecated".
 
@@ -45,11 +65,11 @@ Not every rule has the potential to evolve and reach the "stable" level. This is
 
 The maturity level of the rules, however, does not directly reflect their potential for generating noise in the adopters' environment. This is due to the unique and constantly changing nature of each environment, especially in cloud environments, making it challenging to accurately predict the impact of rules.
 
-Newcomers to Falco will be encouraged to start by configuring their setup with introductory rules labeled as "Falco's default rules" (`maturity_stable`). These rules, which are currently based on syscall and container events, will live in the established [falco_rules.yaml](https://github.com/falcosecurity/rules/blob/main/rules/falco_rules.yaml) file. 
+Newcomers to Falco will be encouraged to start by configuring their setup with introductory rules labeled as "Falco's default rules" (`maturity_stable`). These rules, which are currently based on syscall and container events, will live in the established [falco_rules.yaml](https://github.com/falcosecurity/rules/blob/main/rules/falco_rules.yaml) file.
 
-As users become more familiar with Falco and better understand their unique environments, they can gradually fine-tune the default rules to meet their specific requirements. Tuning rules goes hand in hand with assessing the performance overhead and adjusting Falco's [configuration](https://github.com/falcosecurity/falco/blob/master/falco.yaml) accordingly. This consideration is important to keep in mind as there are usually limitations to the budget allocated for security monitoring.
+As users become more familiar with Falco and better understand their unique environments, they can gradually fine-tune the rules to meet their specific requirements. Tuning rules goes hand in hand with assessing the performance overhead and adjusting Falco's [configuration](https://github.com/falcosecurity/falco/blob/master/falco.yaml) accordingly. This consideration is important to keep in mind as there are usually limitations to the budget allocated for security monitoring.
 
-Once adopters have integrated the stable default rules with low false positives and acceptable performance consistently, they can add a next set of rules. This set may include rules with `maturity_incubating` or `maturity_sandbox`,  offering more specific detections and/or broader monitoring, depending on the rule.
+Once adopters have integrated the stable default rules with low False Positives and acceptable performance overhead consistently, they can add a next set of rules. This set may include rules with `maturity_incubating` or `maturity_sandbox`, offering more specific detections and/or broader monitoring, depending on the rule.
 
 # Rules Acceptance Criteria
 
@@ -73,7 +93,7 @@ As part of the review process, the following aspects will be thoroughly checked 
 
 *Robustness*
 
-To enhance the effectiveness of detection, priority is given to behavioral detections, as opposed to string matching on process command arguments or other fields. This preference is based on the ease with which the latter can be circumvented. The same principle applies when selecting the most robust system call for detecting a specific threat. However, there is a place and purpose for more signature-based detections. The existing [upstream rules](rules/falco_rules.yaml) tagged with `maturity_stable` serve as a good starting point to explore a variety of useful rules that cover various attack vectors and employ both signature and behavior-based detection styles.
+To enhance the effectiveness of detection, priority is given to behavioral detections, as opposed to string matching on process command arguments or other fields. This preference is based on the ease with which the latter can be circumvented. The same principle applies when selecting the most robust system call for detecting a specific threat. However, there is a place and purpose for more signature-based detections. The existing rules tagged with `maturity_stable` serve as a good starting point to explore a variety of useful rules that cover various attack vectors and employ both signature and behavior-based detection styles.
 
 *Relevance*
 
