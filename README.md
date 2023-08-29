@@ -19,9 +19,11 @@ Links:
 
 ### Default Rules
 
-The [falco_rules.yaml](rules/falco_rules.yaml) file contains Falco's default rules, categorized by the maturity level `maturity_stable` based on the [Rules Maturity Framework](CONTRIBUTING.md#rules-maturity-framework). Stable rules are enabled by default. Additionally, the file includes incubating and sandbox rules that are not enabled by default and may require engineering effort for [effective adoption](CONTRIBUTING.md#justification-of-rules-maturity-framework-for-falco-adoption). All rules in [falco_rules.yaml](rules/falco_rules.yaml) are solely based on syscalls and container events. For an up-to-date overview table linking to the respective Mitre Attack resources and more, please refer to the [rules overview](https://falcosecurity.github.io/rules/) document. Lastly, you can find Falco plugins rules in the respective [plugins](https://github.com/falcosecurity/plugins) repos' subfolder.
+The [falco_rules.yaml](rules/falco_rules.yaml) file includes community-contributed Falco rules for syscalls and container events. These rules are part of the default Falco release package and are categorized by maturity level as `maturity_stable`, following the [Rules Maturity Framework](CONTRIBUTING.md#rules-maturity-framework). Rules at the remaining maturity levels can be found within the Falco rules file according to their level. Rules at a maturity level lower than `maturity_stable` may need extra customization to ensure [effective adoption](CONTRIBUTING.md#justification-of-rules-maturity-framework-for-falco-adoption).
 
-Interested in contributing your custom rules? Visit the [contributing](#contributing) section below and join the Falco community now!
+For an up-to-date overview table linking to the respective Mitre Attack resources and more, please refer to the [rules overview](https://falcosecurity.github.io/rules/) document. Lastly, you can find Falco plugins rules in the respective [plugins](https://github.com/falcosecurity/plugins) repos' subfolder.
+
+Interested in contributing your custom rules? Visit the [contributing](#contributing) section below and join the Falco community now.
 
 ## Falco Rules Files Registry
 
