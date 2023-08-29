@@ -2767,18 +2767,6 @@
     WARNING
   tags: [maturity_incubating, host, container, process, filesystem, mitre_defense_evasion, T1070]
 
-# This rule is deprecated and will/should never be triggered. Keep it here for backport compatibility.
-# Rule Delete or rename shell history is the preferred rule to use now.
-- rule: Delete Bash History
-  desc: Detect bash history deletion
-  condition: >
-    ((spawned_process and proc.name in (shred, rm, mv) and proc.args contains "bash_history") or
-     (open_write and fd.name contains "bash_history" and evt.arg.flags contains "O_TRUNC"))
-  output: Bash history deleted or renamed (file=%fd.name name=%evt.arg.name path=%evt.arg.path oldpath=%evt.arg.oldpath evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
-  priority:
-    WARNING
-  tags: [maturity_incubating, host, container, process, filesystem, mitre_defense_evasion, T1070]
-
 - list: user_known_chmod_applications
   items: [hyperkube, kubelet, k3s-agent]
 
