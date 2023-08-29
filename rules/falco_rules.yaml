@@ -2725,7 +2725,7 @@
   output: Grep private keys or passwords activities found (evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
   priority:
     WARNING
-  tags: [maturity_incubating, host, container, process, filesystem, mitre_credential_access, T1552.001]
+  tags: [maturity_stable, host, container, process, filesystem, mitre_credential_access, T1552.001]
 
 - list: log_directories
   items: [/var/log, /dev/log]
@@ -3573,7 +3573,7 @@
          (proc.name = "find" and proc.args endswith ".aws/credentials"))
   output: Detected AWS credentials search activity (proc_pcmdline=%proc.pcmdline proc_cwd=%proc.cwd group_gid=%group.gid group_name=%group.name user_loginname=%user.loginname evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
   priority: WARNING
-  tags: [maturity_incubating, host, container, process, aws, mitre_credential_access, T1552]
+  tags: [maturity_stable, host, container, process, aws, mitre_credential_access, T1552]
 
 - rule: Execution from /dev/shm
   desc: > 
@@ -3592,7 +3592,7 @@
     and not container.image.repository in (falco_privileged_images, trusted_images)
   output: File execution detected from /dev/shm (evt_res=%evt.res file=%fd.name proc_cwd=%proc.cwd proc_pcmdline=%proc.pcmdline user_loginname=%user.loginname group_gid=%group.gid group_name=%group.name evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
   priority: WARNING
-  tags: [maturity_incubating, host, container, mitre_execution, T1059.004]
+  tags: [maturity_stable, host, container, mitre_execution, T1059.004]
 
 # List of allowed container images that are known to execute binaries not part of their base image.
 - list: known_drop_and_execute_containers
