@@ -3620,3 +3620,39 @@
 # Application rules have moved to application_rules.yaml. Please look
 # there if you want to enable them by adding to
 # falco_rules.local.yaml.
+
+
+- macro: rocketmq_check_netty_server
+  condition: (proc.name contains NettyServer and proc.env contains ROCKETMQ)
+
+- macro: read_socket
+  condition: evt.type=read and (fd.typechar='4' or fd.typechar='6')
+
+- macro: rocketmq_check_payload_for_conf_update
+  condition: (read_socket and evt.buffer contains 'code":25' and evt.buffer contains serialize)
+
+- rule: Apache Rocketmq CVE-2023-33246 Exploit Detection
+  desc: >
+    CVE-2023-33246 is exploited at the function used to update configuration & can be detected by looking at the buffer for broker code-25 and serializeTypeCurrentRPC function.
+  condition: >
+    evt.dir=< and rocketmq_check_netty_server and rocketmq_check_payload_for_conf_update
+#  enabled: false
+  output: CVE-2023-33246 exploit detected (event=%evt.type server_ip=%fd.sip server_port=%fd.sport proto=%fd.l4proto parent=%proc.pname process=%proc.name command=%proc.cmdline container_id=%container.id)
+  priority: CRITICAL
+  tags: [host, container, exploit, CVE_2023_33246, rocketmq, apache,Mitre_Initial_Access, Mitre_Execution,TA0001, TA0002, T1133, T1059]
+
+
+- macro: rocketmq_check_env_variable
+  condition: (proc.env contains ROCKETMQ)
+
+- macro: rocketmq_check_properties_file_write_conf
+  condition: (fd.nameraw contains conf and fd.nameraw endswith '.properties')
+
+- rule: Apache Rocketmq CVE-2023-33246 Exploit Attempt based on properties file
+  desc: >
+    Observed the file ends with '.properties' created under folder 'CONF' upon exploit CVE-2023-33246 attempt
+  condition: >
+    open_write and evt.dir=< and rocketmq_check_env_variable and rocketmq_check_properties_file_write_conf
+  output: CVE-2023-33246 exploit attempt detected (event=%evt.type filepath=%fd.name server_ip=%fd.sip server_port=%fd.sport proto=%fd.l4proto parent=%proc.pname process=%proc.name command=%proc.cmdline container_id=%container.id)
+  priority: WARNING
+  tags: [host, container, anomaly, CVE_2023_33246, rocketmq, apache,Mitre_Initial_Access, Mitre_Execution,TA0001, TA0002, T1133, T1059]
