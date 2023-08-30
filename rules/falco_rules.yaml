@@ -408,7 +408,7 @@
   enabled: false
   output: Disallowed SSH Connection (connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
   priority: NOTICE
-  tags: [maturity_sandbox, host, container, network, mitre_lateral_movement, T1021.004]
+  tags: [maturity_deprecated, host, container, network, mitre_lateral_movement, T1021.004]
 
 # These rules and supporting macros are more of an example for how to
 # use the fd.*ip and fd.*ip.name fields to match connection
@@ -442,7 +442,7 @@
   enabled: false
   output: Disallowed outbound connection destination (connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
   priority: NOTICE
-  tags: [maturity_sandbox, host, container, network, mitre_command_and_control, TA0011]
+  tags: [maturity_deprecated, host, container, network, mitre_command_and_control, TA0011]
 
 - list: allowed_inbound_source_ipaddrs
   items: ['"127.0.0.1"']
@@ -3238,7 +3238,7 @@
   enabled: false
   output: Network connection outside authorized port and binary (connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
   priority: WARNING
-  tags: [maturity_sandbox, container, network, mitre_discovery, TA0011, NIST_800-53_CM-7]
+  tags: [maturity_deprecated, container, network, mitre_discovery, TA0011, NIST_800-53_CM-7]
 
 - macro: user_known_stand_streams_redirect_activities
   condition: (never_true)
@@ -3374,7 +3374,7 @@
   output: Outbound connection to C2 server (c2_domain=%fd.sip.name c2_addr=%fd.sip connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
   priority: WARNING
   enabled: false
-  tags: [maturity_sandbox, host, container, network, mitre_command_and_control, TA0011]
+  tags: [maturity_deprecated, host, container, network, mitre_command_and_control, TA0011]
 
 - list: allowed_container_images_loading_kernel_module
   items: []
