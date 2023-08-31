@@ -630,7 +630,7 @@
   condition: >
     ((proc.cmdline="usermod -a -G sumologic_collector" or
       proc.cmdline="groupadd sumologic_collector") and
-     (proc.pname=secureFiles.sh and proc.aname[2]=java))
+     (proc.pname=secureFiles.sh and proc.aexe[2] endswith java))
 
 - macro: run_by_yum
   condition: ((proc.pname=sh and proc.aname[2]=yum) or
@@ -667,7 +667,7 @@
      (proc.pname=scl and proc.aname[2] in (tfm-rake,tfm-ruby))))
 
 - macro: java_running_sdjagent
-  condition: (proc.name=java and proc.cmdline contains sdjagent.jar)
+  condition: (proc.exe endswith java and proc.cmdline contains sdjagent.jar)
 
 - macro: kubelet_running_loopback
   condition: (proc.pname=kubelet and proc.name=loopback)
@@ -865,7 +865,7 @@
   condition: (proc.name=dse-entrypoint and fd.name=/root/tmp__)
 
 - macro: zap_writing_state
-  condition: (proc.name=java and proc.cmdline contains "jar /zap" and fd.name startswith /root/.ZAP)
+  condition: (proc.exe endswith java and proc.cmdline contains "jar /zap" and fd.name startswith /root/.ZAP)
 
 - macro: airflow_writing_state
   condition: (proc.name=airflow and fd.name startswith /root/airflow)
@@ -874,7 +874,7 @@
   condition: (proc.name=rpm and fd.directory=/root/.rpmdb)
 
 - macro: maven_writing_groovy
-  condition: (proc.name=java and proc.cmdline contains "classpath /usr/local/apache-maven" and fd.name startswith /root/.groovy)
+  condition: (proc.exe endswith java and proc.cmdline contains "classpath /usr/local/apache-maven" and fd.name startswith /root/.groovy)
 
 - macro: chef_writing_conf
   condition: (proc.name=chef-client and fd.name startswith /root/.chef)
@@ -883,7 +883,7 @@
   condition: (proc.name in (kubectl,oc) and fd.name startswith /root/.kube)
 
 - macro: java_running_cassandra
-  condition: (proc.name=java and proc.cmdline contains "cassandra.jar")
+  condition: (proc.exe endswith java and proc.cmdline contains "cassandra.jar")
 
 - macro: cassandra_writing_state
   condition: (java_running_cassandra and fd.directory=/root/.cassandra)
@@ -1131,7 +1131,7 @@
                and (fd.name=/etc/openvpn/client.map or fd.name startswith /etc/haproxy))
 
 - macro: java_writing_conf
-  condition: (proc.name=java and fd.name=/etc/.java/.systemPrefs/.system.lock)
+  condition: (proc.exe endswith java and fd.name=/etc/.java/.systemPrefs/.system.lock)
 
 - macro: rabbitmq_writing_conf
   condition: (proc.name=rabbitmq-server and fd.directory=/etc/rabbitmq)
