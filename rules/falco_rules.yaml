@@ -113,6 +113,9 @@
 - macro: kernel_module_load
   condition: (evt.type in (init_module, finit_module) and evt.dir=<)
 
+- macro: dup
+  condition: (evt.type in (dup, dup2, dup3))
+
 # File categories
 - macro: bin_dir
   condition: (fd.directory in (/bin, /sbin, /usr/bin, /usr/sbin))
@@ -164,7 +167,7 @@
   items: [add-shell, remove-shell]
 
 - macro: shell_procs
-  condition: proc.name in (shell_binaries)
+  condition: (proc.name in (shell_binaries))
 
 - list: coreutils_binaries
   items: [
@@ -237,7 +240,7 @@
     (proc.name in (interpreted_binaries))
 
 - macro: server_procs
-  condition: proc.name in (http_server_binaries, db_server_binaries, docker_binaries, sshd)
+  condition: (proc.name in (http_server_binaries, db_server_binaries, docker_binaries, sshd))
 
 # The explicit quotes are needed to avoid the - characters being
 # interpreted by the filter expression.
@@ -266,19 +269,19 @@
   items: [rpm_binaries, deb_binaries, update-alternat, gem, npm, python_package_managers, sane-utils.post, alternatives, chef-client, apk, snapd]
 
 - macro: package_mgmt_procs
-  condition: proc.name in (package_mgmt_binaries)
+  condition: (proc.name in (package_mgmt_binaries))
 
 - macro: package_mgmt_ancestor_procs
-  condition: proc.pname in (package_mgmt_binaries) or
+  condition: (proc.pname in (package_mgmt_binaries) or
              proc.aname[2] in (package_mgmt_binaries) or
              proc.aname[3] in (package_mgmt_binaries) or
-             proc.aname[4] in (package_mgmt_binaries)
+             proc.aname[4] in (package_mgmt_binaries))
 
 - macro: coreos_write_ssh_dir
   condition: (proc.name=update-ssh-keys and fd.name startswith /home/core/.ssh)
 
 - macro: run_by_package_mgmt_binaries
-  condition: proc.aname in (package_mgmt_binaries, needrestart)
+  condition: (proc.aname in (package_mgmt_binaries, needrestart))
 
 - list: ssl_mgmt_binaries
   items: [ca-certificates]
@@ -314,7 +317,7 @@
   items: [nxexec, nxnode.bin, nxserver.bin, nxclient.bin]
 
 - macro: system_procs
-  condition: proc.name in (coreutils_binaries, user_mgmt_binaries)
+  condition: (proc.name in (coreutils_binaries, user_mgmt_binaries))
 
 - list: mail_binaries
   items: [
@@ -338,14 +341,13 @@
 
 - macro: sensitive_files
   condition: >
-    fd.name startswith /etc and
-    (fd.name in (sensitive_file_names)
-     or fd.directory in (/etc/sudoers.d, /etc/pam.d))
+    ((fd.name startswith /etc and fd.name in (sensitive_file_names)) or
+      fd.directory in (/etc/sudoers.d, /etc/pam.d))
 
 # Indicates that the process is new. Currently detected using time
 # since process was started, using a threshold of 5 seconds.
 - macro: proc_is_new
-  condition: proc.duration <= 5000000000
+  condition: (proc.duration <= 5000000000)
 
 # Network
 - macro: inbound
@@ -380,7 +382,7 @@
      (evt.rawres >= 0 or evt.res = EINPROGRESS))
 
 - macro: ssh_port
-  condition: fd.sport=22
+  condition: (fd.sport=22)
 
 # In a local/user rules file, you could override this macro to
 # enumerate the servers for which ssh connections are allowed. For
@@ -576,7 +578,7 @@
 # System users that should never log into a system. Consider adding your own
 # service users (e.g. 'apache' or 'mysqld') here.
 - macro: system_users
-  condition: user.name in (bin, daemon, games, lp, mail, nobody, sshd, sync, uucp, www-data)
+  condition: (user.name in (bin, daemon, games, lp, mail, nobody, sshd, sync, uucp, www-data))
 
 - macro: httpd_writing_ssl_conf
   condition: >
@@ -650,7 +652,7 @@
      (proc.pname=scl and proc.aname[2] in (tfm-rake,tfm-ruby))))
 
 - macro: java_running_sdjagent
-  condition: proc.name=java and proc.cmdline contains sdjagent.jar
+  condition: (proc.name=java and proc.cmdline contains sdjagent.jar)
 
 - macro: kubelet_running_loopback
   condition: (proc.pname=kubelet and proc.name=loopback)
@@ -782,7 +784,7 @@
   condition: (proc.pname=update-ca-trust and proc.name=trust and fd.name startswith /etc/pki)
 
 - macro: brandbot_writing_os_release
-  condition: proc.name=brandbot and fd.name=/etc/os-release
+  condition: (proc.name=brandbot and fd.name=/etc/os-release)
 
 - macro: selinux_writing_conf
   condition: (proc.name in (semodule,genhomedircon,sefcontext_comp) and fd.name startswith /etc/selinux)
@@ -825,10 +827,10 @@
 
 - macro: exe_running_docker_save
   condition: >
-    proc.name = "exe"
+    (proc.name = "exe"
     and (proc.cmdline contains "/var/lib/docker"
     or proc.cmdline contains "/var/run/docker")
-    and proc.pname in (dockerd, docker, dockerd-current, docker-current)
+    and proc.pname in (dockerd, docker, dockerd-current, docker-current))
 
 # Ideally we'd have a length check here as well but
 # filterchecks don't have operators like len()
@@ -1055,7 +1057,7 @@
   condition: (proc.name=mktemp and proc.aname[3] in (plesk_binaries))
 
 - macro: networkmanager_writing_resolv_conf
-  condition: proc.aname[2]=nm-dispatcher and fd.name=/etc/resolv.conf
+  condition: (proc.aname[2]=nm-dispatcher and fd.name=/etc/resolv.conf)
 
 - macro: add_shell_writing_shells_tmp
   condition: (proc.name=add-shell and fd.name=/etc/shells.tmp)
@@ -1195,7 +1197,7 @@
 # and repeats it.
 
 - macro: user_known_write_etc_conditions
-  condition: proc.name=confd
+  condition: (proc.name=confd)
 
 # This is a placeholder for user to extend the whitelist for write below etc rule
 - macro: user_known_write_below_etc_activities
@@ -1206,7 +1208,8 @@
 
 - macro: write_etc_common
   condition: >
-    etc_dir and evt.dir = < and open_write
+    (open_write 
+    and etc_dir and evt.dir=< 
     and proc_name_exists
     and not proc.name in (passwd_binaries, shadowutils_binaries, sysdigcloud_binaries,
                           package_mgmt_binaries, ssl_mgmt_binaries, dhcp_binaries,
@@ -1309,7 +1312,7 @@
     and not mcafee_writing_cma_d
     and not avinetworks_supervisor_writing_ssh
     and not multipath_writing_conf
-    and not calico_node
+    and not calico_node)
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc
@@ -1371,7 +1374,7 @@
 # In this file, it just takes one of the condition in the base macro
 # and repeats it.
 - macro: user_known_write_root_conditions
-  condition: fd.name=/root/.bash_history
+  condition: (fd.name=/root/.bash_history)
 
 # This is a placeholder for user to extend the whitelist for write below root rule
 - macro: user_known_write_below_root_activities
@@ -1417,7 +1420,7 @@
   tags: [maturity_sandbox, host, container, filesystem, mitre_persistence, TA0003]
 
 - macro: cmp_cp_by_passwd
-  condition: proc.name in (cmp, cp) and proc.pname in (passwd, run-parts)
+  condition: (proc.name in (cmp, cp) and proc.pname in (passwd, run-parts))
 
 - macro: user_known_read_sensitive_files_activities
   condition: (never_true)
@@ -2377,7 +2380,7 @@
 # In this file, it just takes one of the condition in the base macro
 # and repeats it.
 - macro: user_known_non_sudo_setuid_conditions
-  condition: user.name=root
+  condition: (user.name=root)
 
 # sshd, mail programs attempt to setuid to root even when running as non-root. Excluding here to avoid meaningless FPs
 - rule: Non sudo setuid
@@ -2610,9 +2613,9 @@
 # TODO: Remove k8s.gcr.io reference after 01/Dec/2023
 - macro: pkg_mgmt_in_kube_proxy
   condition: >
-    proc.cmdline startswith "update-alternat"
+    (proc.cmdline startswith "update-alternat"
     and (container.image.repository = "registry.k8s.io/kube-proxy"
-    or container.image.repository = "k8s.gcr.io/kube-proxy")
+    or container.image.repository = "k8s.gcr.io/kube-proxy"))
 
 - rule: Launch Package Management Process in Container
   desc: > 
@@ -3103,9 +3106,9 @@
 
 - macro: network_local_subnet
   condition: >
-    fd.rnet in (rfc_1918_addresses) or
+    (fd.rnet in (rfc_1918_addresses) or
     fd.ip = "0.0.0.0" or
-    fd.net = "127.0.0.0/8"
+    fd.net = "127.0.0.0/8")
 
 # # The rule is disabled by default.
 # # How to test:
@@ -3164,9 +3167,6 @@
 
 - macro: user_known_stand_streams_redirect_activities
   condition: (never_true)
-
-- macro: dup
-  condition: evt.type in (dup, dup2, dup3)
 
 # As of engine version 20 this rule can be improved by using the fd.types[]
 # field so it only triggers once when all three of std{out,err,in} are
@@ -3412,11 +3412,11 @@
   condition: (never_true)
 
 - macro: curl_download
-  condition: proc.name = curl and
+  condition: (proc.name = curl and
               (proc.cmdline contains " -o " or
               proc.cmdline contains " --output " or
               proc.cmdline contains " -O " or
-              proc.cmdline contains " --remote-name ")
+              proc.cmdline contains " --remote-name "))
 
 - rule: Launch Ingress Remote File Copy Tools in Container
   desc: > 
@@ -3519,12 +3519,12 @@
 
 - macro: ptrace_attach_or_injection
   condition: >
-    evt.type=ptrace and evt.dir=> and
+    (evt.type=ptrace and evt.dir=> and
     (evt.arg.request contains PTRACE_POKETEXT or
     evt.arg.request contains PTRACE_POKEDATA or
     evt.arg.request contains PTRACE_ATTACH or
     evt.arg.request contains PTRACE_SEIZE or
-    evt.arg.request contains PTRACE_SETREGS)
+    evt.arg.request contains PTRACE_SETREGS))
 
 - rule: PTRACE attached to process
   desc: > 
