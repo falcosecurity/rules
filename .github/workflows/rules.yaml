@@ -35,12 +35,12 @@ jobs:
           # then we consider all the rules contained in the repo
           all_files="${{ steps.changed-files.outputs.all }}"
           values=""
-          if [ -z $all_files ]; then
+          if [ -z "$all_files" ]; then
             values=$(ls rules/*.yaml)
           else
             for changed_file in $all_files; do
-              if [[ ${changed_file} =~ ^rules/.* ]]; then
-                values="${values}${changed_file}"
+              if [[ "${changed_file}" =~ ^rules/.* ]]; then
+                values=${values}${changed_file}$'\n'
               fi
             done
           fi
@@ -69,7 +69,7 @@ jobs:
       - name: Setup Golang
         uses: actions/setup-go@v3
         with:
-          go-version: '1.19.0'
+          go-version: "1.19.0"
 
       - name: Checkout rules
         uses: actions/checkout@v3
@@ -77,7 +77,7 @@ jobs:
       - name: Build checker tool
         working-directory: build/checker
         run: go build -o rules-check
-      
+
       - name: Test checker tool
         working-directory: build/checker
         run: go test ./... -cover
@@ -104,7 +104,7 @@ jobs:
       - name: Setup Golang
         uses: actions/setup-go@v3
         with:
-          go-version: '1.19.0'
+          go-version: "1.19.0"
 
       - name: Checkout rules
         uses: actions/checkout@v3
@@ -122,7 +122,7 @@ jobs:
       - name: Build checker tool
         working-directory: build/checker
         run: go build -o rules-check
-      
+
       - name: Test checker tool
         working-directory: build/checker
         run: go test ./... -cover
@@ -131,7 +131,7 @@ jobs:
         id: compare
         run: |
           ./.github/compare-rule-files.sh \
-              ${{ matrix.rules-file }} \
+              "${{ matrix.rules-file }}" \
               result.txt \
               build/checker/rules-check \
               "falcosecurity/falco-no-driver:$FALCO_VERSION"
@@ -162,7 +162,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           path: tmp-artifacts
-      
+
       - name: Save PR info
         run: |
           mkdir -p ./pr
@@ -172,8 +172,8 @@ jobs:
           echo "" >> ./pr/COMMENT
           files=$(find ./tmp-artifacts/)
           for file in $files; do
-            if [[ $file =~ "COMMENT" ]]; then
-              cat $file >> ./pr/COMMENT
+            if [[ "$file" =~ "COMMENT" ]]; then
+              cat "$file" >> ./pr/COMMENT
             fi
           done
           echo Uploading PR info...
