@@ -33,9 +33,9 @@ Rules files:
 
 ```
 falco_rules.yaml
-falco_rules.incubating.yaml
-falco_rules.sandbox.yaml
-falco_rules.deprecated.yaml
+falco-incubating_rules.yaml
+falco-sandbox_rules.yaml
+falco-deprecated_rules.yaml
 ```
 
 Falco offers configurability through the [falco.yaml](https://github.com/falcosecurity/falco/blob/master/falco.yaml) file, enabling support for the unique use cases of adopters. This configurability allows adopters to determine which rules should be loaded based on tags and other properties of the rules. With Falco 0.36 and beyond, it's now possible to apply multiple rules that match the same event, eliminating concerns about rule prioritization based on the "first match wins" principle.
