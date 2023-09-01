@@ -31,6 +31,18 @@ The Falco Rules Files Registry contains metadata and information about rules fil
 
 Note: _Currently, the registry includes only rules for the syscall call data source; for other data sources see the [plugins repository](https://github.com/falcosecurity/plugins)._
 
+### Naming Convention
+
+Rule files must be located in the [/rules](rules) folder of this repository and are named according to the following convention: `<ruleset>_rules.yaml`.
+
+The `<ruleset>` portion represents the _ruleset_ name, which must be an alphanumeric string, separated by `-`, entirely in lowercase, and beginning with a letter.
+
+Rule files are subsequently released using Git tags. The tag name should follow the pattern `<ruleset>-rules-<version>`, where `<version>` adheres to [Semantic Versioning](https://semver.org/). See [RELEASE.md](RELEASE.md) for more details about our release process.
+
+For instance, the _falco_ ruleset is stored under [/rules/falco_rules.yaml](rules/falco_rules.yaml), and its version _1.0.0_ was released using the [falco-rules-1.0.0](https://github.com/falcosecurity/rules/releases/tag/falco-rules-1.0.0) tag.
+
+Note: _This convention applies to this repository only. Falco application does not impose any naming convention for naming rule files._
+
 <!-- Check out the sections below to know how to [register your rules](#registering-a-new-rule) and see rules currently contained in the registry. -->
 
 <!--
