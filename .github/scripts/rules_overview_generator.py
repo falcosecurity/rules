@@ -26,7 +26,7 @@ def arg_parser():
 def rules_to_df(rules_dir):
     l = []
     for rules_filename in os.listdir(rules_dir):
-        if not 'falco_rules' in rules_filename:
+        if not 'falco' in rules_filename:
             continue
         with open(os.path.join(rules_dir, rules_filename), 'r') as f:
             items = yaml.safe_load(f)
@@ -81,10 +81,11 @@ def print_markdown(df):
 
     print('# Falco Rules Overview\n')
     print('Last Updated: {}\n'.format(datetime.date.today()))
-    print('This auto-generated document is derived from the `falco_rules.*` yaml files within the [rules](https://github.com/falcosecurity/rules/blob/main/rules/) directory of the main branch in the official Falco [rules repository](https://github.com/falcosecurity/rules/tree/main).\n')
+    print('This auto-generated document is derived from the `falco*_rules.yaml` files files within the [rules](https://github.com/falcosecurity/rules/blob/main/rules/) directory of the main branch in the official Falco [rules repository](https://github.com/falcosecurity/rules/tree/main).\n')
     print('The Falco project maintains a total of {} [rules](https://github.com/falcosecurity/rules/blob/main/rules/), of which {} rules are included in the default Falco package and labeled with [maturity_stable](https://github.com/falcosecurity/rules/blob/main/CONTRIBUTING.md#rules-maturity-framework). Rules at the remaining maturity levels may need extra customization to ensure effective adoption. Consequently, certain rules are intentionally disabled by default, irrespective of their maturity level.\n'.format(n_rules, len(df_stable)))
     print('This document provides an extensive overview of community-contributed syscall and container event-based rules. It offers resources for learning about these rules, promoting successful adoption, and driving future enhancements.\n')
     print('\n[Stable Falco Rules](#stable-falco-rules) | [Incubating Falco Rules](#incubating-falco-rules) | [Sandbox Falco Rules](#sandbox-falco-rules) | [Deprecated Falco Rules](#deprecated-falco-rules) | [Falco Rules Stats](#falco-rules-stats)\n')
+    print('\nThe tables below can be scrolled to the right.\n')
     
     print('\n## Stable Falco Rules\n')
     print('\n{} stable Falco rules ({:.2f}% of rules) are enabled by default:\n'.format(len(df_stable), (100.0 * len(df_stable) / n_rules)))
