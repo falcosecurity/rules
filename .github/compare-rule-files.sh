@@ -17,7 +17,15 @@ cp $RULES_FILE tmp_rule_file.yaml
 
 rules_name=`echo $RULES_FILE | sed -re 's/rules\/(.*)_rules\.yaml/\1/'`
 echo Searching tag with prefix prefix \"$rules_name-rules-\"...
-latest_tag=`git describe --match="$rules_name-rules-*.*.*" --exclude="$rules_name-rules-*.*.*-*" --abbrev=0 --tags $(git rev-list --tags="$rules_name-rules-*.*.*" --max-count=1)`
+git_rev=`git rev-list --tags="$rules_name-rules-*.*.*" --max-count=1`
+
+if [ -z "$git_rev" ]
+then
+    echo Not previous tag has been found
+    exit 0
+fi
+
+latest_tag=`git describe --match="$rules_name-rules-*.*.*" --exclude="$rules_name-rules-*.*.*-*" --abbrev=0 --tags ${git_rev} || echo ""`
 
 if [ -z "$latest_tag" ]
 then
