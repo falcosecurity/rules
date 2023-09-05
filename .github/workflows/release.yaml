@@ -62,6 +62,9 @@ jobs:
         with:
           cosign-release: 'v2.1.0'
 
+      - name: Login with cosign
+        run: cosign login --username ${{ github.repository_owner }} --password ${{ secrets.GITHUB_TOKEN }}
+
       - name: Sign the images with GitHub OIDC Token
         run: cosign sign --yes ${{ steps.oci_build.outputs.ARTIFACT_REPO_DIGEST }}
 
@@ -72,6 +75,5 @@ jobs:
           aws-region: ${{ env.AWS_S3_REGION }}
 
       - name: Upload files to S3
-
         # uses AWS_S3_BUCKET, AWS_S3_PREFIX, AWS_S3_REGION environment variables
         run: build/registry/rules-registry upload-to-s3 registry.yaml ${{ github.ref_name }}
