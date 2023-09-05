@@ -11,10 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      RULES_FILE: falco_rules.yaml
-
       OCI_REGISTRY: ghcr.io
-      ARTIFACT_NAME: falco-rules
 
       AWS_S3_BUCKET: falco-distribution
       AWS_S3_PREFIX: rules
@@ -37,12 +34,15 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version-file: build/registry/go.mod
+
       - name: Build registry artifact tool
         working-directory: build/registry
         run: go build -o rules-registry ./...
+
       - name: Get lowercase OCI repo prefix
         run: |
           echo "OCI_REPO_PREFIX=ghcr.io/${GITHUB_REPOSITORY,,}" >>${GITHUB_ENV}
+
       - name: Upload OCI artifacts to GitHub packages
         id: oci_build
         env:
@@ -52,19 +52,18 @@ jobs:
 
         # uses OCI_REPO_PREFIX environment variable
         run: >-
-          echo "ARTIFACT_DIGEST=$(
+          echo "ARTIFACT_REPO_DIGEST=$(
             build/registry/rules-registry push-to-oci registry.yaml ${{ github.ref_name }}
           )" >> $GITHUB_OUTPUT
-      - run: "echo ${{ steps.oci_build.outputs.ARTIFACT_DIGEST }}"
 
       # Create a signature of the rules artifact as OCI artifact
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3.1.0
         with:
           cosign-release: 'v2.1.0'
-      - run: cosign version
+
       - name: Sign the images with GitHub OIDC Token
-        run: cosign sign --yes ${OCI_REGISTRY}/${{ github.repository }}/${ARTIFACT_NAME}@${{ steps.oci_build.outputs.ARTIFACT_DIGEST }}
+        run: cosign sign --yes ${{ steps.oci_build.outputs.ARTIFACT_REPO_DIGEST }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
