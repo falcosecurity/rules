@@ -63,7 +63,7 @@ jobs:
           cosign-release: 'v2.1.0'
 
       - name: Login with cosign
-        run: cosign login --username ${{ github.repository_owner }} --password ${{ secrets.GITHUB_TOKEN }}
+        run: cosign login $OCI_REGISTRY --username ${{ github.repository_owner }} --password ${{ secrets.GITHUB_TOKEN }}
 
       - name: Sign the images with GitHub OIDC Token
         run: cosign sign --yes ${{ steps.oci_build.outputs.ARTIFACT_REPO_DIGEST }}
