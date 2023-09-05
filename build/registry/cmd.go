@@ -185,7 +185,10 @@ func doPushToOCI(registryFilename, gitTag string) (*string, error) {
 		return nil, fmt.Errorf("could not push %s to %s with source %s and tags %v: %w", tgzFile, ociRepoRef, repoGit, tagsToUpdate, err)
 	}
 
-	return digest, nil
+	// ociRepoDigest is a string that looks like ghcr.io/falcosecurity/rules/falco-rules@sha256:123456...
+	ociRepoDigest := fmt.Sprintf("%s@%s", ociRepoRef, *digest)
+
+	return &ociRepoDigest, nil
 }
 
 func rulesOciRepos(registryEntries *Registry, ociRepoPrefix string) (map[string]string, error) {
@@ -265,11 +268,11 @@ func main() {
 		Args:                  cobra.ExactArgs(2),
 		DisableFlagsInUseLine: true,
 		RunE: func(c *cobra.Command, args []string) error {
-			digest, err := doPushToOCI(args[0], args[1])
+			ociRepoDigest, err := doPushToOCI(args[0], args[1])
 			if err != nil {
 				return err
 			}
-			fmt.Println(*digest)
+			fmt.Println(*ociRepoDigest)
 
 			return nil
 		},
