@@ -42,6 +42,7 @@ type Rulesfile struct {
 	URL      string   `yaml:"url"`
 	License  string   `yaml:"license"`
 	Reserved bool     `yaml:"reserved"`
+	Archived bool     `yaml:"archived"`
 }
 
 type Registry struct {
@@ -67,6 +68,9 @@ func (r *Registry) Validate() error {
 // RulesfileByName returns the rulesfile in the index with the specified name, or nil if not found
 func (r *Registry) RulesfileByName(name string) *Rulesfile {
 	for _, rf := range r.Rulesfiles {
+		if rf.Reserved || rf.Archived {
+			continue
+		}
 		if rf.Name == name {
 			return &rf
 		}
