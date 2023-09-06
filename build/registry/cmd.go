@@ -86,7 +86,7 @@ func doUploadToS3(registryFilename, gitTag string) error {
 
 	rulesfileInfo := reg.RulesfileByName(pt.Name)
 	if rulesfileInfo == nil {
-		return fmt.Errorf("could not find rulesfile %s in registry", pt.Name)
+		return fmt.Errorf("could not find rulesfile %s in the registry (reserved or archived are ignored)", pt.Name)
 	}
 
 	tmpDir, err := os.MkdirTemp("", "falco-artifacts-to-upload")
@@ -149,7 +149,7 @@ func doPushToOCI(registryFilename, gitTag string) (*string, error) {
 
 	rulesfileInfo := reg.RulesfileByName(pt.Name)
 	if rulesfileInfo == nil {
-		return nil, fmt.Errorf("could not find rulesfile %s in registry", pt.Name)
+		return nil, fmt.Errorf("could not find rulesfile %s in the registry (reserved or archived are ignored)", pt.Name)
 	}
 
 	// Create the repository object for the ref.
