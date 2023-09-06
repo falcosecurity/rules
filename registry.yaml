@@ -57,12 +57,13 @@ rulesfiles:
     license: apache-2.0
     url: https://github.com/falcosecurity/rules/blob/main/rules/falco-deprecated_rules.yaml
   - name: application-rules
-    description: Application rules
+    archived: true
+    description: This rules files has been archived and is no longer maintained
     authors: The Falco Authors
     contact: https://falco.org/community
     maintainers:
       - name: The Falco Authors
         email: cncf-falco-dev@lists.cncf.io
-    path: rules/application_rules.yaml
-    url: https://github.com/falcosecurity/rules/blob/main/rules/application_rules.yaml
+    path: archive/application_rules.yaml
+    url: https://github.com/falcosecurity/rules/blob/main/archive/application_rules.yaml
     license: apache-2.0
