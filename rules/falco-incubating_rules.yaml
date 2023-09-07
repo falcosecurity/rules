@@ -1182,3 +1182,42 @@
   output: Environment variables were retrieved from /proc files (file=%fd.name gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
   priority: WARNING
   tags: [maturity_incubating, container, filesystem, process, mitre_discovery, T1083]
+
+# The steps libcontainer performs to set up the root program for a container are:
+# - clone + exec self to a program runc:[0:PARENT]
+# - clone a program runc:[1:CHILD] which sets up all the namespaces
+# - clone a second program runc:[2:INIT] + exec to the root program.
+#   The parent of runc:[2:INIT] is runc:0:PARENT]
+# As soon as 1:CHILD is created, 0:PARENT exits, so there's a race
+#   where at the time 2:INIT execs the root program, 0:PARENT might have
+#   already exited, or might still be around. So we handle both.
+# We also let runc:[1:CHILD] count as the parent process, which can occur
+# when we lose events and lose track of state.
+- macro: container_entrypoint
+  condition: (not proc.pname exists or proc.pname in (runc:[0:PARENT], runc:[1:CHILD], runc, docker-runc, exe, docker-runc-cur, containerd-shim, systemd, crio))
+
+- macro: system_level_side_effect_artifacts_kubectl_cp
+  condition: (fd.name startswith /etc or 
+              fd.name startswith /proc or 
+              fd.name startswith /lib or 
+              fd.name startswith /run or 
+              fd.name startswith /usr or 
+              fd.name="/")
+
+- rule: Exfiltrating Artifacts via Kubernetes Control Plane
+  desc: >
+    Detect the copying of artifacts from a container's file system using the Kubernetes control plane (kubectl cp). 
+    This rule can identify potential exfiltration of application secrets from containers' file systems, potentially 
+    revealing the outcomes of unauthorized access and control plane misuse via stolen identities (such as stolen 
+    credentials like Kubernetes serviceaccount tokens). Can be customized by the adopter to only monitor specific 
+    artifact paths, containers, or namespaces as needed.
+  condition: >
+    open_read 
+    and container 
+    and proc.name=tar 
+    and container_entrypoint 
+    and proc.tty=0 
+    and not system_level_side_effect_artifacts_kubectl_cp
+  output: Exfiltrating Artifacts via Kubernetes Control Plane (file=%fd.name evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
+  priority: NOTICE
+  tags: [maturity_incubating, container, filesystem, mitre_exfiltration, TA0010]
