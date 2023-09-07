@@ -165,6 +165,10 @@ jobs:
 
       - name: Save PR info
         run: |
+          if [ ! -d "./tmp-artifacts/" ]; then
+            echo "No PR info found. Skipping."
+            exit 0
+          fi
           mkdir -p ./pr
           echo ${{ github.event.number }} > ./pr/NR
           touch ./pr/COMMENT
@@ -186,3 +190,4 @@ jobs:
           name: pr
           path: pr/
           retention-days: 1
+          if-no-files-found: warn
