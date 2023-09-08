@@ -1692,4 +1692,23 @@
   priority: WARNING
   tags: [maturity_sandbox, container, filesystem, mitre_initial_access, T1611]
 
-  
+- list: bpf_profiled_binaries
+  items: [falco, bpftool]
+
+- macro: bpf_profiled_procs
+  condition: (proc.name in (bpf_profiled_binaries))
+
+- rule: BPF Program Not Profiled
+  desc: > 
+    BPF is a kernel technology that can be misused for malicious purposes, like "Linux Kernel Module Injection". This 
+    rule should be considered an auditing rule to notify you of any unprofiled BPF tools running in your environment. 
+    However, it requires customization after profiling your environment. BPF-powered agents make bpf syscalls all the 
+    time, so this rule only sends logs for BPF_PROG_LOAD calls (bpf cmd=5) in the enter event. If you also want to log 
+    whether the syscall failed or succeeded, remove the direction filter and add the evt.arg.res_or_fd output field.
+  condition: >
+    evt.type=bpf and evt.dir=> 
+    and evt.arg.cmd=5
+    and not bpf_profiled_procs
+  output: BPF Program Not Profiled (bpf_cmd=%evt.arg.cmd evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
+  priority: NOTICE
+  tags: [maturity_sandbox, host, container, mitre_persistence, TA0003]
