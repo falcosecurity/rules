@@ -1735,3 +1735,26 @@
   output: Decoding Payload in Container (evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
   priority: INFO
   tags: [maturity_sandbox, container, process, mitre_command_and_control, T1132] 
+- list: recon_binaries
+  items: [w, whoami, id, who, uname]
+
+- condition: (proc.name in (recon_binaries))
+  macro: recon_binaries_procs
+
+- rule: Basic Interactive Reconnaissance
+  desc: >
+    This rule detects basic interactive reconnaissance commands that are typically run by unsophisticated attackers or used 
+    in internal Red Team exercises. Interactive is defined as a terminal being present (proc.tty != 0). This could be any 
+    form of reverse shell or usage of kubectl exec or ssh etc. In addition, filtering for the process being the process group  
+    leader indicates that the command was "directly" typed into the terminal and not run as a result of a script. This rule 
+    is a basic auditing or template rule. You can expand the list of reconnaissance commands, such as by adding "ls". Common 
+    anti-patterns are SRE activity or debugging, but it is still worth capturing this generically. Typically, you would expect 
+    other rules to fire as well in relation to this activity.
+  condition: >
+    spawned_process 
+    and recon_binaries_procs 
+    and proc.tty != 0 
+    and proc.is_vpgid_leader=true
+  output: Basic Interactive Reconnaissance (evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
+  priority: NOTICE
+  tags: [maturity_sandbox, host, container, process, mitre_reconnaissance, TA0043]
