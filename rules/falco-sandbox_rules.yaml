@@ -1712,3 +1712,26 @@
   output: BPF Program Not Profiled (bpf_cmd=%evt.arg.cmd evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
   priority: NOTICE
   tags: [maturity_sandbox, host, container, mitre_persistence, TA0003]
+
+- list: known_decode_payload_containers
+  items: []
+
+- macro: base64_decoding
+  condition: (proc.cmdline contains "base64" and (proc.cmdline contains "--decode" or proc.cmdline contains "-d"))
+
+- rule: Decoding Payload in Container
+  desc: > 
+    Detect any use of {base64} decoding in a container. Legitimate applications may decode encoded payloads. The template list 
+    known_decode_payload_containers can be used for simple tuning and customization, or you can adopt custom, more refined tuning. Less 
+    sophisticated adversaries may {base64}-decode their payloads not only to obfuscate them, but also to ensure that the payload remains 
+    intact when the application processes it. Note that injecting commands into an application's input often results in the application 
+    processing passed strings like "sh -c". In these cases, you may be lucky and the encoded blob will also be logged. Otherwise, all you 
+    will see is the {base64} decoding command, as the encoded blob was already interpreted by the shell. 
+  condition: >
+    spawned_process 
+    and container 
+    and base64_decoding 
+    and not container.image.repository in (known_decode_payload_containers)
+  output: Decoding Payload in Container (evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
+  priority: INFO
+  tags: [maturity_sandbox, container, process, mitre_command_and_control, T1132] 
