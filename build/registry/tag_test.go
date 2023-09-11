@@ -71,6 +71,8 @@ func Test_ociTagsToUpdate(t *testing.T) {
 		{"latest_in_line", "0.1.3", []string{"0.1.2", "0.2.0", "0.3.1"}, []string{"0.1.3", "0.1"}},
 		{"version_1", "1.0.2", []string{"0.1.2", "0.2.0", "1.0.0", "2.0.0", "2.0.2"}, []string{"1", "1.0", "1.0.2"}},
 		{"prerelease", "0.1.4-rc1", []string{"0.1.2", "0.1.3"}, []string{"0.1.4-rc1"}},
+		{"latest_with_prerelease", "1.0.2", []string{"1.0.0", "1.0.1", "2.0.0-rc1"}, []string{"1", "1.0", "1.0.2", "latest"}},
+		{"not_latest_with_prerelease", "1.0.2", []string{"1.0.0", "1.0.1", "2.0.0-rc1", "2.0.0"}, []string{"1", "1.0", "1.0.2"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
