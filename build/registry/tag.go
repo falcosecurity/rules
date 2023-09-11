@@ -100,22 +100,25 @@ func ociTagsToUpdate(newTag string, existingTags []string) []string {
 		return tagsToUpdate
 	}
 
-	var existingSemvers []semver.Version
+	var existingFinalSemvers []semver.Version
 	for _, tag := range existingTags {
 		if sv, err := semver.Parse(tag); err == nil {
-			existingSemvers = append(existingSemvers, sv)
+			// ignore prereleases
+			if len(sv.Pre) == 0 {
+				existingFinalSemvers = append(existingFinalSemvers, sv)
+			}
 		}
 	}
 
-	if isLatestSemverForMinor(newSemver, existingSemvers) {
+	if isLatestSemverForMinor(newSemver, existingFinalSemvers) {
 		tagsToUpdate = append(tagsToUpdate, fmt.Sprintf("%d.%d", newSemver.Major, newSemver.Minor))
 	}
 
-	if isLatestSemverForMajor(newSemver, existingSemvers) {
+	if isLatestSemverForMajor(newSemver, existingFinalSemvers) {
 		tagsToUpdate = append(tagsToUpdate, fmt.Sprintf("%d", newSemver.Major))
 	}
 
-	if isLatestSemver(newSemver, existingSemvers) {
+	if isLatestSemver(newSemver, existingFinalSemvers) {
 		tagsToUpdate = append(tagsToUpdate, "latest")
 	}
 
