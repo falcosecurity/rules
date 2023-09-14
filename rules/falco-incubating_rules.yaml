@@ -1221,6 +1221,7 @@
   output: Exfiltrating Artifacts via Kubernetes Control Plane (file=%fd.name evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
   priority: NOTICE
   tags: [maturity_incubating, container, filesystem, mitre_exfiltration, TA0010]
+
 - list: known_memfd_execution_binaries
   items: []
 
@@ -1229,17 +1230,14 @@
 
 - rule: Fileless execution via memfd_create
   desc: >
-    Detect if a binary is executed from memory using the memfd_create technique.
-    This is a well-known defense evasion technique for executing malware on victim machine without storing payload on disk and to avoid leaving traces about what has been executed. 
-    Adopters can whitelist processes that may use fileless execution for benign purposes by adding itmes to the list `known_memfd_execution_processes`.
-    It is worth underline that this technique is used by runc to fix CVE-2019-5736. For this reason, the macro `known_memfd_execution_processes` take this into account.
+    Detect if a binary is executed from memory using the memfd_create technique. This is a well-known defense evasion 
+    technique for executing malware on a victim machine without storing the payload on disk and to avoid leaving traces 
+    about what has been executed. Adopters can whitelist processes that may use fileless execution for benign purposes 
+    by adding items to the list known_memfd_execution_processes.
   condition: >
     spawned_process
     and proc.is_exe_from_memfd=true
     and not known_memfd_execution_processes
-  output: > 
-    Detected fileless execution via memfd_create (user=%user.name user_loginuid=%user.loginuid user_uid=%user.uid comm=%proc.cmdline exe=%proc.exe container_id=%container.id
-    image=%container.image.repository proc.name=%proc.name proc.sname=%proc.sname proc.pname=%proc.pname proc.aname[2]=%proc.aname[2] exe_flags=%evt.arg.flags
-    proc.exepath=%proc.exepath proc.cwd=%proc.cwd proc.tty=%proc.tty container.start_ts=%container.start_ts proc.sid=%proc.sid proc.vpgid=%proc.vpgid evt.res=%evt.res)
+  output: Fileless execution via memfd_create (container_start_ts=%container.start_ts proc_cwd=%proc.cwd evt_res=%evt.res proc_sname=%proc.sname gparent=%proc.aname[2] evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
   priority: CRITICAL
   tags: [maturity_incubating, host, container, process, mitre_defense_evasion, T1620]
