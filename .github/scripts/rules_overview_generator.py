@@ -74,14 +74,28 @@ def rules_to_df(rules_dir):
 def print_markdown(df):
     n_rules=len(df)
     df_overview = df.drop(['extra_tags_list', 'mitre_phase_list', 'compliance_pci_dss_list', 'compliance_nist_list'], axis=1)
-    df_stable = df_overview[(df_overview['maturity'] == 'maturity_stable')]
-    df_incubating = df_overview[(df_overview['maturity'] == 'maturity_incubating')]
-    df_sandbox = df_overview[(df_overview['maturity'] == 'maturity_sandbox')]
-    df_deprecated = df_overview[(df_overview['maturity'] == 'maturity_deprecated')]
+    maturity_col_name = '<div style="width:150px">maturity</div>'
+    df_overview.rename(columns={ \
+        'maturity': maturity_col_name, \
+        'rule': '<div style=\"width:200px\">rule</div>', \
+        'desc': '<div style=\"width:450px\">desc</div>', \
+        'workload': '<div style=\"width:150px\">workload</div>', \
+        'mitre_phase': '<div style=\"width:150px\">mitre_phase</div>', \
+        'mitre_ttp': '<div style=\"width:150px\">mitre_ttp</div>', \
+        'extra_tags': '<div style=\"width:150px\">extra_tags</div>', \
+        'compliance_pci_dss': '<div style=\"width:150px\">compliance_pci_dss</div>', \
+        'compliance_nist': '<div style=\"width:150px\">compliance_nist</div>', \
+        'enabled': '<div style=\"width:100px\">enabled</div>', \
+            }, inplace=True)
+
+    df_stable = df_overview[(df_overview[maturity_col_name] == 'maturity_stable')]
+    df_incubating = df_overview[(df_overview[maturity_col_name] == 'maturity_incubating')]
+    df_sandbox = df_overview[(df_overview[maturity_col_name] == 'maturity_sandbox')]
+    df_deprecated = df_overview[(df_overview[maturity_col_name] == 'maturity_deprecated')]
 
     print('# Falco Rules Overview\n')
     print('Last Updated: {}\n'.format(datetime.date.today()))
-    print('This auto-generated document is derived from the `falco*_rules.yaml` files files within the [rules](https://github.com/falcosecurity/rules/blob/main/rules/) directory of the main branch in the official Falco [rules repository](https://github.com/falcosecurity/rules/tree/main).\n')
+    print('This auto-generated document is derived from the `falco*_rules.yaml` files within the [rules](https://github.com/falcosecurity/rules/blob/main/rules/) directory of the main branch in the official Falco [rules repository](https://github.com/falcosecurity/rules/tree/main).\n')
     print('The Falco project maintains a total of {} [rules](https://github.com/falcosecurity/rules/blob/main/rules/), of which {} rules are included in the default Falco package and labeled with [maturity_stable](https://github.com/falcosecurity/rules/blob/main/CONTRIBUTING.md#rules-maturity-framework). Rules at the remaining maturity levels may need extra customization to ensure effective adoption. Consequently, certain rules are intentionally disabled by default, irrespective of their maturity level.\n'.format(n_rules, len(df_stable)))
     print('This document provides an extensive overview of community-contributed syscall and container event-based rules. It offers resources for learning about these rules, promoting successful adoption, and driving future enhancements.\n')
     print('\n[Stable Falco Rules](#stable-falco-rules) | [Incubating Falco Rules](#incubating-falco-rules) | [Sandbox Falco Rules](#sandbox-falco-rules) | [Deprecated Falco Rules](#deprecated-falco-rules) | [Falco Rules Stats](#falco-rules-stats)\n')
@@ -114,18 +128,24 @@ def print_markdown(df):
     df2.rename(columns={'mitre_phase_list':'mitre_phase'}, inplace=True)
     df2.sort_values(by=['mitre_phase','rule'], inplace=True)
     df2['rule'] = df[['maturity', 'rule']].agg(': '.join, axis=1)
-    df2 = df2.groupby('mitre_phase').agg({'rule': lambda x: ['\n'.join(list(x)), len(list(x))]})
-    df2['rules'] = df2['rule'].apply(lambda x: x[0])
-    df2['percentage'] = df2['rule'].apply(lambda x: round((100.0 * x[1] / n_rules), 2)).astype(str) + '%'
+    mitre_phase_col_name = '<div style=\"width:200px\">mitre_phase</div>'
+    df2.rename(columns={'mitre_phase': mitre_phase_col_name, \
+            }, inplace=True)
+    df2 = df2.groupby(mitre_phase_col_name).agg({'rule': lambda x: ['\n'.join(list(x)), len(list(x))]})
+    df2['<div style=\"width:450px\">rules</div>'] = df2['rule'].apply(lambda x: x[0])
+    df2['<div style=\"width:100px\">percentage</div>'] = df2['rule'].apply(lambda x: round((100.0 * x[1] / n_rules), 2)).astype(str) + '%'
     print(df2.drop('rule', axis=1).to_markdown(index=True))
     
     print('\n### Compliance-related Falco rules:\n')
     df3 = df
     df3['compliance_tag'] = df['compliance_pci_dss_list'] + df['compliance_nist_list']
     df3.sort_values(by=['rule'], inplace=True)
-    df3 = df3[['rule', 'compliance_tag', 'maturity']].explode('compliance_tag')
-    df3 = df3.groupby('compliance_tag').agg({'rule': lambda x: ['\n'.join(list(x)), len(list(x))]})
-    df3['rules'] = df3['rule'].apply(lambda x: x[0])
+    compliance_tag_col_name = '<div style=\"width:200px\">compliance_tag</div>'
+    df3.rename(columns={'compliance_tag': compliance_tag_col_name, \
+            }, inplace=True)
+    df3 = df3[['rule', compliance_tag_col_name, 'maturity']].explode(compliance_tag_col_name)
+    df3 = df3.groupby(compliance_tag_col_name).agg({'rule': lambda x: ['\n'.join(list(x)), len(list(x))]})
+    df3['<div style=\"width:450px\">rules</div>'] = df3['rule'].apply(lambda x: x[0])
     # df3['percentage'] = df3['rule'].apply(lambda x: round((100.0 * x[1] / n_rules), 2)).astype(str) + '%'
     print(df3.drop('rule', axis=1).to_markdown(index=True))
 
