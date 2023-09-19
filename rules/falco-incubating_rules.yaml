@@ -448,7 +448,7 @@
 - rule: Change namespace privileges via unshare
   desc: > 
     Unprivileged users in containers may not have CAP_SYS_ADMIN or other elevated privileges. However, they can  
-    use the "unshare(CLONE_NEWNS|CLONE_NEWUSER)" system call to create or clone a namespace or user with the 
+    use the unshare system call with CLONE_NEWNS or CLONE_NEWUSER to create or clone a namespace or user with the 
     necessary privileges to conduct further attacks. It is best practice to block the unshare system call via 
     seccomp if it is not needed. Misuse of unshare can be related to misconfigured Kubernetes clusters, for example.
   condition: >
