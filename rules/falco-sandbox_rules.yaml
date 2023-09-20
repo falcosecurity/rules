@@ -1514,7 +1514,7 @@
 - macro: user_known_k8s_client_container_parens
   condition: (user_known_k8s_client_container)
 
-- rule: The docker client is executed in a container
+- rule: Kubernetes Client Tool Launched in Container
   desc: > 
     Detect the execution of a Kubernetes client tool (like docker, kubectl, crictl) within a container, which is typically not expected behavior. 
     Although this rule targets container workloads, monitoring the use of tools like crictl on the host over interactive access could also be 
