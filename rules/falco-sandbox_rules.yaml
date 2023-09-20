@@ -1518,13 +1518,13 @@
   desc: > 
     Detect the execution of a Kubernetes client tool (like docker, kubectl, crictl) within a container, which is typically not expected behavior. 
     Although this rule targets container workloads, monitoring the use of tools like crictl on the host over interactive access could also be 
-    valuable for broader auditing objectives. The rule name is outdated and somewhat misleading when considering the expanded use cases now involved.
+    valuable for broader auditing objectives.
   condition: > 
     spawned_process 
     and container 
     and not user_known_k8s_client_container_parens 
     and proc.name in (k8s_client_binaries)
-  output: Docker or kubernetes client executed in container (evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
+  output: Kubernetes Client Tool Launched in Container (evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
   priority: WARNING
   tags: [maturity_sandbox, container, mitre_execution, T1610]
 
