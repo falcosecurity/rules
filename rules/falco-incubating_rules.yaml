@@ -1235,3 +1235,20 @@
   output: Exfiltrating Artifacts via Kubernetes Control Plane (file=%fd.name evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
   priority: NOTICE
   tags: [maturity_incubating, container, filesystem, mitre_exfiltration, TA0010]
+
+- rule: Adding ssh keys to authorized_keys
+  desc: >
+    After gaining access, attackers can modify the authorized_keys file to maintain persistence on a victim host.
+    Where authorized_keys files are modified via cloud APIs or command line interfaces, an adversary may achieve 
+    privilege escalation on the target virtual machine if they add a key to a higher-privileged user.
+    This rules aims at detecting any modification to the authorized_keys file, that is usually located under the .ssh
+    directory in any user's home directory. This rule complements the more generic auditing rule "Read ssh information"
+    by specifically detecting the writing of new, potentially attacker-provided keys.
+  condition: >
+    open_write
+    and (user_ssh_directory or fd.name startswith /root/.ssh)
+    and fd.name endswith authorized_keys
+    and not proc.name in (ssh_binaries)
+  output: Adding ssh keys to authorized_keys (file=%fd.name evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags)
+  priority: WARNING
+  tags: [maturity_incubating, host, filesystem, mitre_persistence, T1098.004]
