@@ -26,6 +26,10 @@ rulesfiles:
     path: rules/falco_rules.yaml
     license: apache-2.0
     url: https://github.com/falcosecurity/rules/blob/main/rules/falco_rules.yaml
+    signature:
+      cosign:
+        certificate-oidc-issuer: https://token.actions.githubusercontent.com
+        certificate-identity-regexp: https://github.com/falcosecurity/plugins/
   - name: falco-incubating-rules
     description: Falco incubating rules
     authors: The Falco Authors
@@ -36,6 +40,10 @@ rulesfiles:
     path: rules/falco-incubating_rules.yaml
     license: apache-2.0
     url: https://github.com/falcosecurity/rules/blob/main/rules/falco-incubating_rules.yaml
+    signature:
+      cosign:
+        certificate-oidc-issuer: https://token.actions.githubusercontent.com
+        certificate-identity-regexp: https://github.com/falcosecurity/plugins/
   - name: falco-sandbox-rules
     description: Falco sandbox rules
     authors: The Falco Authors
@@ -46,6 +54,10 @@ rulesfiles:
     path: rules/falco-sandbox_rules.yaml
     license: apache-2.0
     url: https://github.com/falcosecurity/rules/blob/main/rules/falco-sandbox_rules.yaml
+    signature:
+      cosign:
+        certificate-oidc-issuer: https://token.actions.githubusercontent.com
+        certificate-identity-regexp: https://github.com/falcosecurity/plugins/
   - name: falco-deprecated-rules
     description: Falco deprecated rules kept as examples but are no longer maintained
     authors: The Falco Authors
