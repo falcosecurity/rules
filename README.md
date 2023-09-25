@@ -95,6 +95,14 @@ Previously, Falco used to bundle all the community rules in its default distribu
 
 If you are using the official Helm chart, you can add the incubating and/or sandbox repository in your [falcoctl config](https://github.com/falcosecurity/charts/blob/f1062000e2e61332b3a8ea892a1765e4f4a60ec6/falco/values.yaml#L406) and by enabling them in the corresponding `falco.yaml` file.
 
+For instance, in order to install the Helm chart and load all the available Falco rules with automatic update on all of them, you can run
+
+```
+helm install falco falcosecurity/falco --set "falcoctl.config.artifact.install.refs={falco-rules:2,falco-incubating-rules:2,falco-sandbox-rules:2}" --set "falcoctl.config.artifact.follow.refs={falco-rules:2,falco-incubating-rules:2,falco-sandbox-rules:2}" --set "falco.rules_file={/etc/falco/k8s_audit_rules.yaml,/etc/falco/rules.d,/etc/falco/falco_rules.yaml,/etc/falco/falco-incubating_rules.yaml,/etc/falco/falco-sandbox_rules.yaml}"
+```
+
+Where the option `falcoctl.config.artifact.install.refs` governs which rules are downloaded at startup, `falcoctl.config.artifact.follow.refs` identifies which rules are automatically updated and `falco.rules_file` indicates which rules are loaded by the engine.
+
 ### Host installation
 
 If you are managing your Falco installation you should be aware of which directories contain the rules. Those are governed by the `rules_file` configuration option in your [falco.yaml](https://github.com/falcosecurity/falco/blob/ab6d76e6d2a076ca1403c91aa62213d2cadb73ea/falco.yaml#L146). Normally, there is also a `rules.d` directory that you can use to upload extra rules or you can add your custom files.
