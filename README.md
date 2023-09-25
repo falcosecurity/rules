@@ -4,7 +4,9 @@
 
 Note: *This repository has been created upon this [proposal](https://github.com/falcosecurity/falco/blob/master/proposals/20221129-artifacts-distribution.md#move-falco-rules-to-their-own-repo).*
 
-This repository maintains the default *rules files* officially owned by the Falcosecurity organization as well as the Falco Rules Files Registry. 
+This repository maintains the default *rules files* officially owned by the Falcosecurity organization as well as the Falco Rules Files Registry.
+
+**Please note**: since version 2.0.0 we changed how we ship and distribute the rules. Read more [below](#falco-rules-2x).
 
 ## Falco Rules
 
@@ -78,6 +80,27 @@ You can find the full registry specification here: *(coming soon...)*
 Please refer to the automatically generated [rules overview](https://falcosecurity.github.io/rules/overview/) document file for a detailed list of all the rules currently registered.
 
 -->
+
+## Falco Rules 2.x
+
+Since version 2.0.0, the rules distributed from this repository have been split into three parts:
+
+- [Stable](https://github.com/falcosecurity/rules/blob/main/rules/falco_rules.yaml) Falco rules. Those are the only ones that are bundled in the Falco by default. It is very important to have a set of stable rules vetted by the community. To learn more about the criterias that are required for a rule to become stable, see the [contributing guide](https://github.com/falcosecurity/rules/blob/main/CONTRIBUTING.md).
+- [Incubating](https://github.com/falcosecurity/rules/blob/main/rules/falco-incubating_rules.yaml) rules, which provide a certain level of robustness guarantee but have been identified by experts as catering to more specific use cases, which may or may not be relevant for each adopter.
+- [Sandbox](https://github.com/falcosecurity/rules/blob/main/rules/falco-sandbox_rules.yaml) rules, which are more experimental.
+
+Previously, Falco used to bundle all the community rules in its default distribution. Today you can choose which set of rules you want to load in your distribution, depending on your preferred installation method:
+
+### Helm Chart
+
+If you are using the official Helm chart, you can add the incubating and/or sandbox repository in your [falcoctl config](https://github.com/falcosecurity/charts/blob/f1062000e2e61332b3a8ea892a1765e4f4a60ec6/falco/values.yaml#L406) and by enabling them in the corresponding `falco.yaml` file.
+
+### Host installation
+
+If you are managing your Falco installation you should be aware of which directories contain the rules. Those are governed by the `rules_file` configuration option in your [falco.yaml](https://github.com/falcosecurity/falco/blob/ab6d76e6d2a076ca1403c91aa62213d2cadb73ea/falco.yaml#L146). Normally, there is also a `rules.d` directory that you can use to upload extra rules or you can add your custom files.
+
+Now you can simply download incubating or sandbox rules from [the repository](https://download.falco.org/?prefix=rules/), uncompress and copy the file there.
+
 
 ## Contributing
 
