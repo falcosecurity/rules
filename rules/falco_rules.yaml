@@ -928,6 +928,7 @@
     relevant to your environment, and adjust the profiled containers you wish not to be alerted on.
   condition: >
     open_write 
+    and container
     and access_log_files 
     and evt.arg.flags contains "O_TRUNC" 
     and not trusted_logging_images 
