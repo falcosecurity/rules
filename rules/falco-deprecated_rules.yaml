@@ -24,7 +24,7 @@
 
 # Starting with version 8, the Falco engine supports exceptions.
 # However the Falco rules file does not use them by default.
-- required_engine_version: 17
+- required_engine_version: "0.17.0"
 
 # This macro `never_true` is used as placeholder for tuning negative logical sub-expressions, for example
 # - macro: allowed_ssh_hosts
