@@ -28,70 +28,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// todo(jasondellaluce,loresuso): move this definitions and their deserialization
-// logic in falcosecurity/testing, and check for duplicates in falcoctl
-
-type falcoListOutput struct {
-	Details struct {
-		Lists []string `json:"lists"`
-	} `json:"details"`
-	Info struct {
-		Items []string `json:"items"`
-		Name  string   `json:"name"`
-	} `json:"info"`
-}
-
-type falcoMacroOutput struct {
-	Details struct {
-		ConditionFields []string `json:"condition_fields"`
-		Events          []string `json:"events"`
-		Lists           []string `json:"lists"`
-		Macros          []string `json:"macros"`
-		Operators       []string `json:"operators"`
-	} `json:"details"`
-	Info struct {
-		Condition string `json:"condition"`
-		Name      string `json:"name"`
-	} `json:"info"`
-}
-
-type falcoRuleOutput struct {
-	Details struct {
-		ConditionFields    []string `json:"condition_fields"`
-		Events             []string `json:"events"`
-		ExceptionFields    []string `json:"exception_fields"`
-		ExceptionOperators []string `json:"exception_operators"`
-		Exceptions         []string `json:"exceptions"`
-		Lists              []string `json:"lists"`
-		Macros             []string `json:"macros"`
-		Operators          []string `json:"operators"`
-		OutputFields       []string `json:"output_fields"`
-	} `json:"details"`
-	Info struct {
-		Condition   string   `json:"condition"`
-		Description string   `json:"description"`
-		Enabled     bool     `json:"enabled"`
-		Name        string   `json:"name"`
-		Output      string   `json:"output"`
-		Priority    string   `json:"priority"`
-		Source      string   `json:"source"`
-		Tags        []string `json:"tags"`
-	} `json:"info"`
-}
-
-type falcoPluginVerReq struct {
-	Name    string `json:"name"`
-	Version string `json:"version"`
-}
-
-type falcoPluginVerReqOutput struct {
-	falcoPluginVerReq
-	Alternatives []falcoPluginVerReq `json:"alternatives"`
-}
-
-func (f *falcoPluginVerReqOutput) GetVerRequirement(pluginName string) *falcoPluginVerReq {
+func getVerRequirement(f *falco.PluginVersionRequirementDescription, pluginName string) *falco.PluginVersionRequirement {
 	if f.Name == pluginName {
-		return &f.falcoPluginVerReq
+		return &f.PluginVersionRequirement
 	}
 	for _, a := range f.Alternatives {
 		if a.Name == pluginName {
@@ -101,26 +40,18 @@ func (f *falcoPluginVerReqOutput) GetVerRequirement(pluginName string) *falcoPlu
 	return nil
 }
 
-func (f *falcoPluginVerReqOutput) GetRequirements() []*falcoPluginVerReq {
-	var res []*falcoPluginVerReq
-	res = append(res, &f.falcoPluginVerReq)
+func getRequirements(f *falco.PluginVersionRequirementDescription) []*falco.PluginVersionRequirement {
+	var res []*falco.PluginVersionRequirement
+	res = append(res, &f.PluginVersionRequirement)
 	for _, a := range f.Alternatives {
 		res = append(res, &a)
 	}
 	return res
 }
 
-type falcoCompareOutput struct {
-	RequiredEngineVersion  string                    `json:"required_engine_version"`
-	RequiredPluginVersions []falcoPluginVerReqOutput `json:"required_plugin_versions"`
-	Lists                  []falcoListOutput         `json:"lists"`
-	Macros                 []falcoMacroOutput        `json:"macros"`
-	Rules                  []falcoRuleOutput         `json:"rules"`
-}
-
-func (f *falcoCompareOutput) FindPluginVerRequirement(pluginName string) *falcoPluginVerReqOutput {
+func findPluginVerRequirement(f *falco.RulesetDescription, pluginName string) *falco.PluginVersionRequirementDescription {
 	for _, r := range f.RequiredPluginVersions {
-		req := r.GetVerRequirement(pluginName)
+		req := getVerRequirement(&r, pluginName)
 		if req != nil {
 			return &r
 		}
@@ -128,7 +59,7 @@ func (f *falcoCompareOutput) FindPluginVerRequirement(pluginName string) *falcoP
 	return nil
 }
 
-func (f *falcoCompareOutput) ListNames() []string {
+func listNames(f *falco.RulesetDescription) []string {
 	var names []string
 	for _, l := range f.Lists {
 		names = append(names, l.Info.Name)
@@ -136,7 +67,7 @@ func (f *falcoCompareOutput) ListNames() []string {
 	return names
 }
 
-func (f *falcoCompareOutput) MacroNames() []string {
+func macroNames(f *falco.RulesetDescription) []string {
 	var names []string
 	for _, l := range f.Macros {
 		names = append(names, l.Info.Name)
@@ -144,7 +75,7 @@ func (f *falcoCompareOutput) MacroNames() []string {
 	return names
 }
 
-func (f *falcoCompareOutput) RuleNames() []string {
+func ruleNames(f *falco.RulesetDescription) []string {
 	var names []string
 	for _, l := range f.Rules {
 		names = append(names, l.Info.Name)
@@ -152,7 +83,7 @@ func (f *falcoCompareOutput) RuleNames() []string {
 	return names
 }
 
-func getCompareOutput(falcoImage, configFile string, ruleFiles, extraFiles []string) (*falcoCompareOutput, error) {
+func getCompareOutput(falcoImage, configFile string, ruleFiles, extraFiles []string) (*falco.RulesetDescription, error) {
 	testOptions := []falco.TestOption{
 		falco.WithOutputJSON(),
 		falco.WithOutputJSON(),
@@ -189,7 +120,7 @@ func getCompareOutput(falcoImage, configFile string, ruleFiles, extraFiles []str
 	}
 
 	// unmarshal json output
-	var out falcoCompareOutput
+	var out falco.RulesetDescription
 	err = json.Unmarshal(([]byte)(res.Stdout()), &out)
 	if err != nil {
 		logrus.Info(res.Stderr())
@@ -202,7 +133,7 @@ func getCompareOutput(falcoImage, configFile string, ruleFiles, extraFiles []str
 	return &out, nil
 }
 
-func compareRulesPatch(left, right *falcoCompareOutput) (res []string) {
+func compareRulesPatch(left, right *falco.RulesetDescription) (res []string) {
 	// Decrementing required_engine_version
 	lRequiredEngineVersion, _ := strconv.Atoi(left.RequiredEngineVersion)
 	rRequiredEngineVersion, _ := strconv.Atoi(right.RequiredEngineVersion)
@@ -214,16 +145,16 @@ func compareRulesPatch(left, right *falcoCompareOutput) (res []string) {
 	// Remove or decrement plugin version requirement
 	for _, lpr := range left.RequiredPluginVersions {
 		var tmpRemoveRes []string
-		lpReqs := lpr.GetRequirements()
+		lpReqs := getRequirements(&lpr)
 		for _, lr := range lpReqs {
-			rr := right.FindPluginVerRequirement(lr.Name)
+			rr := findPluginVerRequirement(right, lr.Name)
 			if rr == nil {
 				// removed dep (not an alternative)
 				tmpRemoveRes = append(tmpRemoveRes, fmt.Sprintf("Version dependency to plugin `%s` has removed", lr.Name))
 			} else {
 				// decremented
 				lv := semver.MustParse(lr.Version)
-				rv := semver.MustParse(rr.GetVerRequirement(lr.Name).Version)
+				rv := semver.MustParse(getVerRequirement(rr, lr.Name).Version)
 				if lv.Compare(rv) > 0 {
 					res = append(res, fmt.Sprintf("Version dependency to plugin `%s` has been decremented", lr.Name))
 				}
@@ -236,17 +167,17 @@ func compareRulesPatch(left, right *falcoCompareOutput) (res []string) {
 
 	// Adding plugin version requirement alternative
 	for _, rpr := range right.RequiredPluginVersions {
-		var lrl *falcoPluginVerReqOutput
-		rReqs := rpr.GetRequirements()
+		var lrl *falco.PluginVersionRequirementDescription
+		rReqs := getRequirements(&rpr)
 		for _, rreq := range rReqs {
-			lrl = left.FindPluginVerRequirement(rreq.Name)
+			lrl = findPluginVerRequirement(left, rreq.Name)
 			if lrl != nil {
 				break
 			}
 		}
 		if lrl != nil {
 			for _, rreq := range rReqs {
-				if lrl.GetVerRequirement(rreq.Name) == nil {
+				if getVerRequirement(lrl, rreq.Name) == nil {
 					res = append(res, fmt.Sprintf("Version dependency alternative to plugin `%s` has added", rreq.Name))
 				}
 			}
@@ -282,8 +213,8 @@ func compareRulesPatch(left, right *falcoCompareOutput) (res []string) {
 				}
 
 				// Adding or removing exceptions for one or more Falco rules
-				if len(diffStrSet(l.Details.Exceptions, r.Details.Exceptions)) != 0 ||
-					len(diffStrSet(r.Details.Exceptions, l.Details.Exceptions)) != 0 {
+				if len(diffStrSet(l.Details.ExceptionNames, r.Details.ExceptionNames)) != 0 ||
+					len(diffStrSet(r.Details.ExceptionNames, l.Details.ExceptionNames)) != 0 {
 					res = append(res, fmt.Sprintf("Rule '%s' has some exceptions added or removed", l.Info.Name))
 				}
 
@@ -306,7 +237,7 @@ func compareRulesPatch(left, right *falcoCompareOutput) (res []string) {
 	return
 }
 
-func compareRulesMinor(left, right *falcoCompareOutput) (res []string) {
+func compareRulesMinor(left, right *falco.RulesetDescription) (res []string) {
 	// Incrementing the required_engine_version number
 	l_required_engine_version, _ := strconv.Atoi(left.RequiredEngineVersion)
 	r_required_engine_version, _ := strconv.Atoi(right.RequiredEngineVersion)
@@ -317,10 +248,10 @@ func compareRulesMinor(left, right *falcoCompareOutput) (res []string) {
 
 	// Adding a new plugin version requirement in required_plugin_versions
 	for _, rpr := range right.RequiredPluginVersions {
-		var lrl *falcoPluginVerReqOutput
-		rReqs := rpr.GetRequirements()
+		var lrl *falco.PluginVersionRequirementDescription
+		rReqs := getRequirements(&rpr)
 		for _, rreq := range rReqs {
-			lrl = left.FindPluginVerRequirement(rreq.Name)
+			lrl = findPluginVerRequirement(left, rreq.Name)
 			if lrl != nil {
 				break
 			}
@@ -332,12 +263,12 @@ func compareRulesMinor(left, right *falcoCompareOutput) (res []string) {
 
 	// Incrementing the version requirement for one or more plugin
 	for _, lpr := range left.RequiredPluginVersions {
-		lpReqs := lpr.GetRequirements()
+		lpReqs := getRequirements(&lpr)
 		for _, lr := range lpReqs {
-			rr := right.FindPluginVerRequirement(lr.Name)
+			rr := findPluginVerRequirement(right, lr.Name)
 			if rr != nil {
 				lv := semver.MustParse(lr.Version)
-				rv := semver.MustParse(rr.GetVerRequirement(lr.Name).Version)
+				rv := semver.MustParse(getVerRequirement(rr, lr.Name).Version)
 				if lv.Compare(rv) < 0 {
 					res = append(res, fmt.Sprintf("Version dependency to plugin `%s` has been incremented", lr.Name))
 				}
@@ -346,19 +277,19 @@ func compareRulesMinor(left, right *falcoCompareOutput) (res []string) {
 	}
 
 	// Adding one or more lists, macros, or rules
-	diff := diffStrSet(right.RuleNames(), left.RuleNames())
+	diff := diffStrSet(ruleNames(right), ruleNames(left))
 	if len(diff) > 0 {
 		for v := range diff {
 			res = append(res, fmt.Sprintf("Rule `%s` has been added", v))
 		}
 	}
-	diff = diffStrSet(right.MacroNames(), left.MacroNames())
+	diff = diffStrSet(macroNames(right), macroNames(left))
 	if len(diff) > 0 {
 		for v := range diff {
 			res = append(res, fmt.Sprintf("Macro `%s` has been added", v))
 		}
 	}
-	diff = diffStrSet(right.ListNames(), left.ListNames())
+	diff = diffStrSet(listNames(right), listNames(left))
 	if len(diff) > 0 {
 		for v := range diff {
 			res = append(res, fmt.Sprintf("List `%s` has been added", v))
@@ -368,13 +299,13 @@ func compareRulesMinor(left, right *falcoCompareOutput) (res []string) {
 	return
 }
 
-func compareRulesMajor(left, right *falcoCompareOutput) (res []string) {
+func compareRulesMajor(left, right *falco.RulesetDescription) (res []string) {
 	// Remove plugin version requirement alternative
 	for _, lpr := range left.RequiredPluginVersions {
 		var tmpRes []string
-		lpReqs := lpr.GetRequirements()
+		lpReqs := getRequirements(&lpr)
 		for _, lr := range lpReqs {
-			rr := right.FindPluginVerRequirement(lr.Name)
+			rr := findPluginVerRequirement(right, lr.Name)
 			if rr == nil && len(lpr.Alternatives) > 0 {
 				// removed dep (an alternative)
 				tmpRes = append(tmpRes, fmt.Sprintf("Version dependency alternative to plugin `%s` has removed", lr.Name))
@@ -387,19 +318,19 @@ func compareRulesMajor(left, right *falcoCompareOutput) (res []string) {
 	}
 
 	// Renaming or removing a list, macro, or rule
-	diff := diffStrSet(left.RuleNames(), right.RuleNames())
+	diff := diffStrSet(ruleNames(left), ruleNames(right))
 	if len(diff) > 0 {
 		for v := range diff {
 			res = append(res, fmt.Sprintf("Rule `%s` has been removed", v))
 		}
 	}
-	diff = diffStrSet(left.MacroNames(), right.MacroNames())
+	diff = diffStrSet(macroNames(left), macroNames(right))
 	if len(diff) > 0 {
 		for v := range diff {
 			res = append(res, fmt.Sprintf("Macro `%s` has been removed", v))
 		}
 	}
-	diff = diffStrSet(left.ListNames(), right.ListNames())
+	diff = diffStrSet(listNames(left), listNames(right))
 	if len(diff) > 0 {
 		for v := range diff {
 			res = append(res, fmt.Sprintf("List `%s` has been removed", v))
