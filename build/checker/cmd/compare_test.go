@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/falcosecurity/testing/pkg/falco"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -90,8 +91,8 @@ const sampleFalcoCompareOutput = `{
 	]
   }`
 
-func testGetSampleFalcoCompareOutput(t *testing.T) *falcoCompareOutput {
-	var out falcoCompareOutput
+func testGetSampleFalcoCompareOutput(t *testing.T) *falco.RulesetDescription {
+	var out falco.RulesetDescription
 	err := json.Unmarshal(([]byte)(sampleFalcoCompareOutput), &out)
 	if err != nil {
 		t.Fatal(err.Error())
@@ -131,7 +132,7 @@ func TestCompareRulesPatch(t *testing.T) {
 	t.Run("add-plugin-version-requirement-alternative", func(t *testing.T) {
 		t.Parallel()
 		o2 := testGetSampleFalcoCompareOutput(t)
-		a := falcoPluginVerReq{Name: "json2", Version: "0.1.0"}
+		a := falco.PluginVersionRequirement{Name: "json2", Version: "0.1.0"}
 		o2.RequiredPluginVersions[1].Alternatives = append(o2.RequiredPluginVersions[1].Alternatives, a)
 		res := compareRulesPatch(testGetSampleFalcoCompareOutput(t), o2)
 		assert.Len(t, res, 1)
@@ -206,7 +207,7 @@ func TestCompareRulesPatch(t *testing.T) {
 		t.Run("add-exceptions", func(t *testing.T) {
 			t.Parallel()
 			o2 := testGetSampleFalcoCompareOutput(t)
-			o2.Rules[0].Details.Exceptions = append(o2.Rules[0].Details.Exceptions, "some-exception-name")
+			o2.Rules[0].Details.ExceptionNames = append(o2.Rules[0].Details.ExceptionNames, "some-exception-name")
 			res := compareRulesPatch(testGetSampleFalcoCompareOutput(t), o2)
 			assert.Len(t, res, 1)
 		})
@@ -214,8 +215,8 @@ func TestCompareRulesPatch(t *testing.T) {
 			t.Parallel()
 			o1 := testGetSampleFalcoCompareOutput(t)
 			o2 := testGetSampleFalcoCompareOutput(t)
-			o1.Rules[0].Details.Exceptions = append(o1.Rules[0].Details.Exceptions, "exception1, exception2")
-			o2.Rules[0].Details.Exceptions = append(o2.Rules[0].Details.Exceptions, "exception1")
+			o1.Rules[0].Details.ExceptionNames = append(o1.Rules[0].Details.ExceptionNames, "exception1, exception2")
+			o2.Rules[0].Details.ExceptionNames = append(o2.Rules[0].Details.ExceptionNames, "exception1")
 			res := compareRulesPatch(o1, o2)
 			assert.Len(t, res, 1)
 		})
@@ -236,8 +237,8 @@ func TestCompareRulesMinor(t *testing.T) {
 	t.Run("add-plugin-version-requirement", func(t *testing.T) {
 		t.Parallel()
 		o2 := testGetSampleFalcoCompareOutput(t)
-		dep := falcoPluginVerReqOutput{
-			falcoPluginVerReq: falcoPluginVerReq{Name: "some_other_plugin", Version: "0.1.0"},
+		dep := falco.PluginVersionRequirementDescription{
+			PluginVersionRequirement: falco.PluginVersionRequirement{Name: "some_other_plugin", Version: "0.1.0"},
 		}
 		o2.RequiredPluginVersions = append(o2.RequiredPluginVersions, dep)
 		res := compareRulesMinor(testGetSampleFalcoCompareOutput(t), o2)
@@ -264,7 +265,7 @@ func TestCompareRulesMinor(t *testing.T) {
 
 	t.Run("add-list", func(t *testing.T) {
 		t.Parallel()
-		l := falcoListOutput{}
+		l := falco.ListDescription{}
 		l.Info.Name = "l2"
 		o2 := testGetSampleFalcoCompareOutput(t)
 		o2.Lists = append(o2.Lists, l)
@@ -274,7 +275,7 @@ func TestCompareRulesMinor(t *testing.T) {
 
 	t.Run("add-macro", func(t *testing.T) {
 		t.Parallel()
-		l := falcoMacroOutput{}
+		l := falco.MacroDescription{}
 		l.Info.Name = "m2"
 		o2 := testGetSampleFalcoCompareOutput(t)
 		o2.Macros = append(o2.Macros, l)
@@ -284,7 +285,7 @@ func TestCompareRulesMinor(t *testing.T) {
 
 	t.Run("add-rule", func(t *testing.T) {
 		t.Parallel()
-		l := falcoRuleOutput{}
+		l := falco.RuleDescription{}
 		l.Info.Name = "r2"
 		o2 := testGetSampleFalcoCompareOutput(t)
 		o2.Rules = append(o2.Rules, l)
@@ -294,11 +295,11 @@ func TestCompareRulesMinor(t *testing.T) {
 
 	t.Run("add-all", func(t *testing.T) {
 		t.Parallel()
-		l := falcoListOutput{}
+		l := falco.ListDescription{}
 		l.Info.Name = "l2"
-		m := falcoMacroOutput{}
+		m := falco.MacroDescription{}
 		m.Info.Name = "m2"
-		r := falcoRuleOutput{}
+		r := falco.RuleDescription{}
 		r.Info.Name = "r2"
 		o2 := testGetSampleFalcoCompareOutput(t)
 		o2.Lists = append(o2.Lists, l)
@@ -317,7 +318,7 @@ func TestCompareRulesMajor(t *testing.T) {
 		t.Run("with-alternatives", func(t *testing.T) {
 			t.Parallel()
 			o2 := testGetSampleFalcoCompareOutput(t)
-			o2.RequiredPluginVersions[0].Alternatives = []falcoPluginVerReq{}
+			o2.RequiredPluginVersions[0].Alternatives = []falco.PluginVersionRequirement{}
 			res := compareRulesMajor(testGetSampleFalcoCompareOutput(t), o2)
 			assert.Len(t, res, 1)
 		})
@@ -326,7 +327,7 @@ func TestCompareRulesMajor(t *testing.T) {
 	t.Run("remove-list", func(t *testing.T) {
 		t.Parallel()
 		o2 := testGetSampleFalcoCompareOutput(t)
-		o2.Lists = []falcoListOutput{}
+		o2.Lists = []falco.ListDescription{}
 		res := compareRulesMajor(testGetSampleFalcoCompareOutput(t), o2)
 		assert.Len(t, res, 1)
 	})
@@ -334,7 +335,7 @@ func TestCompareRulesMajor(t *testing.T) {
 	t.Run("remove-macro", func(t *testing.T) {
 		t.Parallel()
 		o2 := testGetSampleFalcoCompareOutput(t)
-		o2.Macros = []falcoMacroOutput{}
+		o2.Macros = []falco.MacroDescription{}
 		res := compareRulesMajor(testGetSampleFalcoCompareOutput(t), o2)
 		assert.Len(t, res, 1)
 	})
@@ -342,7 +343,7 @@ func TestCompareRulesMajor(t *testing.T) {
 	t.Run("remove-rule", func(t *testing.T) {
 		t.Parallel()
 		o2 := testGetSampleFalcoCompareOutput(t)
-		o2.Rules = []falcoRuleOutput{}
+		o2.Rules = []falco.RuleDescription{}
 		res := compareRulesMajor(testGetSampleFalcoCompareOutput(t), o2)
 		assert.Len(t, res, 1)
 	})
@@ -350,9 +351,9 @@ func TestCompareRulesMajor(t *testing.T) {
 	t.Run("remove-all", func(t *testing.T) {
 		t.Parallel()
 		o2 := testGetSampleFalcoCompareOutput(t)
-		o2.Lists = []falcoListOutput{}
-		o2.Macros = []falcoMacroOutput{}
-		o2.Rules = []falcoRuleOutput{}
+		o2.Lists = []falco.ListDescription{}
+		o2.Macros = []falco.MacroDescription{}
+		o2.Rules = []falco.RuleDescription{}
 		res := compareRulesMajor(testGetSampleFalcoCompareOutput(t), o2)
 		assert.Len(t, res, 3)
 	})
