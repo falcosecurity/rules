@@ -62,15 +62,28 @@ func rulesfileRequirement(filePath string) (*oci.ArtifactRequirement, error) {
 		return nil, fmt.Errorf("requirements for rulesfile %q: %w", filePath, ErrReqNotFound)
 	}
 
-	// Split the requirement and parse the version to semVer.
+	// Split the requirement and parse the version as semVer.
 	tokens := strings.Split(fileScanner.Text(), ":")
-	reqVer, err := semver.ParseTolerant(tokens[1])
+	reqVer, err := semver.Parse(tokens[1])
 	if err != nil {
-		return nil, fmt.Errorf("unable to parse to semVer the version requirement %q", tokens[1])
+		// Check if the version is a expressed as an integer.
+		ver, err := strconv.ParseUint(tokens[1], 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("unable to parse version %q as neither semver nor integer: %w", tokens[1], err)
+		}
+		reqVer = implicitEngineVersion(ver)
 	}
 
 	return &oci.ArtifactRequirement{
 		Name:    engineVersionKey,
-		Version: strconv.FormatUint(reqVer.Major, 10),
+		Version: reqVer.String(),
 	}, nil
+}
+
+func implicitEngineVersion(minor uint64) semver.Version {
+	return semver.Version{
+		Major: 0,
+		Minor: minor,
+		Patch: 0,
+	}
 }
