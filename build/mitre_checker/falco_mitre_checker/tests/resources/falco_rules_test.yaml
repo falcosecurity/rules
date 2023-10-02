@@ -1,0 +1,88 @@
+- required_engine_version: 17
+
+- macro: not a rule
+  condition: true
+
+- rule: not a mitre rule
+  desc: an attempt to write to any file below /etc
+  condition: write_etc_common
+  output: "File below /etc opened for writing (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid parent=%proc.pname pcmdline=%proc.pcmdline file=%fd.name program=%proc.name gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] container_id=%container.id image=%container.image.repository)"
+  priority: ERROR
+  tags: [ host, container, filesystem ]
+
+- rule: correct mitre rule
+  desc: an attempt to write to any file below /etc
+  condition: write_etc_common
+  output: "File below /etc opened for writing (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid parent=%proc.pname pcmdline=%proc.pcmdline file=%fd.name program=%proc.name gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] container_id=%container.id image=%container.image.repository)"
+  priority: ERROR
+  tags: [ host, container, network, mitre_persistence, T1098 ]
+
+- rule: wrong mitre rule
+  desc: >
+    Detect the initial process started by a container that is not in a list of allowed containers.
+  condition: container_started and container and not allowed_containers
+  output: Container started and not in allowed list (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pid=%proc.pid %container.info image=%container.image.repository:%container.image.tag)
+  priority: WARNING
+  tags: [ container, mitre_lateral_movement, T1610 ]
+
+- rule: correct mitre rule tactics tags with multiple techniques
+  desc: >
+    Directory traversal monitored file read - Web applications can be vulnerable to directory traversal attacks that allow accessing files outside of the web app's root directory (e.g. Arbitrary File Read bugs).
+    System directories like /etc are typically accessed via absolute paths. Access patterns outside of this (here path traversal) can be regarded as suspicious.
+    This rule includes failed file open attempts.
+  condition: (open_read or open_file_failed) and (etc_dir or user_ssh_directory or fd.name startswith /root/.ssh or fd.name contains "id_rsa") and directory_traversal and not proc.pname in (shell_binaries)
+  enabled: true
+  output: >
+    Read monitored file via directory traversal (username=%user.name useruid=%user.uid user_loginuid=%user.loginuid program=%proc.name exe=%proc.exepath
+    command=%proc.cmdline pid=%proc.pid parent=%proc.pname file=%fd.name fileraw=%fd.nameraw parent=%proc.pname
+    gparent=%proc.aname[2] container_id=%container.id image=%container.image.repository returncode=%evt.res cwd=%proc.cwd)
+  priority: WARNING
+  tags: [ host, container, filesystem, mitre_discovery, mitre_exfiltration, mitre_credential_access, T1555, T1212, T1020, T1552, T1083 ]
+
+- rule: too many tactics tags with multiple techniques
+  desc: >
+    Directory traversal monitored file read - Web applications can be vulnerable to directory traversal attacks that allow accessing files outside of the web app's root directory (e.g. Arbitrary File Read bugs).
+    System directories like /etc are typically accessed via absolute paths. Access patterns outside of this (here path traversal) can be regarded as suspicious.
+    This rule includes failed file open attempts.
+  condition: (open_read or open_file_failed) and (etc_dir or user_ssh_directory or fd.name startswith /root/.ssh or fd.name contains "id_rsa") and directory_traversal and not proc.pname in (shell_binaries)
+  enabled: true
+  output: >
+    Read monitored file via directory traversal (username=%user.name useruid=%user.uid user_loginuid=%user.loginuid program=%proc.name exe=%proc.exepath
+    command=%proc.cmdline pid=%proc.pid parent=%proc.pname file=%fd.name fileraw=%fd.nameraw parent=%proc.pname
+    gparent=%proc.aname[2] container_id=%container.id image=%container.image.repository returncode=%evt.res cwd=%proc.cwd)
+  priority: WARNING
+  tags: [ host, container, filesystem, mitre_discovery, mitre_exfiltration, mitre_credential_access, mitre_execution, T1555, T1212, T1020, T1552, T1083 ]
+
+- rule: wrong mitre rule multiple techniques and missing one tactic
+  desc: >
+    Read sensitive file untrusted - an attempt to read any sensitive file (e.g. files containing user/password/authentication
+    information). Exceptions are made for known trusted programs.
+  condition: >
+    sensitive_files and open_read
+    and proc_name_exists
+    and not proc.name in (user_mgmt_binaries, userexec_binaries, package_mgmt_binaries,
+     cron_binaries, read_sensitive_file_binaries, shell_binaries, hids_binaries,
+     vpn_binaries, mail_config_binaries, nomachine_binaries, sshkit_script_binaries,
+     in.proftpd, mandb, salt-call, salt-minion, postgres_mgmt_binaries,
+     google_oslogin_
+     )
+    and not cmp_cp_by_passwd
+    and not ansible_running_python
+    and not run_by_qualys
+    and not run_by_chef
+    and not run_by_google_accounts_daemon
+    and not user_read_sensitive_file_conditions
+    and not mandb_postinst
+    and not perl_running_plesk
+    and not perl_running_updmap
+    and not veritas_driver_script
+    and not perl_running_centrifydc
+    and not runuser_reading_pam
+    and not linux_bench_reading_etc_shadow
+    and not user_known_read_sensitive_files_activities
+    and not user_read_sensitive_file_containers
+  output: >
+    Sensitive file opened for reading by non-trusted program (user=%user.name user_loginuid=%user.loginuid program=%proc.name
+    command=%proc.cmdline pid=%proc.pid file=%fd.name parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] container_id=%container.id image=%container.image.repository)
+  priority: WARNING
+  tags: [ host, container, filesystem, mitre_credential_access, mitre_discovery, T1555, T1212, T1020, T1552, T1083 ]
