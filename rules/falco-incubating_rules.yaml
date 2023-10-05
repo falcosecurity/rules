@@ -1253,3 +1253,15 @@
   output: Adding ssh keys to authorized_keys (file=%fd.name evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags)
   priority: WARNING
   tags: [maturity_incubating, host, filesystem, mitre_persistence, T1098.004]
+
+# Detection for possible use of CVE-2023-4911
+# Based on https://www.qualys.com/2023/10/03/cve-2023-4911/looney-tunables-local-privilege-escalation-glibc-ld-so.txt
+- rule: Program possibly trying to use CVE-2023-4911
+  desc: >
+    Detect use of GLIBC_TUNABLES environment variable, which could be used for priviledge escalation to root on hosts running vulnerable glibc versions.
+  condition: >
+    spawned_process
+    and proc.env icontains GLIBC_TUNABLES
+  output: Process run with GLIBC_TUNABLES environment variable which could be attempting priviledge escalation (env=%proc.env evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
+  priority: NOTICE
+  tags: [maturity_incubating, host, users, mitre_privilege_escalation, CVE-2023-4911]
