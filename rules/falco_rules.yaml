@@ -921,6 +921,10 @@
               container.image.repository endswith "openshift3/ose-logging-fluentd" or
               container.image.repository endswith "containernetworking/azure-npm")
 
+- macro: containerd_activities
+  condition: proc.name=containerd and (fd.name startswith "/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/" or
+                                       fd.name startswith "/var/lib/containerd/tmpmounts/")
+
 - rule: Clear Log Activities
   desc: > 
     Detect clearing of critical access log files, typically done to erase evidence that could be attributed to an adversary's 
@@ -928,9 +932,9 @@
     relevant to your environment, and adjust the profiled containers you wish not to be alerted on.
   condition: >
     open_write 
-    and container
     and access_log_files 
     and evt.arg.flags contains "O_TRUNC" 
+    and not containerd_activities
     and not trusted_logging_images 
     and not allowed_clear_log_files
   output: Log files were tampered (file=%fd.name evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
