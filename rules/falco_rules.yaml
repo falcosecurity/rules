@@ -922,8 +922,8 @@
               container.image.repository endswith "containernetworking/azure-npm")
 
 - macro: containerd_activities
-  condition: proc.name=containerd and (fd.name startswith "/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/" or
-                                       fd.name startswith "/var/lib/containerd/tmpmounts/")
+  condition: (proc.name=containerd and (fd.name startswith "/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/" or
+                                        fd.name startswith "/var/lib/containerd/tmpmounts/"))
 
 - rule: Clear Log Activities
   desc: > 
