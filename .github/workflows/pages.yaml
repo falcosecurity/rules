@@ -2,7 +2,7 @@ name: Deploy Github Pages
 on:
   push:
     branches: [main]
-      
+
 permissions:
   contents: read
   pages: write
@@ -20,17 +20,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - uses: actions/setup-python@v2
         with:
           python-version: 3.x
-      
+
       - name: Generate updated inventory
         run: |
           mkdir docs/
           pip install -r .github/scripts/requirements.txt
           python .github/scripts/rules_overview_generator.py --rules_dir=rules > docs/index.md
-          
+
       - name: Disable Table Of Content for overview
         run: |
           sed -i '1s/^/---\nhide:\n- toc\n---\n\n/' docs/index.md
@@ -38,7 +38,7 @@ jobs:
       - run: pip install mkdocs mkdocs-material
 
       - run: mkdocs build
-      
+
       - uses: actions/upload-pages-artifact@v1
         with:
           path: 'site'
