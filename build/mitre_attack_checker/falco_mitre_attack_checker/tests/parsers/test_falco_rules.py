@@ -1,8 +1,8 @@
 import pytest
 
-from falco_mitre_checker.exceptions.rules_exceptions import FalcoRulesFileContentError
-from falco_mitre_checker.parsers.falco_rules import FalcoRulesParser
-from falco_mitre_checker.tests.test_common import NOT_FALCO_RULES_FILE, FALCO_RULES_FILE
+from falco_mitre_attack_checker.exceptions.rules_exceptions import FalcoRulesFileContentError
+from falco_mitre_attack_checker.parsers.falco_rules import FalcoRulesParser
+from falco_mitre_attack_checker.tests.test_common import NOT_FALCO_RULES_FILE, FALCO_RULES_FILE
 
 # test falco rules file validation
 with pytest.raises(FalcoRulesFileContentError):

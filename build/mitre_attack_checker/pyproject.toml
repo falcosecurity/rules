@@ -1,11 +1,11 @@
 [tool.poetry]
-name = "falco_mitre_checker"
+name = "falco_mitre_attack_checker"
 version = "0.1.0"
 description = "Audit module to validate Falco rules against the Mitre ATT&CK Framework"
 authors = ["Louis Cailliot <louis.cailliot@thalesgroup.com>"]
 license = "Apache-2.0"
 readme = "README.md"
-packages = [{include = "falco_mitre_checker"}]
+packages = [{include = "falco_mitre_attack_checker"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -24,4 +24,4 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-falco_mitre_checker = "mitre_checker.__main__:main"
+falco_mitre_attack_checker = "mitre_attack_checker.__main__:main"

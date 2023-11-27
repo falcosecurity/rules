@@ -2,13 +2,13 @@ import logging
 from pathlib import Path
 from typing import List
 
-from falco_mitre_checker.models.falco_mitre_errors import \
+from falco_mitre_attack_checker.models.falco_mitre_errors import \
     ErrorReason, FalcoMitreError, FalcoRulesErrors
-from falco_mitre_checker.models.falco_mitre_relations import MitreRelations
-from falco_mitre_checker.parsers.falco_rules import FalcoRulesParser
-from falco_mitre_checker.parsers.mitre_stix import MitreParser
-from falco_mitre_checker.utils.file import write_file
-from falco_mitre_checker.utils.logger import MitreCheckerLogger
+from falco_mitre_attack_checker.models.falco_mitre_relations import MitreRelations
+from falco_mitre_attack_checker.parsers.falco_rules import FalcoRulesParser
+from falco_mitre_attack_checker.parsers.mitre_stix import MitreParser
+from falco_mitre_attack_checker.utils.file import write_file
+from falco_mitre_attack_checker.utils.logger import MitreCheckerLogger
 
 logger = logging.getLogger(MitreCheckerLogger.name)
 

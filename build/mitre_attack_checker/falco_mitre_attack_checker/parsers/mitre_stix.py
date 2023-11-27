@@ -4,7 +4,7 @@ from typing import Dict, List
 import requests
 from stix2 import MemoryStore, Filter, AttackPattern
 
-from falco_mitre_checker.utils.logger import MitreCheckerLogger
+from falco_mitre_attack_checker.utils.logger import MitreCheckerLogger
 
 logger = logging.getLogger(MitreCheckerLogger.name)
 

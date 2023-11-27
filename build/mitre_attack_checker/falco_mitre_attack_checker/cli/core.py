@@ -4,9 +4,9 @@ from typing import List
 
 import typer
 
-from falco_mitre_checker.api.core import mitre_checker_engine
-from falco_mitre_checker.exceptions.rules_exceptions import FalcoRulesFileContentError
-from falco_mitre_checker.utils.logger import MitreCheckerLogger
+from falco_mitre_attack_checker.api.core import mitre_checker_engine
+from falco_mitre_attack_checker.exceptions.rules_exceptions import FalcoRulesFileContentError
+from falco_mitre_attack_checker.utils.logger import MitreCheckerLogger
 
 app = typer.Typer(help=f"Mitre Checker",
                   no_args_is_help=True,

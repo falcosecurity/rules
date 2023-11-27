@@ -1,9 +1,9 @@
 from pathlib import Path
 from typing import List
 
-from falco_mitre_checker.engine.mitre_checker import FalcoMitreChecker
-from falco_mitre_checker.models.falco_mitre_errors import ErrorReason, FalcoRulesErrors, FalcoMitreError
-from falco_mitre_checker.tests.test_common import MITRE_DOMAIN, MITRE_VERSION, FALCO_RULES_FILE
+from falco_mitre_attack_checker.engine.mitre_checker import FalcoMitreChecker
+from falco_mitre_attack_checker.models.falco_mitre_errors import ErrorReason, FalcoRulesErrors, FalcoMitreError
+from falco_mitre_attack_checker.tests.test_common import MITRE_DOMAIN, MITRE_VERSION, FALCO_RULES_FILE
 
 # global
 mitre_checker = FalcoMitreChecker(MITRE_DOMAIN, MITRE_VERSION)
