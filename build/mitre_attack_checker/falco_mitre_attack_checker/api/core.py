@@ -2,9 +2,9 @@ import logging
 from pathlib import Path
 from typing import List, Dict
 
-from falco_mitre_checker.engine.mitre_checker import FalcoMitreChecker
-from falco_mitre_checker.models.falco_mitre_errors import FalcoMitreError
-from falco_mitre_checker.utils.logger import MitreCheckerLogger
+from falco_mitre_attack_checker.engine.mitre_checker import FalcoMitreChecker
+from falco_mitre_attack_checker.models.falco_mitre_errors import FalcoMitreError
+from falco_mitre_attack_checker.utils.logger import MitreCheckerLogger
 
 logger = logging.getLogger(MitreCheckerLogger.name)
 

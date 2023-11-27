@@ -1,6 +1,6 @@
 # Specific project files
-build/mitre_checker/build
-build/mitre_checker/reports
+build/mitre_attack_checker/build
+build/mitre_attack_checker/reports
 **/falco_rules_mitre_errors.json
 **/application_rules_errors.json
 

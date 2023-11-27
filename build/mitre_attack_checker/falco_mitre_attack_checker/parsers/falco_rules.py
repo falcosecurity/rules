@@ -2,9 +2,9 @@ import re
 from pathlib import Path
 from typing import Dict
 
-from falco_mitre_checker.exceptions.rules_exceptions import FalcoRulesFileContentError
-from falco_mitre_checker.models.falco_mitre_relations import MitreRelations
-from falco_mitre_checker.utils.file import read_yaml
+from falco_mitre_attack_checker.exceptions.rules_exceptions import FalcoRulesFileContentError
+from falco_mitre_attack_checker.models.falco_mitre_relations import MitreRelations
+from falco_mitre_attack_checker.utils.file import read_yaml
 
 
 class FalcoRulesParser(object):

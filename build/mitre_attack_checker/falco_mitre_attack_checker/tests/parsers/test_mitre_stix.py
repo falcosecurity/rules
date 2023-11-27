@@ -1,5 +1,5 @@
-from falco_mitre_checker.parsers.mitre_stix import MitreParser
-from falco_mitre_checker.tests.test_common import RESOURCES_DIR, MITRE_VERSION, MITRE_DOMAIN
+from falco_mitre_attack_checker.parsers.mitre_stix import MitreParser
+from falco_mitre_attack_checker.tests.test_common import RESOURCES_DIR, MITRE_VERSION, MITRE_DOMAIN
 
 MITRE_STIX_DATAFILE = f"{RESOURCES_DIR}/mitre_cti_stix_13_1.json"
 

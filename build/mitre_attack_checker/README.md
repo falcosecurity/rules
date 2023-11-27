@@ -1,15 +1,15 @@
-# Mitre Checker Module
+# Mitre ATT&CK Checker Module
 
-The Mitre Checker module aims to check the compliance of the Falco rules against the Mitre ATT&CK
-Framework. This module provides to Falco experts and Falco users a way to check default and custom
+The Mitre ATT&CK Checker module aims to check the compliance of the Falco rules against the Mitre ATT&CK
+framework. This module provides to Falco experts and Falco users a way to check default and custom
 rules for Mitre ATT&CK extra tags.
 This module uses STIX from the OASIS standards. Structured Threat Information Expression (STIX™) is a
 language and serialization format used to exchange cyber threat intelligence (CTI) :
 
 - [STIX CTI documentation](https://oasis-open.github.io/cti-documentation/stix/intro)
 
-Leveraging STIX, Mitre Checker fetches the ATT&CK® STIX Data from MITRE ATT&CK repositories using the
-`python-stix2` library implemented by OASIS:
+Leveraging STIX, Mitre ATT&CK Checker fetches the ATT&CK® STIX Data from MITRE ATT&CK repositories using
+the `python-stix2` library implemented by OASIS:
 
 - [ATT&CK STIX Data repository](https://github.com/mitre-attack/attack-stix-data)
 - [Python STIX2 repository](https://github.com/oasis-open/cti-python-stix2)
@@ -45,19 +45,19 @@ Requirements :
 Or manualy using `pip` :
 
 ```sh
-pip install dist/mitre_checker-0.1.0-py3-none-any.whl
+pip install dist/falco_mitre_attack_checker-0.1.0-py3-none-any.whl
 ```
 
 ## Usage
 
 ```sh
-python -m falco_mitre_checker --help
+python -m falco_mitre_attack_checker --help
 ```
 
 Using the stable falco rules :
 
 ```sh
-python -m falco_mitre_checker -f ../../rules/falco_rules.yaml -o /tmp/
+python -m falco_mitre_attack_checker -f ../../rules/falco_rules.yaml -o /tmp/
 ```
 
 ## Development
@@ -79,7 +79,7 @@ With coverage :
 
 ```sh
 poetry update
-poetry run python -m pytest falco_mitre_checker/tests --cov=falco_mitre_checker
+poetry run python -m pytest --cov=falco_mitre_attack_checker
 ```
 
 ```

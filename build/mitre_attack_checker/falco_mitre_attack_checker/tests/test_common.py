@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-from falco_mitre_checker.utils.logger import MitreCheckerLogger
+from falco_mitre_attack_checker.utils.logger import MitreCheckerLogger
 
 MitreCheckerLogger()
 
