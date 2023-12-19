@@ -1713,7 +1713,7 @@
     whether the syscall failed or succeeded, remove the direction filter and add the evt.arg.res_or_fd output field.
   condition: >
     evt.type=bpf and evt.dir=> 
-    and evt.arg.cmd=5
+    and evt.arg.cmd=BPF_PROG_LOAD
     and not bpf_profiled_procs
   output: BPF Program Not Profiled (bpf_cmd=%evt.arg.cmd evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
   priority: NOTICE
