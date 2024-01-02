@@ -10,47 +10,34 @@ This repository has been created upon this [Proposal](https://github.com/falcose
 
 Rules tell [Falco](https://github.com/falcosecurity/falco) what to do. These rules are pre-defined detections for various security threats, abnormal behaviors, and compliance-related monitoring.
 
-<style>
-    .container {
-        display: flex;
-        align-items: flex-start;
-        margin-bottom: 20px;
-    }
+</br>
 
-    .container img {
-        flex: none;
-        margin-right: 15px;
-    }
-
-    .container p {
-        margin: 0;
-    }
-</style>
-
-<div class="container">
-    <img src="docs/images/start.png" alt="Image" width="21" height="21">
-    <p>Explore the <a href="https://falco.org/docs/rules">Official Documentation</a> for a starting point and better understanding of rule concepts. Users can modify the community-contributed Falco rules to fit their needs or use them as examples. In most cases, users also create their own custom rules. Keep in mind that the rules in this repository are related to Falco's primary monitoring functions, specifically for syscalls and container events. Meanwhile, Falco plugin rules are stored within the respective subfolders of the <a href="https://github.com/falcosecurity/plugins">Plugins</a> repository.</p>
+<p align="left">
+    <img src="docs/images/start.png" alt="Image" width="21" height="21">&nbsp;&nbsp;
+    Explore the <a href="https://falco.org/docs/rules">Official Documentation</a> for a starting point and better understanding of rule concepts. Users can modify the community-contributed Falco rules to fit their needs or use them as examples. In most cases, users also create their own custom rules. Keep in mind that the rules in this repository are related to Falco's primary monitoring functions, specifically for syscalls and container events. Meanwhile, Falco plugin rules are stored within the respective subfolders of the <a href="https://github.com/falcosecurity/plugins">Plugins</a> repository.</p>
 </div>
 
-<div class="container">
-    <img src="docs/images/insight.png" alt="Image" width="20" height="26">
-    <p>Because Falco rules, especially Sandbox and Incubating rules, are dynamic, it's crucial to stay updated. As threats and systems evolve, Falco evolves with each release. Therefore, regularly check the <a href="https://falcosecurity.github.io/rules/">Rules Overview Document</a>, Falco's <a href="https://falco.org/docs/reference/rules/supported-fields/">Supported Fields</a>, and Falco's release notes with every new release. It is recommended to consistently use the most recent <a href='https://github.com/falcosecurity/falco/releases/latest'>Falco Release</a> to avoid compatibility issues, which are enforced by the <i>required_engine_version</i>.</p>
+<p align="left">
+    <img src="docs/images/insight.png" alt="Image" width="18" height="24">&nbsp;&nbsp;
+    Because Falco rules, especially Sandbox and Incubating rules, are dynamic, it's crucial to stay updated. As threats and systems evolve, Falco evolves with each release. Therefore, regularly check the <a href="https://falcosecurity.github.io/rules/">Rules Overview Document</a>, Falco's <a href="https://falco.org/docs/reference/rules/supported-fields/">Supported Fields</a>, and Falco's release notes with every new release. It is recommended to consistently use the most recent <a href='https://github.com/falcosecurity/falco/releases/latest'>Falco Release</a> to avoid compatibility issues, which are enforced by the <i>required_engine_version</i>.</p>
 </div>
 
-<div class="container">
-    <img src="docs/images/setting.png" alt="Image" width="23" height="23">
-    <p>Important: The Falco project only guarantees that the most recent rules releases are compatible with the latest Falco release. Discover all rule files in the <a href="rules/">rules/</a> folder. Refer to our <a href="./RELEASE.md">Release Process</a> and <a href="CONTRIBUTING.md#rules-maturity-framework">Rules Maturity Framework</a> for rule categorization, release procedures, and usage guidelines. Published upon tagging a new release, the <i>maturity_stable</i> rules in the <a href="rules/falco_rules.yaml">falco_rules.yaml</a> file are included in the default Falco release package. Other maturity-level rules are released separately, requiring explicit installation and possible customization for effective <a href="CONTRIBUTING.md#justification-of-rules-maturity-framework-for-falco-adoption">Adoption</a>.</p>
+<p align="left">
+    <img src="docs/images/setting.png" alt="Image" width="23" height="23">&nbsp;&nbsp;
+    Important: The Falco project only guarantees that the most recent rules releases are compatible with the latest Falco release. Discover all rule files in the <a href="rules/">rules/</a> folder. Refer to our <a href="./RELEASE.md">Release Process</a> and <a href="CONTRIBUTING.md#rules-maturity-framework">Rules Maturity Framework</a> for rule categorization, release procedures, and usage guidelines. Published upon tagging a new release, the <i>maturity_stable</i> rules in the <a href="rules/falco_rules.yaml">falco_rules.yaml</a> file are included in the default Falco release package. Other maturity-level rules are released separately, requiring explicit installation and possible customization for effective <a href="CONTRIBUTING.md#justification-of-rules-maturity-framework-for-falco-adoption">Adoption</a>.</p>
 </div>
 
-<div class="container">
-    <img src="docs/images/announce.png" alt="Image" width="20" height="20">
-    <p>Starting from rules version 3.0.0, the <i>required_engine_version</i> follows semantic versioning and only functions with Falco version >= 0.37.0. Since rules version <a href="#falco-rules-2x">2.0.0</a>, we've modified our rules' shipping and distribution process. With Falco >= 0.37.0, <i>selective rules overrides</i> aim to further streamline the adoption and customization of upstream rules.</p>
+<p align="left">
+    <img src="docs/images/announce.png" alt="Image" width="20" height="20">&nbsp;&nbsp;
+    Starting from rules version 3.0.0, the <i>required_engine_version</i> follows semantic versioning and only functions with Falco version >= 0.37.0. Since rules version <a href="#falco-rules-2x">2.0.0</a>, we've modified our rules' shipping and distribution process. With Falco >= 0.37.0, <i>selective rules overrides</i> aim to further streamline the adoption and customization of upstream rules.</p>
 </div>
 
-<div class="container">
-    <img src="docs/images/cross.png" alt="Image" width="20" height="20">
-    <p>Be cautious: The <i>main</i> branch has the latest development. Before using rules from the <i>main</i> branch, check for compatibility. Changes like new output fields might cause incompatibilities with the latest stable Falco release. The Falco Project advises using rules only from the release branches. Lastly, we'd like to highlight the importance of regular engineering effort to effectively adopt Falco rules. Considering that each adopter's system and monitoring needs are unique, it's advisable to view the rules as examples.</p>
-</div>
+<p align="left">
+  <img src="docs/images/cross.png" alt="Image" width="20" height="20">&nbsp;&nbsp;
+  Be cautious: The <i>main</i> branch has the latest development. Before using rules from the <i>main</i> branch, check for compatibility. Changes like new output fields might cause incompatibilities with the latest stable Falco release. The Falco Project advises using rules only from the release branches. Lastly, we'd like to highlight the importance of regular engineering effort to effectively adopt Falco rules. Considering that each adopter's system and monitoring needs are unique, it's advisable to view the rules as examples.
+</p>
+
+</br>
 
 ## Falco Rules Files Registry
 
