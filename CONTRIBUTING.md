@@ -17,7 +17,7 @@ All rules must be licensed under the [Apache 2.0 License](./LICENSE).
 
 The rules maturity framework was established following this [proposal](proposals/20230605-rules-adoption-management-maturity-framework.md). 
 
-At a high level, The Falco Project maintains community-contributed syscall and container event-based [rules](https://github.com/falcosecurity/rules/blob/main/rules/), with `maturity_stable` tagged rules being included in the default Falco release package. Other maturity-level rules are released separately, requiring explicit installation and possible customization for effective. In essence, there are now dedicated rule files for each maturity level.
+At a high level, The Falco Project maintains community-contributed syscall and container event-based [rules](https://github.com/falcosecurity/rules/blob/main/rules/), with `maturity_stable` tagged rules being included in the Falco release package. Other maturity-level rules are released separately, requiring explicit installation and possible customization for effective. In essence, there are now dedicated rule files for each maturity level.
 
 The next sections will dive deeper into how the framework works and offer guidance on selecting a maturity level for specific rules.
 
