@@ -269,7 +269,7 @@
              (fd.cnet in (allowed_inbound_source_networks)) or
              (fd.cip.name in (allowed_inbound_source_domains)))
   enabled: false
-  output: Disallowed inbound connection source (connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
+  output: Disallowed inbound connection source (connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
   priority: NOTICE
   tags: [maturity_sandbox, host, container, network, mitre_command_and_control, TA0011]
 
@@ -586,6 +586,11 @@
 - macro: user_known_update_package_registry
   condition: (never_true)
 
+# todo!: the usage of `evt.arg*` filter check in the output should be avoided
+# when more than one event type is involved because some event will populate
+# the filtercheck and others will always return <NA>. In this specific
+# rule, 'open_write' events don't have a `%evt.arg.newpath` argument for example so
+# we will always return `<NA>`.
 - rule: Update Package Repository
   desc: > 
     This rule generically detects updates to package repositories and can be seen as an auditing measure. 
@@ -1117,7 +1122,7 @@
     and not package_mgmt_procs 
     and not exe_running_docker_save 
     and not user_known_modify_bin_dir_activities
-  output: File below known binary directory renamed/removed (file=%fd.name pcmdline=%proc.pcmdline evt_args=%evt.args evt_type=%evt.type evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
+  output: File below known binary directory renamed/removed (file=%fd.name pcmdline=%proc.pcmdline evt_args=%evt.args evt_type=%evt.type evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
   priority: ERROR
   tags: [maturity_sandbox, host, container, filesystem, mitre_defense_evasion, T1222.002]
 
@@ -1136,7 +1141,7 @@
     and not package_mgmt_procs
     and not user_known_mkdir_bin_dir_activities
     and not exe_running_docker_save
-  output: Directory below known binary directory created (directory=%evt.arg.path evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
+  output: Directory below known binary directory created (directory=%evt.arg.path evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
   priority: ERROR
   tags: [maturity_sandbox, host, container, filesystem, mitre_persistence, T1222.002]
 
@@ -1254,7 +1259,7 @@
     and sensitive_mount
     and not falco_sensitive_mount_containers
     and not user_sensitive_mount_containers
-  output: Container with sensitive mount started (mounts=%container.mounts evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
+  output: Container with sensitive mount started (mounts=%container.mounts evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
   priority: INFO
   tags: [maturity_sandbox, container, cis, mitre_execution, T1610]
 
@@ -1279,7 +1284,7 @@
     container_started 
     and container 
     and not allowed_containers
-  output: Container started and not in allowed list (evt_type=%evt.type user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
+  output: Container started and not in allowed list (evt_type=%evt.type user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
   priority: WARNING
   tags: [maturity_sandbox, container, mitre_lateral_movement, T1610]
 
@@ -1296,7 +1301,7 @@
     inbound 
     and interpreted_procs
   enabled: false
-  output: Interpreted program received/listened for network traffic (connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
+  output: Interpreted program received/listened for network traffic (connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
   priority: NOTICE
   tags: [maturity_sandbox, host, container, network, mitre_exfiltration, TA0011]
 
@@ -1309,7 +1314,7 @@
     outbound 
     and interpreted_procs
   enabled: false
-  output: Interpreted program performed outgoing network connection (connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
+  output: Interpreted program performed outgoing network connection (connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
   priority: NOTICE
   tags: [maturity_sandbox, host, container, network, mitre_exfiltration, TA0011]
 
@@ -1335,7 +1340,7 @@
     and fd.sport <= 32767 
     and not nodeport_containers
   enabled: false
-  output: Unexpected K8s NodePort Connection (connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
+  output: Unexpected K8s NodePort Connection (connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
   priority: NOTICE
   tags: [maturity_sandbox, network, k8s, container, mitre_persistence, T1205.001, NIST_800-53_AC-6]
 
@@ -1359,7 +1364,7 @@
     and not user_known_create_hidden_file_activities
     and not exe_running_docker_save
   enabled: false
-  output: Hidden file or directory created (file=%fd.name newpath=%evt.arg.newpath evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
+  output: Hidden file or directory created (file=%fd.name newpath=%evt.arg.newpath evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
   priority:
     NOTICE
   tags: [maturity_sandbox, host, container, filesystem, mitre_defense_evasion, T1564.001]
@@ -1470,7 +1475,7 @@
     net_miner_pool 
     and not trusted_images_query_miner_domain_dns
   enabled: false
-  output: Outbound connection to IP/Port flagged by https://cryptoioc.ch (ip=%fd.rip connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
+  output: Outbound connection to IP/Port flagged by https://cryptoioc.ch (ip=%fd.rip connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
   priority: CRITICAL
   tags: [maturity_sandbox, host, container, network, mitre_impact, T1496]
 
@@ -1558,7 +1563,7 @@
     and not runc_writing_var_lib_docker 
     and not user_known_container_drift_activities 
   enabled: false
-  output: Drift detected (chmod), new executable created in a container (filename=%evt.arg.filename name=%evt.arg.name mode=%evt.arg.mode evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
+  output: Drift detected (chmod), new executable created in a container (filename=%evt.arg.filename name=%evt.arg.name mode=%evt.arg.mode evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
   priority: ERROR
   tags: [maturity_sandbox, container, process, filesystem, mitre_execution, T1059]
 
@@ -1635,7 +1640,7 @@
     and user.uid != 0 
     and (evt.rawres >= 0 or evt.res != -1) 
     and not proc.name in (user_known_userfaultfd_processes)
-  output: An userfaultfd syscall was successfully executed by an unprivileged user (evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
+  output: An userfaultfd syscall was successfully executed by an unprivileged user (evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
   priority: CRITICAL
   tags: [maturity_sandbox, host, container, process, mitre_defense_evasion, TA0005]
 
@@ -1667,7 +1672,7 @@
   condition: >
     java_network_read 
     and evt.buffer bcontains cafebabe
-  output: Java process class file download (server_ip=%fd.sip server_port=%fd.sport connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
+  output: Java process class file download (server_ip=%fd.sip server_port=%fd.sport connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
   priority: CRITICAL
   enabled: false
   tags: [maturity_sandbox, host, container, process, mitre_initial_access, T1190]
@@ -1710,7 +1715,7 @@
     evt.type=bpf and evt.dir=> 
     and evt.arg.cmd=5
     and not bpf_profiled_procs
-  output: BPF Program Not Profiled (bpf_cmd=%evt.arg.cmd evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
+  output: BPF Program Not Profiled (bpf_cmd=%evt.arg.cmd evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
   priority: NOTICE
   tags: [maturity_sandbox, host, container, mitre_persistence, TA0003]
 
