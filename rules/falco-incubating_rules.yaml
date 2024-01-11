@@ -265,7 +265,7 @@
     and not proc.name in (shell_binaries)
     and not exe_running_docker_save
     and not user_known_shell_config_modifiers
-  output: A shell configuration file has been modified (file=%fd.name pcmdline=%proc.pcmdline evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
+  output: A shell configuration file has been modified (file=%fd.name pcmdline=%proc.pcmdline evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
   priority:
     WARNING
   tags: [maturity_incubating, host, container, filesystem, mitre_persistence, T1546.004]
@@ -281,7 +281,7 @@
     ((open_write and fd.name startswith /etc/cron) or
      (spawned_process and proc.name = "crontab")) 
     and not user_known_cron_jobs
-  output: Cron jobs were scheduled to run (file=%fd.name evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
+  output: Cron jobs were scheduled to run (file=%fd.name evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
   priority:
     NOTICE
   tags: [maturity_incubating, host, container, filesystem, mitre_execution, T1053.003]
@@ -377,7 +377,7 @@
      and (user_ssh_directory or fd.name startswith /root/.ssh)
      and not user_known_read_ssh_information_activities 
      and not proc.name in (ssh_binaries)
-  output: ssh-related file/directory read by non-ssh program (file=%fd.name pcmdline=%proc.pcmdline evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
+  output: ssh-related file/directory read by non-ssh program (file=%fd.name pcmdline=%proc.pcmdline evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
   priority: ERROR
   tags: [maturity_incubating, host, container, filesystem, mitre_collection, T1005]
 
@@ -456,7 +456,7 @@
     evt.type=unshare and evt.dir=< 
     and container 
     and not thread.cap_permitted contains CAP_SYS_ADMIN
-  output: Change namespace privileges via unshare (res=%evt.res evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
+  output: Change namespace privileges via unshare (res=%evt.res evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
   priority: NOTICE
   tags: [maturity_incubating, container, mitre_privilege_escalation, T1611]
 
@@ -864,7 +864,7 @@
     and not fd.name in (allowed_dev_files)
     and not fd.name startswith /dev/tty
     and not user_known_create_files_below_dev_activities
-  output: File created below /dev by untrusted program (file=%fd.name evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
+  output: File created below /dev by untrusted program (file=%fd.name evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
   priority: ERROR
   tags: [maturity_incubating, host, filesystem, mitre_persistence, T1543]
 
@@ -1203,7 +1203,7 @@
     and container 
     and (fd.name glob /proc/*/environ)
     and not proc.name in (known_binaries_to_read_environment_variables_from_proc_files)
-  output: Environment variables were retrieved from /proc files (file=%fd.name gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
+  output: Environment variables were retrieved from /proc files (file=%fd.name gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
   priority: WARNING
   tags: [maturity_incubating, container, filesystem, process, mitre_discovery, T1083]
 
@@ -1242,7 +1242,7 @@
     and container_entrypoint 
     and proc.tty=0 
     and not system_level_side_effect_artifacts_kubectl_cp
-  output: Exfiltrating Artifacts via Kubernetes Control Plane (file=%fd.name evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
+  output: Exfiltrating Artifacts via Kubernetes Control Plane (file=%fd.name evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
   priority: NOTICE
   tags: [maturity_incubating, container, filesystem, mitre_exfiltration, TA0010]
 
@@ -1259,7 +1259,7 @@
     and (user_ssh_directory or fd.name startswith /root/.ssh)
     and fd.name endswith authorized_keys
     and not proc.name in (ssh_binaries)
-  output: Adding ssh keys to authorized_keys (file=%fd.name evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags)
+  output: Adding ssh keys to authorized_keys (file=%fd.name evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty)
   priority: WARNING
   tags: [maturity_incubating, host, filesystem, mitre_persistence, T1098.004]
 

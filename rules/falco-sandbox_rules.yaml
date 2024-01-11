@@ -312,7 +312,7 @@
          fd.directory in (shell_config_directories)) 
     and not proc.name in (shell_binaries)
   enabled: false
-  output: A shell configuration file was read by a non-shell program (file=%fd.name evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
+  output: A shell configuration file was read by a non-shell program (file=%fd.name evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
   priority:
     WARNING
   tags: [maturity_sandbox, host, container, filesystem, mitre_discovery, T1546.004]
@@ -601,7 +601,7 @@
     and not package_mgmt_ancestor_procs
     and not exe_running_docker_save
     and not user_known_update_package_registry
-  output: Repository files get updated (newpath=%evt.arg.newpath file=%fd.name pcmdline=%proc.pcmdline evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
+  output: Repository files get updated (newpath=%evt.arg.newpath file=%fd.name pcmdline=%proc.pcmdline evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
   priority:
     NOTICE
   tags: [maturity_sandbox, host, container, filesystem, mitre_execution, T1072]
@@ -626,7 +626,7 @@
     and not python_running_get_pip
     and not python_running_ms_oms
     and not user_known_write_below_binary_dir_activities
-  output: File below a known binary directory opened for writing (file=%fd.name pcmdline=%proc.pcmdline gparent=%proc.aname[2] evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
+  output: File below a known binary directory opened for writing (file=%fd.name pcmdline=%proc.pcmdline gparent=%proc.aname[2] evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
   priority: ERROR
   tags: [maturity_sandbox, host, container, filesystem, mitre_persistence, T1543]
 
@@ -681,7 +681,7 @@
     and not google_accounts_daemon_writing_ssh
     and not cloud_init_writing_ssh
     and not user_known_write_monitored_dir_conditions
-  output: File below a monitored directory opened for writing (file=%fd.name pcmdline=%proc.pcmdline gparent=%proc.aname[2] evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
+  output: File below a monitored directory opened for writing (file=%fd.name pcmdline=%proc.pcmdline gparent=%proc.aname[2] evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
   priority: ERROR
   tags: [maturity_sandbox, host, container, filesystem, mitre_persistence, T1543]
 
@@ -971,7 +971,7 @@
     profiling of your environment can transform this rule into an effective rule for detecting unusual behavior associated with system 
     changes, including compliance-related cases.
   condition: write_etc_common
-  output: File below /etc opened for writing (file=%fd.name pcmdline=%proc.pcmdline gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
+  output: File below /etc opened for writing (file=%fd.name pcmdline=%proc.pcmdline gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
   priority: ERROR
   tags: [maturity_sandbox, host, container, filesystem, mitre_persistence, T1098]
 
@@ -1074,7 +1074,7 @@
     and not known_root_conditions
     and not user_known_write_root_conditions
     and not user_known_write_below_root_activities
-  output: File below / or /root opened for writing (file=%fd.name evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
+  output: File below / or /root opened for writing (file=%fd.name evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
   priority: ERROR
   tags: [maturity_sandbox, host, container, filesystem, mitre_persistence, TA0003]
 
@@ -1103,7 +1103,7 @@
     and not exe_running_docker_save
     and not amazon_linux_running_python_yum
     and not user_known_write_rpm_database_activities
-  output: rpm database opened for writing by a non-rpm program (file=%fd.name pcmdline=%proc.pcmdline evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
+  output: rpm database opened for writing by a non-rpm program (file=%fd.name pcmdline=%proc.pcmdline evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
   priority: ERROR
   tags: [maturity_sandbox, host, container, filesystem, software_mgmt, mitre_persistence, T1072]
 
@@ -1583,7 +1583,7 @@
     and not runc_writing_var_lib_docker 
     and not user_known_container_drift_activities 
   enabled: false
-  output: Drift detected (open+create), new executable created in a container (filename=%evt.arg.filename name=%evt.arg.name mode=%evt.arg.mode evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
+  output: Drift detected (open+create), new executable created in a container (filename=%evt.arg.filename name=%evt.arg.name mode=%evt.arg.mode evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
   priority: ERROR
   tags: [maturity_sandbox, container, process, filesystem, mitre_execution, T1059]
 
@@ -1694,7 +1694,7 @@
     and not docker_procs 
     and not proc.cmdline = "runc:[1:CHILD] init"
   enabled: false
-  output: Detect Potential Container Breakout Exploit (CVE-2019-5736) (file=%fd.name evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
+  output: Detect Potential Container Breakout Exploit (CVE-2019-5736) (file=%fd.name evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
   priority: WARNING
   tags: [maturity_sandbox, container, filesystem, mitre_initial_access, T1611]
 
