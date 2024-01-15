@@ -25,7 +25,7 @@
 
 # Starting with version 8, the Falco engine supports exceptions.
 # However the Falco rules file does not use them by default.
-- required_engine_version: 0.26.0
+- required_engine_version: 0.31.0
 
 # Currently disabled as read/write are ignored syscalls. The nearly
 # similar open_write/open_read check for files being opened for
