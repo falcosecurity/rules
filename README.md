@@ -1,6 +1,8 @@
 # Falco Rules
 
-[![Latest release](https://img.shields.io/github/v/release/falcosecurity/rules?style=for-the-badge)](https://github.com/falcosecurity/rules/releases/latest) [![Docs](https://img.shields.io/badge/docs-latest-green.svg?style=for-the-badge)](https://falco.org/docs/rules)  [![Rules Overview](https://img.shields.io/badge/docs-latest-green.svg?label=Rules%20Overview&style=for-the-badge)](https://falcosecurity.github.io/rules/) [![Style Guide](https://img.shields.io/badge/docs-latest-green.svg?label=Style%20Guide&style=for-the-badge)](https://falco.org/docs/rules/style-guide/) 
+[![Latest release](https://img.shields.io/github/v/release/falcosecurity/rules?label=Latest%20Rules%20Release&style=for-the-badge)](https://github.com/falcosecurity/rules/releases/latest) [![Compatible Falco release](https://img.shields.io/github/v/release/falcosecurity/falco?label=Compatible%20Falco%20Release&style=for-the-badge)](https://github.com/falcosecurity/falco/releases/latest) 
+
+[![Docs](https://img.shields.io/badge/docs-latest-green.svg?style=for-the-badge)](https://falco.org/docs/rules)  [![Rules Overview](https://img.shields.io/badge/docs-latest-green.svg?label=Rules%20Overview&style=for-the-badge)](https://falcosecurity.github.io/rules/) [![Style Guide](https://img.shields.io/badge/docs-latest-green.svg?label=Style%20Guide&style=for-the-badge)](https://falco.org/docs/rules/style-guide/) 
 
 [![Supported Fields](https://img.shields.io/badge/docs-latest-green.svg?label=Supported%20Fields&style=for-the-badge)](https://falco.org/docs/reference/rules/supported-fields/) [![Supported EVT ARG Fields](https://img.shields.io/badge/docs-latest-green.svg?label=Supported%20Evt%20Arg%20Fields&style=for-the-badge)](https://github.com/falcosecurity/libs/blob/master/driver/event_table.c)
 
@@ -31,7 +33,7 @@ Rules tell [Falco](https://github.com/falcosecurity/falco) what to do. These rul
 
 <p align="left">
     <img src="docs/images/announce.png" alt="Image" width="20" height="20">&nbsp;&nbsp;
-    Starting from rules version 3.0.0, the <i>required_engine_version</i> follows semantic versioning and only functions with Falco version >= 0.37.0. Since rules version <a href="#falco-rules-2x">2.0.0</a>, we've modified our rules' shipping and distribution process. With Falco >= 0.37.0, <i>selective rules overrides</i> aim to further streamline the adoption and customization of upstream rules. Keep in mind that the <a href="CONTRIBUTING.md#rules-maturity-framework">Rules Maturity Framework</a> is a best effort on the part of the community, and ultimately, you have to decide if any rules are useful for your use cases. </p>
+    Starting from rules version 3.0.0, the <i>required_engine_version</i> follows semantic versioning and only functions with Falco version >= 0.37.0. Since rules version <a href="#falco-rules-2x">2.0.0</a>, we've modified our rules' shipping and distribution process. With Falco >= 0.37.0, <i>selective rules overrides</i> aim to further streamline the adoption and customization of upstream rules. Since Falco 0.36.0, you can opt to generate logs for each rule per event type when the condition evaluates to true, addressing concerns about rules overshadowing each other, see <a href="https://github.com/falcosecurity/falco/blob/master/falco.yaml">rule_matching</a>. Starting from Falco 0.35.0, you have precise control over the syscalls that are being monitored, see <a href="https://github.com/falcosecurity/falco/blob/master/falco.yaml">base_syscalls</a>. Lastly, keep in mind that the <a href="CONTRIBUTING.md#rules-maturity-framework">Rules Maturity Framework</a> is a best effort on the part of the community, and ultimately, you have to decide if any rules are useful for your use cases. </p>
 </div>
 
 <p align="left">
