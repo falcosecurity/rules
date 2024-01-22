@@ -193,9 +193,24 @@ func doPushToOCI(registryFilename, gitTag string) (*string, error) {
 }
 
 func rulesOciRepos(registryEntries *Registry, ociRepoPrefix string) (map[string]string, error) {
+	var user, token string
 	var repo *repository.Repository
 	var err error
-	ociClient := authn.NewClient(authn.WithCredentials(&auth.EmptyCredential))
+	var foundUser, foundToken bool
+	var cred *auth.Credential
+
+	user, foundUser = os.LookupEnv(RegistryUserEnv)
+	token, foundToken = os.LookupEnv(RegistryTokenEnv)
+
+	if !foundUser && !foundToken {
+		cred = &auth.EmptyCredential
+	} else {
+		cred = &auth.Credential{
+			Username: user,
+			Password: token,
+		}
+	}
+	ociClient := authn.NewClient(authn.WithCredentials(cred))
 	ociEntries := make(map[string]string)
 
 	for _, entry := range registryEntries.Rulesfiles {
@@ -255,7 +270,7 @@ func main() {
 
 	updateIndexCmd := &cobra.Command{
 		Use:                   "update-index <registryFilename> <indexFilename>",
-		Short:                 "Update an index file for artifacts distribution using registry data",
+		Short:                 "Update an index file for artifacts distribution using registry data, authenticates to the registry if REGISTRY_USER, REGISTRY_TOKEN are set",
 		Args:                  cobra.ExactArgs(2),
 		DisableFlagsInUseLine: true,
 		RunE: func(c *cobra.Command, args []string) error {
