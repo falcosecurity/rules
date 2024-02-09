@@ -27,7 +27,6 @@ jobs:
 
       - name: Generate updated inventory
         run: |
-          mkdir docs/
           pip install -r .github/scripts/requirements.txt
           python .github/scripts/rules_overview_generator.py --rules_dir=rules > docs/index.md
 
