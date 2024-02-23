@@ -23,7 +23,7 @@ jobs:
       - name: Get changed files
         id: changed-files
         if: github.event_name == 'pull_request'
-        uses: Ana06/get-changed-files@v2.2.0
+        uses: Ana06/get-changed-files@v2.3.0
         with:
           format: space-delimited
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -113,7 +113,7 @@ jobs:
         run: git fetch --tags origin
 
       - name: Get changed files
-        uses: Ana06/get-changed-files@v2.2.0
+        uses: Ana06/get-changed-files@v2.3.0
         id: changed
         with:
           format: space-delimited
