@@ -1699,7 +1699,7 @@
   tags: [maturity_sandbox, container, filesystem, mitre_initial_access, T1611]
 
 - list: bpf_profiled_binaries
-  items: [falco, bpftool]
+  items: [falco, bpftool, systemd]
 
 - macro: bpf_profiled_procs
   condition: (proc.name in (bpf_profiled_binaries))
