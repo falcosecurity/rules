@@ -1,0 +1,18 @@
+name: Yamllint Github Actions
+on: 
+  pull_request:
+    branches: 
+      - master
+
+jobs: 
+  lintFalcoRules: 
+    name: Yamllint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3 
+      - name: checkout falco-rules
+        uses: ibiqlik/action-yamllint@v3
+        with: 
+          files: /rules/*.yaml 
+          yamllint_strict: true
+          yamllint_comment: true
