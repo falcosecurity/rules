@@ -1,4 +1,4 @@
-- required_engine_version: 17
+- required_engine_version: 0.31.0
 
 - macro: not a rule
   condition: true
