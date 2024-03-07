@@ -2,7 +2,7 @@
 name = "falco_mitre_attack_checker"
 version = "0.1.0"
 description = "Audit module to validate Falco rules against the Mitre ATT&CK Framework"
-authors = ["Louis Cailliot <louis.cailliot@thalesgroup.com>"]
+authors = ["The Falco Authors <cncf-falco-dev@lists.cncf.io>"]
 license = "Apache-2.0"
 readme = "README.md"
 packages = [{include = "falco_mitre_attack_checker"}]
