@@ -9,10 +9,9 @@ jobs:
     name: Yamllint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3 
-      - name: checkout falco-rules
+      - name: Checkout repo
+      - uses: actions/checkout@v4
+      - name: yaml-lint
         uses: ibiqlik/action-yamllint@v3
         with: 
-          files: /rules/*.yaml 
-          yamllint_strict: true
-          yamllint_comment: true
+          file_or_dir: rules/*.yaml
