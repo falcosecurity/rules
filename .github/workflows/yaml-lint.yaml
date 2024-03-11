@@ -2,7 +2,7 @@ name: Yamllint Github Actions
 on: 
   pull_request:
     branches: 
-      - master
+      - main
 
 jobs: 
   lintFalcoRules: 
