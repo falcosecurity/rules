@@ -634,7 +634,6 @@
     - public.ecr.aws/falcosecurity/falco-no-driver
 
 # These container images are allowed to run with --privileged and full set of capabilities
-# TODO: Remove k8s.gcr.io reference after 01/Dec/2023
 - list: falco_privileged_images
   items: [
     falco_containers,
@@ -653,16 +652,12 @@
     gke.gcr.io/netd-amd64,
     gke.gcr.io/watcher-daemonset,
     gcr.io/google-containers/prometheus-to-sd,
-    k8s.gcr.io/ip-masq-agent-amd64,
-    k8s.gcr.io/kube-proxy,
-    k8s.gcr.io/prometheus-to-sd,
     registry.k8s.io/ip-masq-agent-amd64,
     registry.k8s.io/kube-proxy,
     registry.k8s.io/prometheus-to-sd,
     quay.io/calico/node,
     sysdig/sysdig,
     sematext_images,
-    k8s.gcr.io/dns/k8s-dns-node-cache,
     registry.k8s.io/dns/k8s-dns-node-cache,
     mcr.microsoft.com/oss/kubernetes/kube-proxy
   ]
@@ -796,7 +791,6 @@
 # allowed to contact the K8s API Server from within a container. This
 # might cover cases where the K8s infrastructure itself is running
 # within a container.
-# TODO: Remove k8s.gcr.io reference after 01/Dec/2023
 - macro: k8s_containers
   condition: >
     (container.image.repository in (gcr.io/google_containers/hyperkube-amd64,
@@ -808,7 +802,7 @@
      ibm_cloud_containers,
      velero/velero,
      quay.io/jetstack/cert-manager-cainjector, weaveworks/kured,
-     quay.io/prometheus-operator/prometheus-operator, k8s.gcr.io/ingress-nginx/kube-webhook-certgen,
+     quay.io/prometheus-operator/prometheus-operator,
      registry.k8s.io/ingress-nginx/kube-webhook-certgen, quay.io/spotahome/redis-operator,
      registry.opensource.zalan.do/acid/postgres-operator, registry.opensource.zalan.do/acid/postgres-operator-ui,
      rabbitmqoperator/cluster-operator, quay.io/kubecost1/kubecost-cost-model,
