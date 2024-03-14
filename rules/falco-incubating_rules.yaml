@@ -559,7 +559,6 @@
     - public.ecr.aws/falcosecurity/falco-no-driver
 
 # These container images are allowed to run with --privileged and full set of capabilities
-# TODO: Remove k8s.gcr.io reference after 01/Dec/2023
 - list: falco_privileged_images
   items: [
     falco_containers,
@@ -578,16 +577,12 @@
     gke.gcr.io/netd-amd64,
     gke.gcr.io/watcher-daemonset,
     gcr.io/google-containers/prometheus-to-sd,
-    k8s.gcr.io/ip-masq-agent-amd64,
-    k8s.gcr.io/kube-proxy,
-    k8s.gcr.io/prometheus-to-sd,
     registry.k8s.io/ip-masq-agent-amd64,
     registry.k8s.io/kube-proxy,
     registry.k8s.io/prometheus-to-sd,
     quay.io/calico/node,
     sysdig/sysdig,
     sematext_images,
-    k8s.gcr.io/dns/k8s-dns-node-cache,
     registry.k8s.io/dns/k8s-dns-node-cache,
     mcr.microsoft.com/oss/kubernetes/kube-proxy
   ]
@@ -932,12 +927,10 @@
   condition: (never_true)
 
 # Container is supposed to be immutable. Package management should be done in building the image.
-# TODO: Remove k8s.gcr.io reference after 01/Dec/2023
 - macro: pkg_mgmt_in_kube_proxy
   condition: >
     (proc.cmdline startswith "update-alternat"
-    and (container.image.repository = "registry.k8s.io/kube-proxy"
-    or container.image.repository = "k8s.gcr.io/kube-proxy"))
+    and container.image.repository = "registry.k8s.io/kube-proxy")
 
 - rule: Launch Package Management Process in Container
   desc: > 

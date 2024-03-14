@@ -1496,11 +1496,8 @@
 - list: k8s_client_binaries
   items: [docker, kubectl, crictl]
 
-# TODO: Remove k8s.gcr.io reference after 01/Dec/2023
 - list: user_known_k8s_ns_kube_system_images
   items: [
-    k8s.gcr.io/fluentd-gcp-scaler,
-    k8s.gcr.io/node-problem-detector/node-problem-detector,
     registry.k8s.io/fluentd-gcp-scaler,
     registry.k8s.io/node-problem-detector/node-problem-detector
   ]
@@ -1511,8 +1508,7 @@
   ]
 
 # Whitelist for known docker client binaries run inside container
-# - k8s.gcr.io/fluentd-gcp-scaler / registry.k8s.io/fluentd-gcp-scaler in GCP/GKE
-# TODO: Remove k8s.gcr.io reference after 01/Dec/2023
+# - registry.k8s.io/fluentd-gcp-scaler in GCP/GKE
 - macro: user_known_k8s_client_container
   condition: >
     (k8s.ns.name="kube-system" and container.image.repository in (user_known_k8s_ns_kube_system_images)) or container.image.repository in (user_known_k8s_images)
