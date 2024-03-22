@@ -15,23 +15,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-# Information about rules tags and fields can be found here: https://falco.org/docs/rules/#tags-for-current-falco-ruleset
-# The initial item in the `tags` fields reflects the maturity level of the rules introduced upon the proposal https://github.com/falcosecurity/rules/blob/main/proposals/20230605-rules-adoption-management-maturity-framework.md
-# `tags` fields also include information about the type of workload inspection (host and/or container), and Mitre Attack killchain phases and Mitre TTP code(s)
+# Information about rules tags and fields can be found here:
+# https://falco.org/docs/rules/#tags-for-current-falco-ruleset
+# The initial item in the `tags` fields reflects the maturity level of
+# the rules introduced upon the proposal
+# Proposal: Rules Adoption Management Maturity Framework
+# URL: https://github.com/falcosecurity/rules/blob/main/
+# proposals/20230605-rules-adoption-management-maturity-framework.md
+# `tags` fields also include information about the type of
+# workload inspection (host and/or container), and Mitre Attack killchain
+# phases and Mitre TTP code(s)
 # Mitre Attack References:
 # [1] https://attack.mitre.org/tactics/enterprise/
-# [2] https://raw.githubusercontent.com/mitre/cti/master/enterprise-attack/enterprise-attack.json
+# [2] https://raw.githubusercontent.com/mitre/cti/master/
+#     enterprise-attack/enterprise-attack.json
 
 # Starting with version 8, the Falco engine supports exceptions.
 # However the Falco rules file does not use them by default.
-- required_engine_version: 0.31.0
+---
 
-# This macro `never_true` is used as placeholder for tuning negative logical sub-expressions, for example
+- required_engine_version: '0.31.0'
+
+# This macro `never_true` is used as placeholder for
+# tuning negative logical sub-expressions, for example
 # - macro: allowed_ssh_hosts
 #   condition: (never_true)
-# can be used in a rules' expression with double negation `and not allowed_ssh_hosts` which effectively evaluates
-# to true and does nothing, the perfect empty template for `logical` cases as opposed to list templates.
+# can be used in a rules' expression with double negation
+# `and not allowed_ssh_hosts` which effectively evaluates
+# to true and does nothing, the perfect empty template for
+# `logical` cases as opposed to list templates.
 # When tuning the rule you can override the macro with something useful, e.g.
 # - macro: allowed_ssh_hosts
 #   condition: (evt.hostname contains xyz)
@@ -46,19 +58,20 @@
   condition: >
     (((evt.type = connect and evt.dir=<) or
       (evt.type in (sendto,sendmsg) and evt.dir=< and
-       fd.l4proto != tcp and fd.connected=false and fd.name_changed=true)) and
-     (fd.typechar = 4 or fd.typechar = 6) and
-     (fd.ip != "0.0.0.0" and fd.net != "127.0.0.0/8" and not fd.snet in (rfc_1918_addresses)) and
-     (evt.rawres >= 0 or evt.res = EINPROGRESS))
+      fd.l4proto != tcp and fd.connected=false and fd.name_changed=true)) and
+    (fd.typechar = 4 or fd.typechar = 6) and
+    (fd.ip != "0.0.0.0" and fd.net != "127.0.0.0/8" and
+      not fd.snet in (rfc_1918_addresses)) and
+    (evt.rawres >= 0 or evt.res = EINPROGRESS))
 
 # Very similar to inbound/outbound, but combines the tests together
 # for efficiency.
 - macro: inbound_outbound
   condition: >
     ((((evt.type in (accept,accept4,listen,connect) and evt.dir=<)) and
-     (fd.typechar = 4 or fd.typechar = 6)) and
-     (fd.ip != "0.0.0.0" and fd.net != "127.0.0.0/8") and
-     (evt.rawres >= 0 or evt.res = EINPROGRESS))
+    (fd.typechar = 4 or fd.typechar = 6)) and
+    (fd.ip != "0.0.0.0" and fd.net != "127.0.0.0/8") and
+    (evt.rawres >= 0 or evt.res = EINPROGRESS))
 
 - macro: ssh_port
   condition: (fd.sport=22)
@@ -77,19 +90,30 @@
   condition: (never_true)
 
 - rule: Disallowed SSH Connection
-  desc: > 
-    Detect any new SSH connection on port 22 to a host other than those in an allowed list of hosts. 
-    This rule absolutely requires profiling your environment beforehand. Network-based rules are extremely 
-    crucial in any security program, as they can often provide the only definitive evidence. However, 
-    effectively operationalizing them can be challenging due to the potential for noise.
-  condition: > 
-    inbound_outbound 
-    and ssh_port 
+  desc: >
+    Detect any new SSH connection on port 22 to a host other than
+    those in an allowed list of hosts. This rule absolutely requires
+    profiling your environment beforehand. Network-based rules are extremely
+    crucial in any security program, as they can often provide the only
+    definitive evidence. However, effectively operationalizing them can be
+    challenging due to the potential for noise.
+  condition: >
+    inbound_outbound
+    and ssh_port
     and not allowed_ssh_hosts
   enabled: false
-  output: Disallowed SSH Connection (connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
+  output: >
+    Disallowed SSH Connection
+    (connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type
+    fd_proto=fd.l4proto evt_type=%evt.type user=%user.name
+    user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name
+    proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline
+    terminal=%proc.tty %container.info)
   priority: NOTICE
-  tags: [maturity_deprecated, host, container, network, mitre_lateral_movement, T1021.004]
+  tags: [
+    maturity_deprecated, host, container, network,
+    mitre_latera_movement, T1021.004
+  ]
 
 # These rules and supporting macros are more of an example for how to
 # use the fd.*ip and fd.*ip.name fields to match connection
@@ -110,68 +134,97 @@
   items: [google.com, www.yahoo.com]
 
 - rule: Unexpected outbound connection destination
-  desc: > 
-    Detect any outbound connection to a destination outside of an allowed set of ips, networks, or domain names. 
-    This rule absolutely requires profiling your environment beforehand. Network-based rules are extremely crucial 
-    in any security program, as they can often provide the only definitive evidence. However, effectively operationalizing 
-    them can be challenging due to the potential for noise.
+  desc: >
+    Detect any outbound connection to a destination outside of an allowed
+    set of ips, networks, or domain names. This rule absolutely requires
+    profiling your environment beforehand. Network-based rules are extremely
+    crucial in any security program, as they can often provide the only
+    definitive evidence. However, effectively operationalizing them can be
+    challenging due to the potential for noise.
   condition: >
-    outbound 
+    outbound
     and not ((fd.sip in (allowed_outbound_destination_ipaddrs)) or
-             (fd.snet in (allowed_outbound_destination_networks)) or
-             (fd.sip.name in (allowed_outbound_destination_domains)))
+            (fd.snet in (allowed_outbound_destination_networks)) or
+            (fd.sip.name in (allowed_outbound_destination_domains)))
   enabled: false
-  output: Disallowed outbound connection destination (connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
+  output: >
+    Disallowed outbound connection destination
+    (connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type
+    fd_proto=fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid
+    user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath
+    parent=%proc.pname command=%proc.cmdline terminal=%proc.tty
+    %container.info)
+
   priority: NOTICE
-  tags: [maturity_deprecated, host, container, network, mitre_command_and_control, TA0011]
+  tags: [
+    maturity_deprecated, host, container, network,
+    mitre_command_and_control, TA0011
+  ]
 # Use this to test whether the event occurred within a container.
 # When displaying container information in the output field, use
 # %container.info, without any leading term (file=%fd.name
-# %container.info user=%user.name user_loginuid=%user.loginuid, and not file=%fd.name
-# container=%container.info user=%user.name user_loginuid=%user.loginuid). The output will change
-# based on the context and whether or not -pk/-pm/-pc was specified on
-# the command line.
+# %container.info user=%user.name user_loginuid=%user.loginuid, and
+# not file=%fd.name container=%container.info user=%user.name
+# user_loginuid=%user.loginuid). The output will change based on the context
+# and whether or not -pk/-pm/-pc was specified on the command line.
 - macro: container
   condition: (container.id != host)
 
 - list: allowed_image
-  items: [] # add image to monitor, i.e.: bitnami/nginx
+  items: []  # add image to monitor, i.e.: bitnami/nginx
 
 - list: authorized_server_binary
   items: []  # add binary to allow, i.e.: nginx
-  
+
 - list: authorized_server_port
-  items: [] # add port to allow, i.e.: 80
+  items: []  # add port to allow, i.e.: 80
 
 # # How to test:
 # kubectl run --image=nginx nginx-app --port=80 --env="DOMAIN=cluster"
-# kubectl expose deployment nginx-app --port=80 --name=nginx-http --type=LoadBalancer
+# kubectl expose deployment nginx-app
+#   --port=80
+#   --name=nginx-http
+#   --type=LoadBalancer
 # # On minikube:
 # minikube service nginx-http
 # # On general K8s:
 # kubectl get services
 # kubectl cluster-info
 # # Visit the Nginx service and port, should not fire.
-# # Change rule to different port, then different process name, and test again that it fires.
+# # Change rule to different port, then different process name, and
+# # test again that it fires.
 
 - rule: Outbound or Inbound Traffic not to Authorized Server Process and Port
-  desc: > 
-    Detect traffic to an unauthorized server process and port within pre-defined containers. 
-    This rule absolutely requires profiling your environment beforehand and also necessitates adjusting the list of containers 
-    to which this rule will be applied. The current expression logic will never evaluate to true unless the list is populated. 
-    Network-based rules are extremely crucial in any security program, as they can often provide the only definitive evidence. 
-    However, effectively operationalizing them can be challenging due to the potential for noise. Notably, this rule is challenging 
-    to operationalize.
+  desc: >
+    Detect traffic to an unauthorized server process and port within
+    pre-defined containers. This rule absolutely requires profiling
+    your environment beforehand and also necessitates adjusting the
+    list of containers to which this rule will be applied. The current
+    expression logic will never evaluate to true unless the list is
+    populated. Network-based rules are extremely crucial in any
+    security program, as they can often provide the only definitive
+    evidence. However, effectively operationalizing them can be
+    challenging due to the potential for noise. Notably, this rule is
+    challenging to operationalize.
   condition: >
-    inbound_outbound 
-    and container 
-    and container.image.repository in (allowed_image) 
-    and not proc.name in (authorized_server_binary) 
+    inbound_outbound
+    and container
+    and container.image.repository in (allowed_image)
+    and not proc.name in (authorized_server_binary)
     and not fd.sport in (authorized_server_port)
   enabled: false
-  output: Network connection outside authorized port and binary (connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
+  output: >
+    Network connection outside authorized port and binary
+    (connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type
+    fd_proto=fd.l4proto evt_type=%evt.type user=%user.name
+    user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name
+    proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline
+    terminal=%proc.tty %container.info)
   priority: WARNING
-  tags: [maturity_deprecated, container, network, mitre_discovery, TA0011, NIST_800-53_CM-7]
+  tags: [
+    maturity_deprecated, container, network, mitre_discovery, TA0011,
+    NIST_800-53_CM-7
+  ]
 
 - list: c2_server_ip_list
   items: []
@@ -180,17 +233,31 @@
   items: []
 
 - rule: Outbound Connection to C2 Servers
-  desc: > 
-    Detect outbound connections to command and control servers using a list of IP addresses and fully qualified domain names (FQDNs).
-    This rule absolutely requires profiling your environment beforehand and also necessitates adjusting the template lists. The current 
-    expression logic will never evaluate to true unless the lists are populated. Network-based rules are extremely crucial in any 
-    security program, as they can often provide the only definitive evidence. However, effectively operationalizing them can be challenging 
-    due to the potential for noise. Notably, this rule is challenging to operationalize.
+  desc: >
+    Detect outbound connections to command and control servers using a list
+    of IP addresses and fully qualified domain names (FQDNs). This rule
+    absolutely requires profiling your environment beforehand and also
+    necessitates adjusting the template lists. The current expression logic
+    will never evaluate to true unless the lists are populated. Network-based
+    rules are extremely crucial in any security program, as they can often
+    provide the only definitive evidence.However, effectively operationalizing
+    them can be challenging due to the potential for noise. Notably, this rule
+    is challenging to operationalize.
   condition: >
-    outbound 
+    outbound
     and ((fd.sip in (c2_server_ip_list)) or
-         (fd.sip.name in (c2_server_fqdn_list)))
-  output: Outbound connection to C2 server (c2_domain=%fd.sip.name c2_addr=%fd.sip connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
+        (fd.sip.name in (c2_server_fqdn_list)))
+  output: >
+    Outbound connection to C2 server
+    (c2_domain=%fd.sip.name c2_addr=%fd.sip
+    connection=%fd.name lport=%fd.lport rport=%fd.rport
+    fd_type=%fd.type fd_proto=fd.l4proto evt_type=%evt.type
+    user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid
+    process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname
+    command=%proc.cmdline terminal=%proc.tty %container.info)
   priority: WARNING
   enabled: false
-  tags: [maturity_deprecated, host, container, network, mitre_command_and_control, TA0011]
+  tags: [
+    maturity_deprecated, host, container, network,
+    mitre_command_and_control, TA0011
+  ]
