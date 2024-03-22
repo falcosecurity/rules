@@ -834,6 +834,17 @@
        fd.name startswith /etc/ssh/ssh_monitor_config_ or
        fd.name startswith /etc/ssh/ssh_config_))
 
+- macro: etckeeper_activities
+  condition: (never_true)
+
+- macro: etckeeper
+  condition: >
+    (proc.aname = etckeeper
+     or (proc.aname in (50vcs-commit, 30store-metadata, 50uncommitted-c))
+    and (fd.name startswith /etc/.git/
+         or fd.name = /etc/.etckeeper)
+    and etckeeper_activities)
+
 - macro: multipath_writing_conf
   condition: (proc.name = multipath and fd.name startswith /etc/multipath/)
 
@@ -961,6 +972,7 @@
     and not automount_using_mtab
     and not mcafee_writing_cma_d
     and not avinetworks_supervisor_writing_ssh
+    and not etckeeper
     and not multipath_writing_conf
     and not calico_node)
 
