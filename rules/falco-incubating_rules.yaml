@@ -1274,3 +1274,13 @@
   output: Process run with suspect environment variable which could be attempting privilege escalation (env=%proc.env evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
   priority: NOTICE
   tags: [maturity_incubating, host, container, users, mitre_privilege_escalation, TA0004]
+
+- rule: Backdoored library loaded into SSHD (CVE-2024-3094)
+  desc: This rule detects possible CVE-2024-3094 exploitation when the SSH daemon process loads a vulnerable version of the liblzma library. An attacker could exploit this to interfere with authentication in sshd via systemd, potentially compromising sensitive data or escalating their privileges.
+  condition: > 
+    open_read and 
+    proc.name=sshd and 
+    (fd.name endswith "liblzma.so.5.6.0" or fd.name endswith "liblzma.so.5.6.1")
+  output: SSHD loaded a backdoored version of liblzma library %fd.name with parent %proc.pname and cmdline %proc.cmdline (process=%proc.name parent=%proc.pname file=%fd.name evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid proc_exepath=%proc.exepath command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
+  priority: WARNING
+  tags: [maturity_incubating, host, container]
