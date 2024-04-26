@@ -63,7 +63,7 @@
 # on the identity of the process performing an action such as opening
 # a file, etc., we require that the process name be known.
 - macro: proc_name_exists
-  condition: (proc.name!="<NA>")
+  condition: (not proc.name in ("<NA>","N/A"))
 
 - macro: rename
   condition: (evt.type in (rename, renameat, renameat2))
@@ -769,7 +769,7 @@
 # https://github.com/draios/sysdig/issues/954). So in that case, allow
 # a setuid.
 - macro: known_user_in_container
-  condition: (container and user.name != "N/A")
+  condition: (container and not user.name in ("<NA>","N/A"))
 
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to allow for specific combinations of

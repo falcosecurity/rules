@@ -74,8 +74,9 @@
 # the process name may be missing. For some rules that really depend
 # on the identity of the process performing an action such as opening
 # a file, etc., we require that the process name be known.
+# TODO: At the moment we keep the `N/A` variant for compatibility with old scap-files
 - macro: proc_name_exists
-  condition: (proc.name!="<NA>")
+  condition: (not proc.name in ("<NA>","N/A"))
 
 - macro: spawned_process
   condition: (evt.type in (execve, execveat) and evt.dir=<)
