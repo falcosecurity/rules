@@ -1283,7 +1283,7 @@
     (fd.name contains "liblzma.so.5.6.0" or fd.name contains "liblzma.so.5.6.1")
   output: SSHD loaded a backdoored version of liblzma library %fd.name with parent %proc.pname and cmdline %proc.cmdline (process=%proc.name parent=%proc.pname file=%fd.name evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid proc_exepath=%proc.exepath command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
   priority: WARNING
-  tags: [maturity_incubating, host, container]
+  tags: [maturity_incubating, host, container, mitre_initial_access, T1556]
 
 - list: bpf_profiled_binaries
   items: [falco, bpftool, systemd]
