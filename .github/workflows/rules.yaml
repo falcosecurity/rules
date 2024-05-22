@@ -31,15 +31,17 @@ jobs:
       - name: Find changed rules files
         id: set-changed-files
         run: |
-          # if we skip changed-files because we're not in a pull-request,
-          # then we consider all the rules contained in the repo
+          # Find any changed file located under the /rules folder that matches the naming convention <ruleset>_rules.yaml.
+          # See https://github.com/falcosecurity/rules/blob/main/README.md#naming-convention for details.
+          # Additionally, if we skip changed-files because we're not in a pull request,
+          # then we consider all the rules contained in the repository.
           all_files="${{ steps.changed-files.outputs.all }}"
           values=""
           if [ -z "$all_files" ]; then
-            values=$(ls rules/*.yaml)
+            values=$(ls rules/*_rules.yaml)
           else
             for changed_file in $all_files; do
-              if [[ "${changed_file}" =~ ^rules/.* ]]; then
+              if [[ "${changed_file}" =~ ^rules/[^/]*_rules\.yaml$ ]]; then
                 values=${values}${changed_file}$'\n'
               fi
             done
