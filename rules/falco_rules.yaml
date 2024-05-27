@@ -91,7 +91,7 @@
   condition: (evt.type in (init_module, finit_module) and evt.dir=<)
 
 - macro: dup
-  condition: (evt.type in (dup, dup2, dup3))
+  condition: (evt.type in (dup, dup2, dup3) and evt.dir=<)
 
 # File categories
 - macro: etc_dir
