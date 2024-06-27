@@ -269,7 +269,7 @@
              (fd.cnet in (allowed_inbound_source_networks)) or
              (fd.cip.name in (allowed_inbound_source_domains)))
   enabled: false
-  output: Disallowed inbound connection source (connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
+  output: Disallowed inbound connection source (connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=%fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
   priority: NOTICE
   tags: [maturity_sandbox, host, container, network, mitre_command_and_control, TA0011]
 
@@ -1313,7 +1313,7 @@
     inbound 
     and interpreted_procs
   enabled: false
-  output: Interpreted program received/listened for network traffic (connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
+  output: Interpreted program received/listened for network traffic (connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=%fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
   priority: NOTICE
   tags: [maturity_sandbox, host, container, network, mitre_exfiltration, TA0011]
 
@@ -1326,7 +1326,7 @@
     outbound 
     and interpreted_procs
   enabled: false
-  output: Interpreted program performed outgoing network connection (connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
+  output: Interpreted program performed outgoing network connection (connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=%fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
   priority: NOTICE
   tags: [maturity_sandbox, host, container, network, mitre_exfiltration, TA0011]
 
@@ -1352,7 +1352,7 @@
     and fd.sport <= 32767 
     and not nodeport_containers
   enabled: false
-  output: Unexpected K8s NodePort Connection (connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
+  output: Unexpected K8s NodePort Connection (connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=%fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
   priority: NOTICE
   tags: [maturity_sandbox, network, k8s, container, mitre_persistence, T1205.001, NIST_800-53_AC-6]
 
@@ -1487,7 +1487,7 @@
     net_miner_pool 
     and not trusted_images_query_miner_domain_dns
   enabled: false
-  output: Outbound connection to IP/Port flagged by https://cryptoioc.ch (ip=%fd.rip connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
+  output: Outbound connection to IP/Port flagged by https://cryptoioc.ch (ip=%fd.rip connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=%fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
   priority: CRITICAL
   tags: [maturity_sandbox, host, container, network, mitre_impact, T1496]
 
@@ -1680,7 +1680,7 @@
   condition: >
     java_network_read 
     and evt.buffer bcontains cafebabe
-  output: Java process class file download (server_ip=%fd.sip server_port=%fd.sport connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
+  output: Java process class file download (server_ip=%fd.sip server_port=%fd.sport connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=%fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
   priority: CRITICAL
   enabled: false
   tags: [maturity_sandbox, host, container, process, mitre_initial_access, T1190]
