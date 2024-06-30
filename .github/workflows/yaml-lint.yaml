@@ -15,3 +15,5 @@ jobs:
         uses: ibiqlik/action-yamllint@v3
         with: 
           file_or_dir: rules/*.yaml
+        env:
+          YAMLLINT_CONFIG_FILE: .github/workflows/.yamllint
