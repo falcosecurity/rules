@@ -1296,7 +1296,7 @@
     BPF is a kernel technology that can be misused for malicious purposes, like "Linux Kernel Module Injection". This 
     rule should be considered an auditing rule to notify you of any unprofiled BPF tools running in your environment. 
     However, it requires customization after profiling your environment. BPF-powered agents make bpf syscalls all the 
-    time, so this rule only sends logs for BPF_PROG_LOAD calls (bpf cmd=BPF_PROG_LOAD) in the enter event. If you also want to log 
+    time, so this rule only sends logs for BPF_PROG_LOAD calls (bpf cmd=5) in the enter event. If you also want to log 
     whether the syscall failed or succeeded, remove the direction filter and add the evt.arg.res_or_fd output field.
   condition: >
     evt.type=bpf and evt.dir=> 
