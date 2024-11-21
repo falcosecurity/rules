@@ -1751,3 +1751,22 @@
   output: Basic Interactive Reconnaissance (evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags %container.info)
   priority: NOTICE
   tags: [maturity_sandbox, host, container, process, mitre_reconnaissance, TA0043]
+
+- rule: Netcat/Socat Remote Code Execution on Host
+  desc: > 
+    Netcat/Socat Program runs on host that allows remote code execution and may be utilized 
+    as a part of a variety of reverse shell payload https://github.com/swisskyrepo/PayloadsAllTheThings/.
+    These programs are of higher relevance as they are commonly installed on UNIX-like operating systems.
+  condition: >
+          spawned_process
+          and not container
+          and ((proc.name = "nc" and (proc.cmdline contains "-e" or
+                                      proc.cmdline contains "-c")) or
+               (proc.name = "ncat" and (proc.args contains "--sh-exec" or
+                                        proc.args contains "--exec" or proc.args contains "-e " or
+                                        proc.args contains "-c " or proc.args contains "--lua-exec")) or
+               (proc.name = 'socat' and (proc.args contains "EXEC" or
+                                         proc.args contains "SYSTEM")))
+  output: Netcat/Socat runs on host that allows remote code execution (evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags)
+  priority: WARNING
+  tags: [maturity_sandbox, host, network, process, mitre_execution, T1059]
