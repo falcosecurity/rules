@@ -1230,10 +1230,15 @@
   tags: [maturity_stable, host, container, network, process, mitre_execution, T1059]
 
 - list: known_memfd_execution_binaries
-  items: []
+  items: [runc]
 
 - macro: known_memfd_execution_processes
-  condition: (proc.name in (known_memfd_execution_binaries))
+  condition: > 
+    (proc.name in (known_memfd_execution_binaries))
+    or (proc.pname in (known_memfd_execution_binaries))
+    or (proc.exepath = "memfd:runc_cloned:/proc/self/exe")
+    or (proc.exe = "memfd:runc_cloned:/proc/self/exe")
+
 
 - rule: Fileless execution via memfd_create
   desc: >
