@@ -88,7 +88,7 @@ jobs:
         run: |
           build/checker/rules-check \
               validate \
-              --falco-image="falcosecurity/falco-no-driver:${{ matrix.falco-version }}" \
+              --falco-image="falcosecurity/falco:${{ matrix.falco-version }}" \
               -r ${{ matrix.rules-file }}
 
   check-version:
@@ -136,7 +136,7 @@ jobs:
               "${{ matrix.rules-file }}" \
               result.txt \
               build/checker/rules-check \
-              "falcosecurity/falco-no-driver:$FALCO_VERSION"
+              "falcosecurity/falco:$FALCO_VERSION"
           if [ -s result.txt ]; then
             echo "comment_file=result.txt" >> $GITHUB_OUTPUT
           fi
