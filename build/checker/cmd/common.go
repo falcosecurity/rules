@@ -23,7 +23,7 @@ import (
 	"strings"
 )
 
-const defaultFalcoDockerImage = "falcosecurity/falco-no-driver:master"
+const defaultFalcoDockerImage = "falcosecurity/falco:master"
 
 const defaultFalcoDockerEntrypoint = "/usr/bin/falco"
 
