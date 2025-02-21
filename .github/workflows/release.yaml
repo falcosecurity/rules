@@ -58,7 +58,7 @@ jobs:
 
       # Create a signature of the rules artifact as OCI artifact
       - name: Install Cosign
-        uses: sigstore/cosign-installer@v3.8.0
+        uses: sigstore/cosign-installer@v3.8.1
 
       - name: Login with cosign
         run: cosign login $OCI_REGISTRY --username ${{ github.repository_owner }} --password ${{ secrets.GITHUB_TOKEN }}
