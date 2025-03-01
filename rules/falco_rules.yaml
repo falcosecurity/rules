@@ -919,7 +919,9 @@
 
 - macro: containerd_activities
   condition: (proc.name=containerd and (fd.name startswith "/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/" or
-                                        fd.name startswith "/var/lib/containerd/tmpmounts/"))
+                                        fd.name startswith "/var/lib/rancher/k3s/agent/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots" or
+                                        fd.name startswith "/var/lib/containerd/tmpmounts/" or
+                                        fd.name startswith "/var/lib/rancher/k3s/agent/containerd/tmpmounts/"))
 
 - rule: Clear Log Activities
   desc: > 
