@@ -27,6 +27,10 @@
 # However the Falco rules file does not use them by default.
 - required_engine_version: 0.31.0
 
+- required_plugin_versions:
+    - name: container
+      version: 0.2.0
+
 # Currently disabled as read/write are ignored syscalls. The nearly
 # similar open_write/open_read check for files being opened for
 # reading/writing.
