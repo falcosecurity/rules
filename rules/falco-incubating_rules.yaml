@@ -27,6 +27,10 @@
 # However the Falco rules file does not use them by default.
 - required_engine_version: 0.35.0
 
+- required_plugin_versions:
+    - name: container
+      version: 0.2.0
+
 - macro: open_write
   condition: (evt.type in (open,openat,openat2) and evt.is_open_write=true and fd.typechar='f' and fd.num>=0)
 
