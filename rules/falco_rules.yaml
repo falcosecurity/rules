@@ -159,7 +159,7 @@
     apt-listchanges, unattended-upgr, apt-add-reposit, apt-cache, apt.systemd.dai
     ]
 - list: python_package_managers
-  items: [pip, pip3, conda]
+  items: [pip, pip3, conda, uv]
 
 # The truncated dpkg-preconfigu is intentional, process names are
 # truncated at the falcosecurity-libs level.
