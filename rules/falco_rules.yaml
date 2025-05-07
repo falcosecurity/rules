@@ -674,7 +674,7 @@
 # We also let runc:[1:CHILD] count as the parent process, which can occur
 # when we lose events and lose track of state.
 - macro: container_entrypoint
-  condition: (not proc.pname exists or proc.pname in (runc:[0:PARENT], runc:[1:CHILD], runc, docker-runc, exe, docker-runc-cur, containerd-shim, systemd, crio))
+  condition: (not proc.pname exists or proc.pname in (runc:[0:PARENT], runc:[1:CHILD], runc, docker-runc, exe, docker-runc-cur, containerd-shim, systemd, crio, conmon))
 
 - macro: user_known_system_user_login
   condition: (never_true)
