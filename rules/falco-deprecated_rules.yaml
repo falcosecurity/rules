@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #
-# Copyright (C) 2023 The Falco Authors.
+# Copyright (C) 2025 The Falco Authors.
 #
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,11 +25,11 @@
 
 # Starting with version 8, the Falco engine supports exceptions.
 # However the Falco rules file does not use them by default.
-- required_engine_version: 0.31.0
+- required_engine_version: 0.50.0
 
 - required_plugin_versions:
     - name: container
-      version: 0.2.0
+      version: 0.2.2
 
 # This macro `never_true` is used as placeholder for tuning negative logical sub-expressions, for example
 # - macro: allowed_ssh_hosts
