@@ -5,7 +5,6 @@ approvers:
   - fededp
   - andreagit97
   - lucaguerra
-  - incertum
 reviewers:
   - leodido
   - kaizhe
@@ -13,3 +12,4 @@ reviewers:
   - loresuso
 emeritus_approvers:
   - kaizhe
+  - incertum
