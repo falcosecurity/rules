@@ -296,9 +296,7 @@
 
 - macro: container_started
   condition: >
-    ((evt.type = container or
-     (spawned_process and proc.vpid=1)) and
-     container.image.repository != incomplete)
+     (spawned_process and proc.vpid=1 and container)
 
 - list: cron_binaries
   items: [anacron, cron, crond, crontab]
@@ -610,7 +608,6 @@
     seen as more suspicious, prompting a closer inspection.
   condition: >
     container_started 
-    and container
     and container.privileged=true
     and not falco_privileged_containers
     and not user_privileged_containers
@@ -640,7 +637,6 @@
     raise suspicion, prompting closer scrutiny.
   condition: >
     container_started 
-    and container
     and excessively_capable_container
     and not falco_privileged_containers
     and not user_privileged_containers
