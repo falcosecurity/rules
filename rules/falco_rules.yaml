@@ -877,6 +877,9 @@
        proc.args icontains " user "))
     )
 
+- macro: user_known_search_private_key_or_password_activities
+  condition: (never_true)
+
 - rule: Search Private Keys or Passwords
   desc: >
     Detect attempts to search for private keys or passwords using the grep or find command. This is often seen with 
@@ -892,6 +895,7 @@
                                   proc.args contains "id_ecdsa"
           )
         ))
+    and not user_known_search_private_key_or_password_activities
   output: Grep private keys or passwords activities found | evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags
   priority:
     WARNING
