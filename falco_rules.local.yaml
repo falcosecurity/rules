@@ -1,0 +1,6 @@
+- rule: Suspicious curl with POST or data upload
+  desc: Detects curl commands using -d or -X POST, indicating possible exfiltration or C2
+  condition: spawned_process and proc.name = curl and (proc.args contains "-d" or proc.args contains "-X POST")
+  output: "Suspicious curl command (user=%user.name command=%proc.cmdline)"
+  priority: WARNING
+  tags: [network, exfiltration, curl]
