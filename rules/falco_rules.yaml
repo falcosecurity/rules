@@ -25,7 +25,7 @@
 
 # Starting with version 8, the Falco engine supports exceptions.
 # However the Falco rules file does not use them by default.
-- required_engine_version: 0.50.0
+- required_engine_version: 0.55.0
 
 - required_plugin_versions:
     - name: container
@@ -83,19 +83,19 @@
   condition: (not proc.name in ("<NA>","N/A"))
 
 - macro: spawned_process
-  condition: (evt.type in (execve, execveat) and evt.dir=<)
+  condition: (evt.type in (execve, execveat))
 
 - macro: create_symlink
-  condition: (evt.type in (symlink, symlinkat) and evt.dir=<)
+  condition: (evt.type in (symlink, symlinkat))
 
 - macro: create_hardlink
-  condition: (evt.type in (link, linkat) and evt.dir=<)
+  condition: (evt.type in (link, linkat))
 
 - macro: kernel_module_load
-  condition: (evt.type in (init_module, finit_module) and evt.dir=<)
+  condition: (evt.type in (init_module, finit_module))
 
 - macro: dup
-  condition: (evt.type in (dup, dup2, dup3) and evt.dir=<)
+  condition: (evt.type in (dup, dup2, dup3))
 
 # File categories
 - macro: etc_dir
@@ -824,7 +824,7 @@
     Kubernetes audit logs (typically drained from control nodes, and Falco offers a k8saudit plugin) as an additional data 
     source for detections within the control plane.
   condition: >
-    evt.type=connect and evt.dir=< 
+    evt.type=connect 
     and (fd.typechar=4 or fd.typechar=6) 
     and container 
     and k8s_api_server 
@@ -1199,8 +1199,8 @@
 
 - macro: outbound
   condition: >
-    (((evt.type = connect and evt.dir=<) or
-      (evt.type in (sendto,sendmsg) and evt.dir=< and
+    ((evt.type = connect or
+      (evt.type in (sendto,sendmsg) and
        fd.l4proto != tcp and fd.connected=false and fd.name_changed=true)) and
      (fd.typechar = 4 or fd.typechar = 6) and
      (fd.ip != "0.0.0.0" and fd.net != "127.0.0.0/8" and not fd.snet in (rfc_1918_addresses)) and
