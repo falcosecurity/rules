@@ -782,7 +782,7 @@
     different user's context, potentially with higher privileges. One drawback is the potential for noise, 
     as many applications legitimately use this approach.
   condition: >
-    evt.type=setuid and evt.dir=>
+    evt.type=setuid
     and (known_user_in_container or not container)
     and not (user.name=root or user.uid=0)
     and not somebody_becoming_themselves
@@ -1298,7 +1298,7 @@
     time, so this rule only sends logs for BPF_PROG_LOAD calls (bpf cmd=5) in the enter event. If you also want to log 
     whether the syscall failed or succeeded, remove the direction filter and add the evt.arg.res_or_fd output field.
   condition: >
-    evt.type=bpf and evt.dir=> 
+    evt.type=bpf
     and (evt.arg.cmd=5 or evt.arg.cmd=BPF_PROG_LOAD)
     and not bpf_profiled_procs
   output: BPF Program Not Profiled | bpf_cmd=%evt.arg.cmd evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty
