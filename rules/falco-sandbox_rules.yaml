@@ -37,7 +37,7 @@
 # - macro: write
 #   condition: (syscall.type=write and fd.type in (file, directory))
 # - macro: read
-#   condition: (syscall.type=read and evt.dir=> and fd.type in (file, directory))
+#   condition: (syscall.type=read and fd.type in (file, directory))
 
 - macro: open_write
   condition: (evt.type in (open,openat,openat2) and evt.is_open_write=true and fd.typechar='f' and fd.num>=0)
