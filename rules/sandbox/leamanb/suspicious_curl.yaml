@@ -1,0 +1,21 @@
+maturity: sandbox
+title: Suspicious cURL with POST or Data Upload
+id: suspicious_curl_post_upload
+version: 1.0.0
+status: experimental
+description: Detects cURL usage with POST or --data, which may indicate data exfiltration or command-and-control activity.
+author: Leaman Brown
+date: 2025-10-10
+references:
+  - https://falco.org/docs/rules/
+  - https://curl.se/docs/manpage.html
+tags:
+  - network
+  - exfiltration
+  - curl
+  - linux
+condition: evt.type = execve and proc.name = "curl" and (proc.args contains "POST" or proc.args contains "--data" or proc.args contains "--upload-file")
+output: >
+  Suspicious cURL command detected (user=%user.name, command=%proc.cmdline)
+priority: WARNING
+source: syscalls
