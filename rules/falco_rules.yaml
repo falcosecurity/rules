@@ -25,11 +25,11 @@
 
 # Starting with version 8, the Falco engine supports exceptions.
 # However the Falco rules file does not use them by default.
-- required_engine_version: 0.55.0
+- required_engine_version: 0.57.0
 
 - required_plugin_versions:
     - name: container
-      version: 0.2.2
+      version: 0.4.0
 
 # Currently disabled as read/write are ignored syscalls. The nearly
 # similar open_write/open_read check for files being opened for
