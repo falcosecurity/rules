@@ -804,6 +804,7 @@
      ibm_cloud_containers,
      docker.io/velero/velero, velero/velero,
      registry.k8s.io/sig-storage/nfs-subdir-external-provisioner,
+     quay.io/metallb/controller, quay.io/metallb/speaker,
      quay.io/jetstack/cert-manager-cainjector, weaveworks/kured,
      quay.io/prometheus-operator/prometheus-operator,
      quay.io/prometheus/prometheus,
