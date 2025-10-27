@@ -148,7 +148,7 @@ jobs:
           cp ${{ steps.compare.outputs.comment_file }} ./pr/COMMENT-${{ strategy.job-index }}
 
       - name: Upload PR info as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: steps.compare.outputs.comment_file != ''
         with:
           name: pr-${{ strategy.job-index }}
@@ -187,7 +187,7 @@ jobs:
           echo ""
 
       - name: Upload PR info as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: pr
           path: pr/
