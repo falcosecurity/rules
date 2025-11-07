@@ -1,8 +1,8 @@
 # Falco Rules
 
-[![Latest release](https://img.shields.io/github/v/release/falcosecurity/rules?label=Latest%20Rules%20Release&style=for-the-badge)](https://github.com/falcosecurity/rules/releases/latest) [![Compatible Falco release](https://img.shields.io/github/v/release/falcosecurity/falco?label=Compatible%20Falco%20Release&style=for-the-badge)](https://github.com/falcosecurity/falco/releases/latest) 
+[![Latest release](https://img.shields.io/github/v/release/falcosecurity/rules?label=Latest%20Rules%20Release&style=for-the-badge)](https://github.com/falcosecurity/rules/releases/latest) [![Compatible Falco release](https://img.shields.io/github/v/release/falcosecurity/falco?label=Compatible%20Falco%20Release&style=for-the-badge)](https://github.com/falcosecurity/falco/releases/latest)
 
-[![Docs](https://img.shields.io/badge/docs-latest-green.svg?style=for-the-badge)](https://falco.org/docs/rules)  [![Rules Overview](https://img.shields.io/badge/docs-latest-green.svg?label=Rules%20Overview&style=for-the-badge)](https://falcosecurity.github.io/rules/) [![Style Guide](https://img.shields.io/badge/docs-latest-green.svg?label=Style%20Guide&style=for-the-badge)](https://falco.org/docs/rules/style-guide/) 
+[![Docs](https://img.shields.io/badge/docs-latest-green.svg?style=for-the-badge)](https://falco.org/docs/rules)  [![Rules Overview](https://img.shields.io/badge/docs-latest-green.svg?label=Rules%20Overview&style=for-the-badge)](https://falcosecurity.github.io/rules/) [![Style Guide](https://img.shields.io/badge/docs-latest-green.svg?label=Style%20Guide&style=for-the-badge)](https://falco.org/docs/rules/style-guide/)
 
 [![Supported Fields](https://img.shields.io/badge/docs-latest-green.svg?label=Supported%20Fields&style=for-the-badge)](https://falco.org/docs/reference/rules/supported-fields/) [![Supported EVT ARG Fields](https://img.shields.io/badge/docs-latest-green.svg?label=Supported%20Evt%20Arg%20Fields&style=for-the-badge)](https://github.com/falcosecurity/libs/blob/master/driver/event_table.c)
 
@@ -50,7 +50,7 @@ Rules tell [Falco](https://github.com/falcosecurity/falco) what to do. These rul
 
 ## Falco Rules Files Registry
 
-The Falco Rules Files Registry contains metadata and information about rules files distributed by The Falco Project. The registry serves as an additional method of making the rules files available to the community, complementing the process of retrieving the rules files from this repository. 
+The Falco Rules Files Registry contains metadata and information about rules files distributed by The Falco Project. The registry serves as an additional method of making the rules files available to the community, complementing the process of retrieving the rules files from this repository.
 
 Note: _Currently, the registry includes only rules for the syscall call data source; for other data sources see the [Plugins](https://github.com/falcosecurity/plugins) repository._
 
