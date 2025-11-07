@@ -83,30 +83,30 @@ poetry run python -m pytest --cov=falco_mitre_attack_checker
 ```
 
 ```
----------- coverage: platform linux, python 3.10.12-final-0 ----------                                   
-Name                                                     Stmts   Miss  Cover                             
-----------------------------------------------------------------------------                             
-falco_mitre_checker/__init__.py                              0      0   100%                             
-falco_mitre_checker/__main__.py                              7      7     0%                             
-falco_mitre_checker/api/__init__.py                          0      0   100%                             
-falco_mitre_checker/api/core.py                             19     19     0%                             
-falco_mitre_checker/cli/__init__.py                          0      0   100%                             
-falco_mitre_checker/cli/core.py                             18     18     0%                             
-falco_mitre_checker/engine/__init__.py                       0      0   100%                             
-falco_mitre_checker/engine/mitre_checker.py                 46      1    98%                             
-falco_mitre_checker/exceptions/__init__.py                   0      0   100%          
-falco_mitre_checker/exceptions/rules_exceptions.py           8      0   100%                             
-falco_mitre_checker/models/__init__.py                       0      0   100%                             
-falco_mitre_checker/models/falco_mitre_errors.py            16      0   100%                             
+---------- coverage: platform linux, python 3.10.12-final-0 ----------
+Name                                                     Stmts   Miss  Cover
+----------------------------------------------------------------------------
+falco_mitre_checker/__init__.py                              0      0   100%
+falco_mitre_checker/__main__.py                              7      7     0%
+falco_mitre_checker/api/__init__.py                          0      0   100%
+falco_mitre_checker/api/core.py                             19     19     0%
+falco_mitre_checker/cli/__init__.py                          0      0   100%
+falco_mitre_checker/cli/core.py                             18     18     0%
+falco_mitre_checker/engine/__init__.py                       0      0   100%
+falco_mitre_checker/engine/mitre_checker.py                 46      1    98%
+falco_mitre_checker/exceptions/__init__.py                   0      0   100%
+falco_mitre_checker/exceptions/rules_exceptions.py           8      0   100%
+falco_mitre_checker/models/__init__.py                       0      0   100%
+falco_mitre_checker/models/falco_mitre_errors.py            16      0   100%
 falco_mitre_checker/models/falco_mitre_relations.py         14      2    86%
 falco_mitre_checker/parsers/__init__.py                      0      0   100%
-falco_mitre_checker/parsers/falco_rules.py                  30      1    97%                             
-falco_mitre_checker/parsers/mitre_stix.py                   31      4    87%                            
-falco_mitre_checker/tests/__init__.py                        0      0   100%                             
-falco_mitre_checker/tests/engine/__init__.py                 0      0   100%                            
-falco_mitre_checker/tests/engine/test_mitre_checker.py      41      0   100%                            
-falco_mitre_checker/tests/parsers/__init__.py                0      0   100%                            
-falco_mitre_checker/tests/parsers/test_falco_rules.py       18      0   100%                             
+falco_mitre_checker/parsers/falco_rules.py                  30      1    97%
+falco_mitre_checker/parsers/mitre_stix.py                   31      4    87%
+falco_mitre_checker/tests/__init__.py                        0      0   100%
+falco_mitre_checker/tests/engine/__init__.py                 0      0   100%
+falco_mitre_checker/tests/engine/test_mitre_checker.py      41      0   100%
+falco_mitre_checker/tests/parsers/__init__.py                0      0   100%
+falco_mitre_checker/tests/parsers/test_falco_rules.py       18      0   100%
 falco_mitre_checker/tests/parsers/test_mitre_stix.py        34      0   100%
 falco_mitre_checker/tests/test_common.py                    13      2    85%
 falco_mitre_checker/utils/__init__.py                        0      0   100%
@@ -133,9 +133,7 @@ poetry run python -m safety check
   0 vulnerabilities ignored
 +=======================================================================================================+
 
- No known security vulnerabilities found. 
+ No known security vulnerabilities found.
 
 +=======================================================================================================+
 ```
-
-
