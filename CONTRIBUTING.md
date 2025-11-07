@@ -15,7 +15,7 @@ All rules must be licensed under the [Apache 2.0 License](./LICENSE).
 
 # Rules Maturity Framework
 
-The rules maturity framework was established following this [proposal](proposals/20230605-rules-adoption-management-maturity-framework.md). 
+The rules maturity framework was established following this [proposal](proposals/20230605-rules-adoption-management-maturity-framework.md).
 
 At a high level, The Falco Project maintains community-contributed syscall and container event-based [rules](https://github.com/falcosecurity/rules/blob/main/rules/), with `maturity_stable` tagged rules being included in the Falco release package. Other maturity-level rules are released separately, requiring explicit installation and possible customization for effective. In essence, there are now dedicated rule files for each maturity level.
 
@@ -48,7 +48,7 @@ Special note regarding *plugins* rules: The rules for different Falco [plugins](
 The levels:
 
 - **maturity_stable** indicates that the rule has undergone thorough evaluation by experts with hands-on production experience. These experts have determined that the rules embody best practices and exhibit optimal robustness, making it more difficult for attackers to bypass Falco. These rules are highly relevant for addressing broader threats and are recommended for customization to specific environments if necessary. They primarily focus on universal system-level detections, such as generic reverse shells or container escapes, which establish a solid baseline for threat detection across diverse industries. This inherent bias against including more application-specific detections is due to their potential lack of broad relevance or applicability. However, to mitigate this bias, the maintainers reserve the right to make judgments on a case-by-case basis.
-- **maturity_incubating** indicates that the rules address relevant threats, provide a certain level of robustness guarantee, and adhere to best practices in rule writing. Furthermore, it signifies that the rules have been identified by experts as catering to more specific use cases, which may or may not be relevant for each adopter. This category is expected to include a larger number of application-specific rules.   
+- **maturity_incubating** indicates that the rules address relevant threats, provide a certain level of robustness guarantee, and adhere to best practices in rule writing. Furthermore, it signifies that the rules have been identified by experts as catering to more specific use cases, which may or may not be relevant for each adopter. This category is expected to include a larger number of application-specific rules.
 - **maturity_sandbox** indicates that the rule is in an experimental stage. The potential for broader usefulness and relevance of "sandbox" rules is currently being assessed. These rules can serve as inspiration and adhere to the minimum acceptance criteria for rules.
 - **maturity_deprecated** indicates that, upon re-assessment, the rule was deemed less applicable to the broader community. Each adopter needs to determine the relevance of these rules on their own. They are kept as examples but are no longer actively supported or tuned by The Falco Project.
 
@@ -56,7 +56,7 @@ In summary, the rules maturity tag reflects the robustness, relevance, applicabi
 
 ## Justification of Rules Maturity Framework for Falco Adoption
 
-A rules maturity framework has been introduced for Falco users to facilitate the adoption of non-custom rules more effectively. This framework ensures a smooth transition for adopters, whether they use rules generically or for specific use cases. A smooth adoption process is defined by making it easy for adopters to understand each rule and also gain an understanding of not just what the rule is doing, but also how beneficial it can be under various circumstances. 
+A rules maturity framework has been introduced for Falco users to facilitate the adoption of non-custom rules more effectively. This framework ensures a smooth transition for adopters, whether they use rules generically or for specific use cases. A smooth adoption process is defined by making it easy for adopters to understand each rule and also gain an understanding of not just what the rule is doing, but also how beneficial it can be under various circumstances.
 Additionally, due to this framework, adopters should find themselves with a clearer understanding of which rules can likely be adopted as-is versus which rules may require significant engineering efforts to evaluate and adopt.
 
 The rules maturity framework aligns with the [status](https://github.com/falcosecurity/evolution/blob/main/REPOSITORIES.md#status) levels used within The Falco Project repositories, namely "Stable", "Incubating", "Sandbox" and "Deprecated".
