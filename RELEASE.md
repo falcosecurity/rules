@@ -40,7 +40,7 @@ Patches on an already-released ruleset can anytime on a per-need basis. Assuming
 
 ## Versioning a ruleset
 
-The version of the official Falco rulesets is compatible with [SemVer](https://semver.org/) and must be meaningful towards the changes in its structure and contents. To define a new version `x.y.z` for a given ruleset, consider the following guidelines. 
+The version of the official Falco rulesets is compatible with [SemVer](https://semver.org/) and must be meaningful towards the changes in its structure and contents. To define a new version `x.y.z` for a given ruleset, consider the following guidelines.
 
 Our automation will detect most of the following criteria and suggest a summary with all the changes relative to each of the three versioning categories (patch, minor, major). This provides a changelog and valuable suggestion on the next version to be assigned to each ruleset. However, be mindful that the versioning process cannot totally automated and always requires human attention (e.g. we can't automatically detect subtle semantic changes in rules). The automated jobs will use the versions of Falco defined in `./github/FALCO_VERSIONS` for validating and checking rulesets. The versions must be line-separated and ordered from the most recent to the least recent. Any [published container image tag](https://hub.docker.com/r/falcosecurity/falco/tags) is a valid Falco version entry, including `master`, `latest`, and any other stable release tag (e.g. `0.35.0`). `master` indicates the most recent dev version of Falco built from mainline, and can be used for using a not-yet-published version of Falco in case we want to run the CI with a new in-development feature.
 

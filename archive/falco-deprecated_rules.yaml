@@ -81,14 +81,14 @@
   condition: (never_true)
 
 - rule: Disallowed SSH Connection
-  desc: > 
-    Detect any new SSH connection on port 22 to a host other than those in an allowed list of hosts. 
-    This rule absolutely requires profiling your environment beforehand. Network-based rules are extremely 
-    crucial in any security program, as they can often provide the only definitive evidence. However, 
+  desc: >
+    Detect any new SSH connection on port 22 to a host other than those in an allowed list of hosts.
+    This rule absolutely requires profiling your environment beforehand. Network-based rules are extremely
+    crucial in any security program, as they can often provide the only definitive evidence. However,
     effectively operationalizing them can be challenging due to the potential for noise.
-  condition: > 
-    inbound_outbound 
-    and ssh_port 
+  condition: >
+    inbound_outbound
+    and ssh_port
     and not allowed_ssh_hosts
   enabled: false
   output: Disallowed SSH Connection | connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty
@@ -114,13 +114,13 @@
   items: [google.com, www.yahoo.com]
 
 - rule: Unexpected outbound connection destination
-  desc: > 
-    Detect any outbound connection to a destination outside of an allowed set of ips, networks, or domain names. 
-    This rule absolutely requires profiling your environment beforehand. Network-based rules are extremely crucial 
-    in any security program, as they can often provide the only definitive evidence. However, effectively operationalizing 
+  desc: >
+    Detect any outbound connection to a destination outside of an allowed set of ips, networks, or domain names.
+    This rule absolutely requires profiling your environment beforehand. Network-based rules are extremely crucial
+    in any security program, as they can often provide the only definitive evidence. However, effectively operationalizing
     them can be challenging due to the potential for noise.
   condition: >
-    outbound 
+    outbound
     and not ((fd.sip in (allowed_outbound_destination_ipaddrs)) or
              (fd.snet in (allowed_outbound_destination_networks)) or
              (fd.sip.name in (allowed_outbound_destination_domains)))
@@ -128,7 +128,7 @@
   output: Disallowed outbound connection destination | connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty
   priority: NOTICE
   tags: [maturity_deprecated, host, container, network, mitre_command_and_control, TA0011]
-  
+
 # Use this to test whether the event occurred within a container.
 - macro: container
   condition: (container.id != host)
@@ -138,7 +138,7 @@
 
 - list: authorized_server_binary
   items: []  # add binary to allow, i.e.: nginx
-  
+
 - list: authorized_server_port
   items: [] # add port to allow, i.e.: 80
 
@@ -154,18 +154,18 @@
 # # Change rule to different port, then different process name, and test again that it fires.
 
 - rule: Outbound or Inbound Traffic not to Authorized Server Process and Port
-  desc: > 
-    Detect traffic to an unauthorized server process and port within pre-defined containers. 
-    This rule absolutely requires profiling your environment beforehand and also necessitates adjusting the list of containers 
-    to which this rule will be applied. The current expression logic will never evaluate to true unless the list is populated. 
-    Network-based rules are extremely crucial in any security program, as they can often provide the only definitive evidence. 
-    However, effectively operationalizing them can be challenging due to the potential for noise. Notably, this rule is challenging 
+  desc: >
+    Detect traffic to an unauthorized server process and port within pre-defined containers.
+    This rule absolutely requires profiling your environment beforehand and also necessitates adjusting the list of containers
+    to which this rule will be applied. The current expression logic will never evaluate to true unless the list is populated.
+    Network-based rules are extremely crucial in any security program, as they can often provide the only definitive evidence.
+    However, effectively operationalizing them can be challenging due to the potential for noise. Notably, this rule is challenging
     to operationalize.
   condition: >
-    inbound_outbound 
-    and container 
-    and container.image.repository in (allowed_image) 
-    and not proc.name in (authorized_server_binary) 
+    inbound_outbound
+    and container
+    and container.image.repository in (allowed_image)
+    and not proc.name in (authorized_server_binary)
     and not fd.sport in (authorized_server_port)
   enabled: false
   output: Network connection outside authorized port and binary | connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty
@@ -179,14 +179,14 @@
   items: []
 
 - rule: Outbound Connection to C2 Servers
-  desc: > 
+  desc: >
     Detect outbound connections to command and control servers using a list of IP addresses and fully qualified domain names (FQDNs).
-    This rule absolutely requires profiling your environment beforehand and also necessitates adjusting the template lists. The current 
-    expression logic will never evaluate to true unless the lists are populated. Network-based rules are extremely crucial in any 
-    security program, as they can often provide the only definitive evidence. However, effectively operationalizing them can be challenging 
+    This rule absolutely requires profiling your environment beforehand and also necessitates adjusting the template lists. The current
+    expression logic will never evaluate to true unless the lists are populated. Network-based rules are extremely crucial in any
+    security program, as they can often provide the only definitive evidence. However, effectively operationalizing them can be challenging
     due to the potential for noise. Notably, this rule is challenging to operationalize.
   condition: >
-    outbound 
+    outbound
     and ((fd.sip in (c2_server_ip_list)) or
          (fd.sip.name in (c2_server_fqdn_list)))
   output: Outbound connection to C2 server | c2_domain=%fd.sip.name c2_addr=%fd.sip connection=%fd.name lport=%fd.lport rport=%fd.rport fd_type=%fd.type fd_proto=fd.l4proto evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty
