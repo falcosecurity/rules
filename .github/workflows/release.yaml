@@ -27,7 +27,7 @@ jobs:
 
       # Get rules repository
       - name: Checkout Rules
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # Get registry artifact tool
       - name: Setup Golang
