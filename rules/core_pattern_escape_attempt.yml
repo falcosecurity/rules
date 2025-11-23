@@ -1,9 +1,13 @@
+- macro: user_known_core_pattern_modifiers
+  condition: (never_true)
+
 - rule: Core Pattern Escape Attempt
   desc: >
     Detects modification of /proc/sys/kernel/core_pattern to use a pipe, potentially to escape containers or execute arbitrary commands via core dumps.
   condition: >
     open_write and fd.name="/proc/sys/kernel/core_pattern" and
-    evt.buffer contains "|"
+    evt.buffer contains "|" and
+    not user_known_core_pattern_modifiers
   output: >
     Core pattern modification to pipe detected (user=%user.name command=%proc.cmdline file=%fd.name)
   priority: CRITICAL
