@@ -1764,3 +1764,40 @@
   output: Netcat/Socat runs on host that allows remote code execution | evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags
   priority: WARNING
   tags: [maturity_sandbox, host, network, process, mitre_execution, T1059]
+
+- list: network_tool_binaries
+  items: [nc, ncat, netcat, nmap, dig, tcpdump, tshark, ngrep, telnet, mitmproxy, socat, zmap]
+
+- macro: network_tool_procs
+  condition: (proc.name in (network_tool_binaries))
+
+- list: node_package_managers
+  items: [npm, yarn, pnpm, node, bun]
+
+- macro: npm_package_install_ancestor
+  condition: >
+    (proc.pname in (node_package_managers) or
+     proc.aname[2] in (node_package_managers) or
+     proc.aname[3] in (node_package_managers) or
+     proc.aname[4] in (node_package_managers) or
+     proc.aname[5] in (node_package_managers))
+
+- macro: user_known_network_tool_in_npm_install_activities
+  condition: (never_true)
+
+- rule: Network Tool Executed During NPM Package Install
+  desc: >
+    Detect network tools being launched when an NPM package is installed. Malicious NPM packages may invoke 
+    preinstall or postinstall commands, which can involve network tools to download malicious payloads or exfiltrate 
+    sensitive information. Network tools spawned by npm, node, yarn, pnpm, bun, or related processes during 
+    package installation should be investigated. This rule complements the more generic "Launch Suspicious Network 
+    Tool in Container" rule with a specific focus on the supply chain attack vector via NPM packages.
+  condition: >
+    spawned_process
+    and container
+    and network_tool_procs
+    and npm_package_install_ancestor
+    and not user_known_network_tool_in_npm_install_activities
+  output: Network tool executed during NPM package installation | evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] exe_flags=%evt.arg.flags
+  priority: WARNING
+  tags: [maturity_sandbox, container, network, process, mitre_execution, T1195.002]
