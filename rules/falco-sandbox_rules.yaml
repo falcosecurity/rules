@@ -1801,3 +1801,177 @@
   output: Network tool executed during NPM package installation | evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] exe_flags=%evt.arg.flags
   priority: WARNING
   tags: [maturity_sandbox, container, network, process, mitre_execution, T1195.002]
+
+
+#############################################################################
+# XPAV-derived Detection Rules
+# https://github.com/JNC4/xpav
+#
+# These rules detect cryptominer activity, web server abuse (webshells),
+# and container escape patterns not covered by existing Falco rules.
+#############################################################################
+
+# Known cryptominer binary names - complements existing stratum protocol detection
+- list: miner_binaries
+  items: [
+    xmrig, xmr-stak, minerd, minergate, cpuminer, ccminer,
+    ethminer, cgminer, bfgminer, sgminer, claymore, nbminer,
+    t-rex, gminer, lolminer, phoenixminer, teamredminer,
+    nanominer, bminer, wildrig, srbminer
+  ]
+
+- macro: is_miner_process
+  condition: (proc.name in (miner_binaries))
+
+- rule: Known Cryptominer Process Executed
+  desc: >
+    Detects execution of known cryptocurrency mining software by matching process names against
+    a list of common miners. Cryptominers are commonly deployed by attackers after gaining initial
+    access to monetize compromised systems. This rule complements the existing "Detect crypto miners
+    using the Stratum protocol" rule by catching miners that may use renamed binaries but still
+    match known miner process names. Consider tuning this rule if you have legitimate mining
+    operations in your environment.
+  condition: >
+    spawned_process
+    and is_miner_process
+  output: Cryptominer process executed | process=%proc.name exe=%proc.exepath evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid parent=%proc.pname command=%proc.cmdline terminal=%proc.tty container_id=%container.id container_name=%container.name
+  priority: CRITICAL
+  tags: [maturity_sandbox, host, container, process, mitre_impact, T1496]
+
+# Web server processes - used for webshell detection
+- list: web_server_binaries
+  items: [nginx, httpd, httpd-foregroun, apache, apache2, lighttpd, php-fpm, php, php-cgi, php7, php8, gunicorn, uwsgi]
+
+# Suspicious child processes that shouldn't be spawned by web servers
+- list: suspicious_web_children
+  items: [curl, wget, nc, ncat, netcat, socat, python, python3, perl, ruby, nmap, id, whoami, uname, base64]
+
+- macro: spawned_by_web_server
+  condition: >
+    (proc.pname in (web_server_binaries) or
+     proc.aname[2] in (web_server_binaries) or
+     proc.aname[3] in (web_server_binaries))
+
+- macro: user_known_web_server_shell_activities
+  condition: (never_true)
+
+- rule: Web Server Spawned Shell
+  desc: >
+    Detects a web server process (nginx, apache, php-fpm, etc.) spawning an interactive shell.
+    This is a strong indicator of webshell exploitation or remote code execution vulnerability
+    being actively exploited. Webshells are a common persistence mechanism used by attackers
+    after compromising web applications. The macro user_known_web_server_shell_activities can
+    be overridden to tune for legitimate use cases like CGI scripts. Note that simple shell
+    wrappers used in health checks are excluded.
+  condition: >
+    spawned_process
+    and spawned_by_web_server
+    and proc.name in (shell_binaries)
+    and not proc.cmdline startswith "sh -c /usr/bin"
+    and not proc.cmdline contains "healthcheck"
+    and not user_known_web_server_shell_activities
+  output: Web server spawned shell | shell=%proc.name web_server=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid command=%proc.cmdline terminal=%proc.tty container_id=%container.id container_name=%container.name exe=%proc.exepath
+  priority: CRITICAL
+  tags: [maturity_sandbox, host, container, process, mitre_persistence, mitre_execution, T1505.003]
+
+- macro: user_known_web_server_child_activities
+  condition: (never_true)
+
+- rule: Web Server Spawned Suspicious Child Process
+  desc: >
+    Detects web server processes spawning suspicious child processes like curl, wget, netcat,
+    or scripting interpreters. These often indicate exploitation of web application vulnerabilities,
+    where attackers download additional payloads or establish network connections. This rule is
+    more sensitive than the shell spawning rule and may require tuning in environments where
+    web applications legitimately execute system commands. Override the macro
+    user_known_web_server_child_activities for custom tuning.
+  condition: >
+    spawned_process
+    and spawned_by_web_server
+    and proc.name in (suspicious_web_children)
+    and not proc.name in (shell_binaries)
+    and not proc.cmdline contains "healthcheck"
+    and not proc.cmdline contains "status"
+    and not user_known_web_server_child_activities
+  output: Web server spawned suspicious child process | child=%proc.name web_server=%proc.pname gparent=%proc.aname[2] evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid command=%proc.cmdline terminal=%proc.tty container_id=%container.id container_name=%container.name
+  priority: WARNING
+  tags: [maturity_sandbox, host, container, process, mitre_execution, T1059]
+
+- rule: Reverse Shell from Web Server
+  desc: >
+    Detects common reverse shell patterns spawned from web server processes. Attackers frequently
+    establish reverse shells after exploiting web vulnerabilities to maintain interactive access
+    to the compromised system. This rule looks for specific command patterns known to create
+    reverse shells, including bash /dev/tcp redirects, netcat with -e flag, and common scripting
+    language reverse shell idioms.
+  condition: >
+    spawned_process
+    and spawned_by_web_server
+    and (proc.cmdline contains "/dev/tcp/" or
+         proc.cmdline contains "nc -e" or
+         proc.cmdline contains "ncat -e" or
+         proc.cmdline contains "bash -i" or
+         proc.cmdline contains "python -c 'import socket" or
+         proc.cmdline contains "python3 -c 'import socket" or
+         proc.cmdline contains "perl -e 'use Socket" or
+         proc.cmdline contains "ruby -rsocket" or
+         (proc.cmdline contains "mkfifo" and proc.cmdline contains "/tmp"))
+  output: Reverse shell spawned from web server | process=%proc.name web_server=%proc.pname evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid command=%proc.cmdline terminal=%proc.tty container_id=%container.id container_name=%container.name
+  priority: CRITICAL
+  tags: [maturity_sandbox, host, container, process, network, mitre_execution, T1059]
+
+# Container escape via privileged device access
+- list: sensitive_block_devices
+  items: [/dev/sda, /dev/sdb, /dev/sdc, /dev/nvme0, /dev/nvme1, /dev/vda, /dev/vdb, /dev/xvda, /dev/xvdb]
+
+- macro: user_known_privileged_device_access
+  condition: (never_true)
+
+- rule: Privileged Container Device Access
+  desc: >
+    Detects container processes accessing raw block devices, which could be used to escape
+    container isolation by directly reading or writing to host storage. This technique allows
+    attackers to access the host filesystem, modify system files, or extract sensitive data
+    even without traditional container escape. Requires the container to have privileged access
+    or specific device permissions. Override user_known_privileged_device_access for legitimate
+    storage operations.
+  condition: >
+    (open_read or open_write)
+    and container
+    and (fd.name startswith /dev/sd or
+         fd.name startswith /dev/nvme or
+         fd.name startswith /dev/vd or
+         fd.name startswith /dev/xvd or
+         fd.name = /dev/mem or
+         fd.name = /dev/kmem)
+    and not user_known_privileged_device_access
+  output: Container accessing block device | device=%fd.name evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty container_id=%container.id container_name=%container.name
+  priority: CRITICAL
+  tags: [maturity_sandbox, container, filesystem, mitre_privilege_escalation, T1611]
+
+# Container access to host filesystem paths
+- macro: user_known_host_path_access
+  condition: (never_true)
+
+# Known container runtimes that legitimately access host paths
+- macro: known_container_runtime_host_access
+  condition: (proc.name in (containerd, containerd-shim, dockerd, docker, runc, crio, cri-o, conmon, podman))
+
+- rule: Container Access to Host Sensitive Paths
+  desc: >
+    Detects container processes accessing paths that typically only exist when the host filesystem
+    is mounted into the container (like /host, /rootfs, /hostfs). This may indicate a container
+    escape attempt or a misconfigured volume mount that exposes the host filesystem. Legitimate
+    monitoring or backup containers may access these paths, so tune accordingly using the
+    user_known_host_path_access macro.
+  condition: >
+    (open_read or open_write)
+    and container
+    and (fd.name startswith /host/ or
+         fd.name startswith /rootfs/ or
+         fd.name startswith /hostfs/)
+    and not known_container_runtime_host_access
+    and not user_known_host_path_access
+  output: Container accessing host filesystem paths | file=%fd.name evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty container_id=%container.id container_name=%container.name
+  priority: WARNING
+  tags: [maturity_sandbox, container, filesystem, mitre_privilege_escalation, T1611]
