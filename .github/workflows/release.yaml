@@ -67,7 +67,7 @@ jobs:
         run: cosign sign --yes ${{ steps.oci_build.outputs.ARTIFACT_REPO_DIGEST }}
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: "arn:aws:iam::292999226676:role/terraform-20230120142903096000000002"
           aws-region: ${{ env.AWS_S3_REGION }}
