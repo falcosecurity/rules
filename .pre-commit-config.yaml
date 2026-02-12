@@ -15,7 +15,7 @@ repos:
       - id: dco-hook-local
         name: DCO hook local
         entry: ./tools/local_hooks/dco-pre-commit-msg.sh
-        language: script
+        language: unsupported_script
         stages: [prepare-commit-msg]
   - repo: https://github.com/adrienverge/yamllint.git
     rev: v1.37.1
