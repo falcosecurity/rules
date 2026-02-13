@@ -1834,7 +1834,7 @@
   condition: >
     spawned_process
     and is_miner_process
-  output: Cryptominer process executed | process=%proc.name exe=%proc.exepath evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid parent=%proc.pname command=%proc.cmdline terminal=%proc.tty container_id=%container.id container_name=%container.name
+  output: Cryptominer process executed | process=%proc.name exe=%proc.exepath evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags
   priority: CRITICAL
   tags: [maturity_sandbox, host, container, process, mitre_impact, T1496]
 
@@ -1870,7 +1870,7 @@
     and not proc.cmdline startswith "sh -c /usr/bin"
     and not proc.cmdline contains "healthcheck"
     and not user_known_web_server_shell_activities
-  output: Web server spawned shell | shell=%proc.name web_server=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid command=%proc.cmdline terminal=%proc.tty container_id=%container.id container_name=%container.name exe=%proc.exepath
+  output: Web server spawned shell | shell=%proc.name web_server=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid command=%proc.cmdline terminal=%proc.tty exe=%proc.exepath exe_flags=%evt.arg.flags
   priority: CRITICAL
   tags: [maturity_sandbox, host, container, process, mitre_persistence, mitre_execution, T1505.003]
 
@@ -1893,7 +1893,7 @@
     and not proc.cmdline contains "healthcheck"
     and not proc.cmdline contains "status"
     and not user_known_web_server_child_activities
-  output: Web server spawned suspicious child process | child=%proc.name web_server=%proc.pname gparent=%proc.aname[2] evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid command=%proc.cmdline terminal=%proc.tty container_id=%container.id container_name=%container.name
+  output: Web server spawned suspicious child process | child=%proc.name web_server=%proc.pname gparent=%proc.aname[2] evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags
   priority: WARNING
   tags: [maturity_sandbox, host, container, process, mitre_execution, T1059]
 
@@ -1916,14 +1916,11 @@
          proc.cmdline contains "perl -e 'use Socket" or
          proc.cmdline contains "ruby -rsocket" or
          (proc.cmdline contains "mkfifo" and proc.cmdline contains "/tmp"))
-  output: Reverse shell spawned from web server | process=%proc.name web_server=%proc.pname evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid command=%proc.cmdline terminal=%proc.tty container_id=%container.id container_name=%container.name
+  output: Reverse shell spawned from web server | process=%proc.name web_server=%proc.pname evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags
   priority: CRITICAL
   tags: [maturity_sandbox, host, container, process, network, mitre_execution, T1059]
 
 # Container escape via privileged device access
-- list: sensitive_block_devices
-  items: [/dev/sda, /dev/sdb, /dev/sdc, /dev/nvme0, /dev/nvme1, /dev/vda, /dev/vdb, /dev/xvda, /dev/xvdb]
-
 - macro: user_known_privileged_device_access
   condition: (never_true)
 
@@ -1945,7 +1942,7 @@
          fd.name = /dev/mem or
          fd.name = /dev/kmem)
     and not user_known_privileged_device_access
-  output: Container accessing block device | device=%fd.name evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty container_id=%container.id container_name=%container.name
+  output: Container accessing block device | device=%fd.name evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty
   priority: CRITICAL
   tags: [maturity_sandbox, container, filesystem, mitre_privilege_escalation, T1611]
 
@@ -1972,6 +1969,6 @@
          fd.name startswith /hostfs/)
     and not known_container_runtime_host_access
     and not user_known_host_path_access
-  output: Container accessing host filesystem paths | file=%fd.name evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty container_id=%container.id container_name=%container.name
+  output: Container accessing host filesystem paths | file=%fd.name evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty
   priority: WARNING
   tags: [maturity_sandbox, container, filesystem, mitre_privilege_escalation, T1611]
