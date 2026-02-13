@@ -1,6 +1,7 @@
 ---
 fail_fast: false
 minimum_pre_commit_version: '0'
+default_install_hook_types: ["pre-commit", "prepare-commit-msg"]
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
