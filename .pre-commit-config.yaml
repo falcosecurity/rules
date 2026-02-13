@@ -1,0 +1,25 @@
+---
+fail_fast: false
+minimum_pre_commit_version: '0'
+default_install_hook_types: ["pre-commit", "prepare-commit-msg"]
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-yaml
+      - id: check-case-conflict
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+  - repo: local
+    hooks:
+      - id: dco-hook-local
+        name: DCO hook local
+        entry: ./tools/local_hooks/dco-pre-commit-msg.sh
+        language: unsupported_script
+        stages: [prepare-commit-msg]
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.38.0
+    hooks:
+      - id: yamllint
+        args: [--format, parsable, --strict, -c=.github/workflows/.yamllint]

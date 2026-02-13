@@ -4,7 +4,7 @@
 
 The objective is to outline key enhancements and improvements to Falco, focusing on optimizing its rule adoption, customization, and management capabilities. The proposal also introduces a rules maturity framework to provide a structured approach for assessing and categorizing rules.
 
-In more detail, this proposal aims to address the expectations of adopters by providing clear guidelines for rule contribution, including processes and criteria. It also aims to provide guidance on rule customization and tuning to help adopters optimize the detection capabilities of Falco for their specific environments. Lastly, the proposal aims to empower adopters by providing them with the necessary knowledge and resources to effectively manage and customize rules. 
+In more detail, this proposal aims to address the expectations of adopters by providing clear guidelines for rule contribution, including processes and criteria. It also aims to provide guidance on rule customization and tuning to help adopters optimize the detection capabilities of Falco for their specific environments. Lastly, the proposal aims to empower adopters by providing them with the necessary knowledge and resources to effectively manage and customize rules.
 
 The proposed timeline for the initial completion of each item is the Falco 0.36 release, with further improvements being continuously added based on feedback.
 
@@ -50,16 +50,16 @@ Not every rule has the potential to evolve and reach the "stable" level. This is
 Levels (new Falco tags):
 
 - **maturity_stable** (enabled by default) indicates that the rule has undergone thorough evaluation by experts with hands-on production experience. These experts have determined that the rules embody best practices and exhibit optimal robustness, making it more difficult for attackers to bypass Falco. These rules are highly relevant for addressing broader threats and are recommended for customization to specific environments if necessary. They primarily focus on universal system-level detections, such as generic reverse shells or container escapes, which establish a solid baseline for threat detection across diverse industries. This inherent bias against including more application-specific detections is due to their potential lack of broad relevance or applicability. However, to mitigate this bias, a grey area will be reserved, enabling case-by-case judgments to be made.
-- **maturity_incubating** (disabled by default) indicates that the rules address relevant threats, provide a certain level of robustness guarantee, and adhere to best practices in rule writing. Furthermore, it signifies that the rules have been identified by experts as catering to more specific use cases, which may or may not be relevant for each adopter. This category is expected to include a larger number of application-specific rules.   
+- **maturity_incubating** (disabled by default) indicates that the rules address relevant threats, provide a certain level of robustness guarantee, and adhere to best practices in rule writing. Furthermore, it signifies that the rules have been identified by experts as catering to more specific use cases, which may or may not be relevant for each adopter. This category is expected to include a larger number of application-specific rules.
 - **maturity_sandbox** (disabled by default) indicates that the rule is in an experimental stage. The potential for broader usefulness and relevance of "sandbox" rules is currently being assessed. These rules can serve as inspiration and adhere to the minimum acceptance criteria for rules.
 - **maturity_deprecated** (disabled by default), indicates that, upon re-assessment, the rule was deemed less applicable to the broader community. Each adopter needs to determine the relevance of these rules on their own. They are kept as examples but are no longer actively supported or tuned by The Falco Project.
 
 > Falco introduces new additional tags, that is:
-> 
-> `maturity_stable`    
-> `maturity_incubating`    
-> `maturity_sandbox`    
-> `maturity_deprecated`    
+>
+> `maturity_stable`
+> `maturity_incubating`
+> `maturity_sandbox`
+> `maturity_deprecated`
 >
 > for each rule. This tag reflects the robustness, relevance, applicability, and stability of each predefined rule in the [falcosecurity/rules](https://github.com/falcosecurity/rules/blob/main/rules/) repository. It serves as general guidance to determine which rules may provide the highest return on investment. As a minimum requirement, each rule must go through the `maturity_incubating` state before advancing to `maturity_stable`. Only `maturity_stable` rules will be enabled by default. We use the existing tags mechanisms to build upon a battle-proven solution and will provide transparent configurability through the `falco.yaml` file to support the unique use cases of adopters.
 >
@@ -67,7 +67,7 @@ Levels (new Falco tags):
 
 The maturity level of the rules, however, does not directly reflect their potential for generating noise in the adopters' environment. This is due to the unique and constantly changing nature of each environment, especially in cloud environments, making it challenging to accurately predict the impact of rules.
 
-Newcomers to Falco will be encouraged to start by configuring their setup with introductory rules labeled as "Falco's default rules" (`maturity_stable`). These rules, which are currently based on syscall and container events, will live in the established [falco_rules.yaml](https://github.com/falcosecurity/rules/blob/main/rules/falco_rules.yaml) file. 
+Newcomers to Falco will be encouraged to start by configuring their setup with introductory rules labeled as "Falco's default rules" (`maturity_stable`). These rules, which are currently based on syscall and container events, will live in the established [falco_rules.yaml](https://github.com/falcosecurity/rules/blob/main/rules/falco_rules.yaml) file.
 
 As users become more familiar with Falco and better understand their unique environments, they can gradually fine-tune the default rules to meet their specific requirements. Tuning rules goes hand in hand with assessing the performance overhead and adjusting Falco's [configuration](https://github.com/falcosecurity/falco/blob/master/falco.yaml) accordingly. This consideration is crucial to convey to adopters, as it is important to keep in mind that there are usually limitations to the budget allocated for security monitoring.
 
@@ -120,7 +120,7 @@ How was the rule tested? The desired testing approach includes not only function
 
 ### Guidance on Rule Customization and Tuning
 
-Each rule tagged as "Stable" will provide clear guidance on how it can be tuned, customized, or combined with other rules if applicable. Over time, a catalog of general best tuning practices will be developed. For specific examples, please refer to Appendix 2. 
+Each rule tagged as "Stable" will provide clear guidance on how it can be tuned, customized, or combined with other rules if applicable. Over time, a catalog of general best tuning practices will be developed. For specific examples, please refer to Appendix 2.
 
 
 ### Setting Expectations for Adopters
@@ -133,7 +133,7 @@ In addition, effectively utilizing Falco requires expertise in various domains, 
 
 ## Key Results for Falco 0.36
 
-In summary, the following action items are planned to be completed leading up to the Falco 0.36 release: 
+In summary, the following action items are planned to be completed leading up to the Falco 0.36 release:
 
 - Clearly communicate Falco's primary uses: threat detection and compliance.
 - Establish specific criteria for each rules maturity level and define general criteria for creating, contributing, and updating rules based on their respective maturity levels.
@@ -157,27 +157,27 @@ Here are some examples of more robust rules with a brief description of why they
 
 <details>
     <summary>Detect release_agent File Container Escapes</summary>
-      <p> 
+      <p>
         Detecting attempts to escape a container is a crucial detection for modern container orchestration systems like Kubernetes. This rule stands out due to its inclusion of preconditions, which verify the necessary privileges of the container. Without these preconditions, the specific TTPs associated with container escape are not feasible.
-      </p> 
+      </p>
       <p>
         The rule is based on the open syscall while monitoring file writing activities, specifically looking for a string match on the file name "release_agent". This approach is robust because Linux expects the cgroup's release_agent file to be named in this manner.
-      </p> 
+      </p>
       <p>
         One downside of the rule is that it addresses only one specific TTP. Enabling additional rules like "Change thread namespace" can enhance coverage for other container escape methods.
-      </p> 
-</details> 
+      </p>
+</details>
 
 
 <details>
     <summary>Drop and execute new binary in container</summary>
-      <p> 
+      <p>
         The Falco 0.34 release <a href="https://falco.org/blog/falco-0-34-0/#even-more-ways-of-catching-suspicious-executions"> note</a> provides a concise summary of how high-value kernel signals can greatly simplify the task of detecting suspicious executions that occur when a malicious implant is dropped and executed. Instead of relying on complex checks for executable paths, the focus shifts to identifying executables that were not part of the container image and were executed from the container's upper overlayfs layer shortly after being dropped.
-      </p> 
+      </p>
       <p>
         This approach narrows detection scope, increases tractability, and eliminates the need for inspecting unfamiliar or unusual executable paths. By leveraging high-value kernel signals, detections become more precise, removing ambiguity and providing crucial context.
-      </p> 
-</details> 
+      </p>
+</details>
 
 </br>
 
@@ -192,17 +192,17 @@ Here are some general tricks for tuning on-host rules:
 
 <details>
     <summary>Profiling</summary>
-      <p> 
+      <p>
         Profiling the environment can be effective in detecting abnormal behaviors that may be considered normal in system-critical applications but outliers in standard applications. Implementing a simple allow list, such as for container names or namespaces, can already provide valuable assistance. This approach also aligns with the practice of clearly defining the crown jewel applications for which robust detections are desired.
-      </p> 
-</details> 
+      </p>
+</details>
 
 <details>
     <summary>Linux concepts / behavioral indicators</summary>
-      <p> 
+      <p>
         Another aspect of tuning a detection involves considering behavioral aspects related to Linux concepts. For example, a detection can be tuned based on the presence of a shell or a Java process in the parent process lineage, or detecting file manipulations while maintaining manual interactive shell access to a container. By incorporating these behavioral indicators, the detection can become more specific, relevant, and effective in identifying potential security threats.
-      </p> 
-</details> 
+      </p>
+</details>
 
 </br>
 
@@ -213,32 +213,32 @@ Examples of existing gaps in Falco for threat detection, as of June 6, 2023, inc
 
 <details>
     <summary>Deep kernel-level monitoring</summary>
-      <p> 
+      <p>
         Falco operates at the kernel level but does not provide deep visibility into all aspects of kernel internals. It focuses on monitoring system calls and other observable events but may not capture low-level kernel activities.
-      </p> 
-</details> 
+      </p>
+</details>
 
 <details>
     <summary>Network packet inspection</summary>
-      <p> 
+      <p>
         Falco's primary focus is on monitoring system calls, and while it can detect network-related system calls, it may not offer extensive network packet inspection capabilities. Additionally, when considering modern cloud architectures with load balancers in front of application backend servers, there are inherent limitations in L3/4 network monitoring. Lastly, keeping in mind that Falco runs on each host in isolation, it means that certain correlations and detailed network introspection are still being extended and improved upon.
-      </p> 
-</details> 
+      </p>
+</details>
 
 <details>
     <summary>Full-stack application monitoring</summary>
-      <p> 
+      <p>
         Essentially, Falco is designed to monitor the Linux kernel and system-level activities. While it can capture certain application-related events, it may not provide comprehensive monitoring and visibility into the full application stack. However, there are exceptions where Falco has expanded its monitoring coverage to additional data sources using the <a href="https://falco.org/docs/plugins/"> plugins</a> framework. One notable example is the integration with Kubernetes audit logs, which provides monitoring at the control plane level within a Kubernetes infrastructure. In addition, Falco's underlying libraries possess the capability to capture abnormal behavior at higher levels of the stack, such as analyzing HTTP requests. However, this potential is currently not exposed in Falco.
-      </p> 
-</details> 
+      </p>
+</details>
 
 
 <details>
     <summary>Advanced behavior analysis / anomaly detection</summary>
-      <p> 
+      <p>
         Falco excels at detecting known patterns and rules-based anomalies. However, it currently may have limitations when it comes to advanced behavior analysis, on host anomaly detection, or identifying zero-day exploits that do not exhibit known patterns.
-      </p> 
-</details> 
+      </p>
+</details>
 
 </br>
 
