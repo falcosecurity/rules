@@ -1772,7 +1772,7 @@
   condition: (proc.name in (network_tool_binaries))
 
 - list: node_package_managers
-  items: [npm, yarn, pnpm, node, bun]
+  items: [npm, yarn, pnpm, bun]
 
 - macro: npm_package_install_ancestor
   condition: >
