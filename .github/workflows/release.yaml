@@ -57,13 +57,24 @@ jobs:
           )" >> $GITHUB_OUTPUT
 
       # Create a signature of the rules artifact as OCI artifact
-      - name: Install Cosign
-        uses: sigstore/cosign-installer@v3.10.0
+      - name: Install Cosign v2
+        uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
+        with:
+          cosign-release: v2.6.2
 
-      - name: Login with cosign
+      - name: Login with cosign v2
         run: cosign login $OCI_REGISTRY --username ${{ github.repository_owner }} --password ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Sign the images with GitHub OIDC Token
+      - name: Sign the artifacts with GitHub OIDC Token (legacy tag-based)
+        run: cosign sign --yes ${{ steps.oci_build.outputs.ARTIFACT_REPO_DIGEST }}
+
+      - name: Install Cosign v3
+        uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
+
+      - name: Login with cosign v3
+        run: cosign login $OCI_REGISTRY --username ${{ github.repository_owner }} --password ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Sign the artifacts with GitHub OIDC Token (OCI 1.1 referrers)
         run: cosign sign --yes ${{ steps.oci_build.outputs.ARTIFACT_REPO_DIGEST }}
 
       - name: Configure AWS credentials
