@@ -1622,7 +1622,7 @@
     highly specific and might be bypassed due to potential issues with string matching on command line arguments.
   condition: >
     spawned_process
-    and user.uid != 0
+    and user.loginuid != 0
     and (proc.name=sudoedit or proc.name = sudo)
     and (proc.args contains -s or proc.args contains -i or proc.args contains --login)
     and (proc.args contains "\ " or proc.args endswith \)
@@ -1655,7 +1655,7 @@
     specific in its scope.
   condition:
     spawned_process
-    and user.uid != 0
+    and user.loginuid != 0
     and proc.name=pkexec
     and proc.args = ''
   output: Detect Polkit pkexec Local Privilege Escalation Exploit (CVE-2021-4034) | args=%proc.args evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags
