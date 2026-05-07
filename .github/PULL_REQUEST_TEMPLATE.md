@@ -39,6 +39,8 @@ Please remove the leading whitespace before the `/kind <>` you uncommented.
 
 > /area documentation
 
+> /area automation
+
 <!--
 Please remove the leading whitespace before the `/area <>` you uncommented.
 -->
