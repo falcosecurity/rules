@@ -1007,6 +1007,36 @@
 # when more than one event type is involved because some event will populate
 # the filtercheck and others will always return <NA>. It would be better to use
 # a more generic filter like `fs.path.*`
+- macro: user_known_security_tool_disable_activities
+  condition: (never_true)
+
+- rule: Defense Tool Disabled or Modified in Container
+  desc: >
+    Detect attempts to disable or modify security tooling inside a running container,
+    including flushing firewall rules via iptables or stopping security daemons such
+    as falco, auditd, or sysdig. Adversaries impair defenses after achieving initial
+    execution to operate undetected before lateral movement.
+    Maps to MITRE ATT&CK T1562.001 (Impair Defenses: Disable or Modify Tools).
+  condition: >
+    spawned_process and container
+    and (
+      (proc.name in (iptables, ip6tables) and
+       (proc.args contains "-F" or proc.args contains "--flush" or
+        proc.args contains "-X" or proc.args contains "--delete-chain"))
+      or
+      (proc.name = systemctl and proc.args contains "stop" and
+       (proc.args contains "falco" or proc.args contains "auditd" or
+        proc.args contains "sysdig" or proc.args contains "osquery"))
+      or
+      (proc.name = service and proc.args contains "stop" and
+       (proc.args contains "falco" or proc.args contains "auditd"))
+    )
+    and not user_known_security_tool_disable_activities
+  output: Security tool disabled or firewall rules cleared in container | args=%proc.args evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty container_id=%container.id image=%container.image.repository
+  priority:
+    WARNING
+  tags: [maturity_incubating, container, process, network, mitre_defense_evasion, T1562.001]
+
 - rule: Delete or rename shell history
   desc: >
     Detect shell history deletion, frequently used by unsophisticated adversaries to eliminate evidence.
