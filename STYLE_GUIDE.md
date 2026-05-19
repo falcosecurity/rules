@@ -137,7 +137,7 @@ the *only* documentation an operator will read before deciding how to override.
 **Required in every tuning macro doc comment:**
 
 1. What the macro does (one sentence).
-2. How to override it — include a concrete `append: true` snippet.
+2. How to override it — include a concrete `override: append` snippet.
 3. The field or fields most commonly used in overrides (e.g., `proc.name`,
    `container.image.repository`).
 
@@ -145,13 +145,15 @@ the *only* documentation an operator will read before deciding how to override.
 
 ```yaml
 # Suppresses "Read sensitive file untrusted" for known-legitimate readers.
-# Default is never_true (no suppression). To allow specific processes, append:
+# Default is never_true (no suppression). To allow specific processes:
 #
 #   - macro: user_known_read_sensitive_files_activities
 #     condition: (proc.name in (my_backup_agent, my_audit_tool))
-#     append: true
+#     override: append
 #
-# Common override fields: proc.name, proc.exepath, container.image.repository.
+# Use `override: replace` to swap the default condition entirely instead of
+# extending it. Common override fields: proc.name, proc.exepath,
+# container.image.repository.
 - macro: user_known_read_sensitive_files_activities
   condition: (never_true)
 ```
@@ -172,26 +174,31 @@ a paraphrase of what overriding means.
 ### GOOD — `allowed_*` style (negative-logic placeholder)
 
 ```yaml
-# Allowlist of hosts permitted to initiate SSH connections in the monitored rule.
-# Default is never_true; the rule uses double negation (and not allowed_ssh_hosts),
-# so this macro effectively allows everything when unset.
+# Allowlist of process names permitted to initiate outbound SSH connections.
+# Default is never_true; the rule uses double negation
+# (and not allowed_ssh_initiators), so this macro effectively allows nothing
+# when unset and the rule's negative gate stays open. Operators override to
+# narrow the set of expected SSH-initiating processes.
 #
-# To restrict SSH to known management hosts:
+# To restrict SSH initiation to known automation tooling:
 #
-#   - macro: allowed_ssh_hosts
-#     condition: (evt.hostname in (bastion.example.com, mgmt.example.com))
-#     append: true   # or override entirely — remove append: true to replace default
+#   - macro: allowed_ssh_initiators
+#     condition: (proc.name in (ansible-playbook, scp, rsync))
+#     override: append
 #
-# See also: macro never_true for the placeholder pattern.
-- macro: allowed_ssh_hosts
+# Use `override: replace` to swap the default condition entirely instead of
+# extending it. Common override fields: proc.name, proc.exepath, fd.rip
+# (for peer-IP allowlists). See also: macro never_true for the placeholder
+# pattern.
+- macro: allowed_ssh_initiators
   condition: (never_true)
 ```
 
 ### BAD
 
 ```yaml
-# Placeholder for SSH host allowlist.
-- macro: allowed_ssh_hosts
+# Placeholder for SSH initiator allowlist.
+- macro: allowed_ssh_initiators
   condition: (never_true)
 ```
 
@@ -294,7 +301,7 @@ temporarily scaffolded, or simply left from a refactor.
 #
 #   - macro: possibly_node_in_container
 #     condition: (proc.pname=node and proc.aname[3]=docker-containe)
-#     # no append: true — replace the default entirely
+#     override: replace   # swap the default never_true guard entirely
 #
 - macro: possibly_node_in_container
   condition: (never_true and (proc.pname=node and proc.aname[3]=docker-containe))
@@ -368,7 +375,7 @@ existing rule corpus; defer to maintainers if guidance changes.
 |-----------|------------|
 | Comment immediately precedes an item (no blank line) | Doc comment — documents that item |
 | Comment has a blank line before it AND below it | Section comment — labels a group |
-| Tuning macro (`user_*`, `allowed_*`) | Doc comment must include override snippet with `append: true` |
+| Tuning macro (`user_*`, `allowed_*`) | Doc comment must include override snippet with `override: append` (or `override: replace`) |
 | List with generated or sourced content | Doc comment must include source command or URL |
 | Commented-out item with no explanation | Delete it — use git history |
 | Commented-out item kept intentionally | Doc comment must state why and when to re-enable |
