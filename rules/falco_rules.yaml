@@ -1278,7 +1278,7 @@
   output: >
     Shell spawned in container by non-shell parent
     (user=%user.name container=%container.name
-    image=%container.image.repository
-    parent=%proc.pname shell=%proc.name cmdline=%proc.cmdline)
+    parent=%proc.pname shell=%proc.name cmdline=%proc.cmdline
+    exe_flags=%evt.arg.flags)
   priority: WARNING
   tags: [container, shell, mitre_execution, T1059]
