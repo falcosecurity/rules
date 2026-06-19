@@ -18,7 +18,7 @@ jobs:
       falco-versions: ${{ steps.set-falco-versions.outputs.versions }}
     steps:
       - name: Checkout rules
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Get changed files
         id: changed-files
@@ -69,7 +69,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout rules
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Golang
         uses: actions/setup-go@v6
@@ -104,7 +104,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout rules
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Golang
         uses: actions/setup-go@v6
