@@ -6,6 +6,10 @@ This repository includes a dedicated guide for contributing rules, outlining the
 
 All rules must be licensed under the [Apache 2.0 License](./LICENSE).
 
+For comment and documentation conventions within rule files (doc comments,
+section comments, tuning-macro override examples, and list provenance), see
+**[STYLE_GUIDE.md](STYLE_GUIDE.md)**.
+
 
 **Table of Contents**
 
