@@ -72,7 +72,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Setup Golang
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version-file: build/checker/go.mod
 
@@ -107,7 +107,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Setup Golang
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version-file: build/checker/go.mod
 
