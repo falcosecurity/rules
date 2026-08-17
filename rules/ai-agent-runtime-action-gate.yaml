@@ -1,0 +1,69 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Copyright (C) 2026 The Falco Authors & A2Z SOC.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+- list: ai_agent_parent_binaries
+  items: [python, python3, python3.10, python3.11, python3.12, python3.13, python3.14, node, bun, deno]
+
+- list: ai_agent_interactive_shells
+  items: [sh, bash, zsh, csh, ksh, tcsh, dash]
+
+- list: ai_agent_destructive_binaries
+  items: [mkfs, fdisk, dd, shred, wipefs, kubectl, helm]
+
+- list: ai_agent_kill_switch_files
+  items: ["artifacts/KILL", "/tmp/KILL", "KILL"]
+
+- macro: ai_agent_process_spawn
+  condition: (proc.pname in (ai_agent_parent_binaries) and container)
+
+- rule: AI Agent Un-Gated Interactive Shell Spawn
+  desc: Detects interactive shell binaries spawned directly from an AI agent or LLM worker container process without an ActionBoundary.
+  condition: >
+    spawned_process and container and
+    ai_agent_process_spawn and
+    proc.name in (ai_agent_interactive_shells)
+  output: >
+    Un-gated interactive shell spawned by AI agent container
+    (proc.cmdline=%proc.cmdline proc.name=%proc.name parent=%proc.pname pcmdline=%proc.pcmdline
+     container.id=%container.id container.name=%container.name image=%container.image.repository)
+  priority: WARNING
+  tags: [container, mitre_execution, T1059, owasp_llm06, ai_agent, action_gate]
+
+- rule: AI Agent Kill-Switch File Creation or Trigger
+  desc: Detects creation or modification of the Gate/Prove emergency kill-switch file (artifacts/KILL) within a container or host.
+  condition: >
+    open_write and
+    (fd.name endswith "/KILL" or fd.name in (ai_agent_kill_switch_files))
+  output: >
+    AI Agent emergency kill-switch file created or modified
+    (file=%fd.name proc.cmdline=%proc.cmdline proc.name=%proc.name user=%user.name
+     container.id=%container.id container.name=%container.name)
+  priority: CRITICAL
+  tags: [container, host, mitre_defense_evasion, T1562, ai_agent, kill_switch, action_gate]
+
+- rule: AI Agent Destructive Command Execution
+  desc: Detects high-blast radius or destructive system commands invoked from an AI agent container process.
+  condition: >
+    spawned_process and container and
+    ai_agent_process_spawn and
+    proc.name in (ai_agent_destructive_binaries)
+  output: >
+    Destructive binary execution attempted by AI agent container
+    (proc.cmdline=%proc.cmdline proc.name=%proc.name parent=%proc.pname
+     container.id=%container.id container.name=%container.name image=%container.image.repository)
+  priority: ERROR
+  tags: [container, mitre_impact, T1485, owasp_llm06, ai_agent, action_gate]
