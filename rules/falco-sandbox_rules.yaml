@@ -2005,8 +2005,14 @@
 # Userspace tooling that queries or manages NVIDIA/AMD GPUs. Legitimate when run
 # by an ML/HPC workload; suspicious when spawned inside a workload that has no
 # business touching the accelerator (e.g. a web frontend or a sidecar).
+#
+# Names are the kernel comm form (task->comm is char[16]: 15 chars plus NUL), as
+# matched by proc.name. Do not "correct" these to their full binary names or they
+# will never match: nvidia-debugdum(p), nvidia-persiste(nced),
+# nvidia-cuda-mps(-control). Same convention as nvidia-installe and
+# unicorn_launche in falco_rules.yaml.
 - list: gpu_management_binaries
-  items: [nvidia-smi, nvidia-debugdump, nvidia-persistenced, nvidia-cuda-mps-control, rocm-smi, rocminfo]
+  items: [nvidia-smi, nvidia-debugdum, nvidia-persiste, nvidia-cuda-mps, rocm-smi, rocminfo]
 
 # Tuning hook for environments where specific images legitimately use the GPU.
 # Override with the set of container images (or other criteria) that are
@@ -2033,10 +2039,15 @@
     and container
     and not user_known_gpu_workloads
   enabled: false
-  output: Container accessing GPU device | device=%fd.name image=%container.image.repository evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty
+  output: Container accessing GPU device | device=%fd.name evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty
   priority: CRITICAL
   tags: [maturity_sandbox, container, filesystem, mitre_impact, T1496]
 
+# Disabled by default for the same reason as the rule above: it is gated on the
+# same untuned user_known_gpu_workloads macro, so until an operator declares
+# which images are expected to touch the accelerator this rule cannot tell a
+# routine nvidia-smi in an ML image from an attacker fingerprinting the GPU.
+# Enable after tuning.
 - rule: GPU Management Tool Run in Container
   desc: >
     Detects execution of an NVIDIA or AMD GPU management or query tool, such as nvidia-smi or
@@ -2050,6 +2061,7 @@
     and container
     and proc.name in (gpu_management_binaries)
     and not user_known_gpu_workloads
-  output: GPU management tool run in container | image=%container.image.repository evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags
+  enabled: false
+  output: GPU management tool run in container | evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags
   priority: CRITICAL
   tags: [maturity_sandbox, container, process, mitre_impact, T1496]
