@@ -448,7 +448,18 @@
   condition: (proc.pname=postgres and (proc.cmdline startswith "sh -c envdir /etc/wal-e.d/env /usr/local/bin/wal-e" or proc.cmdline startswith "sh -c envdir \"/run/etc/wal-e.d/env\" wal-g wal-push"))
 
 - macro: postgres_running_cnpg
-  condition: (proc.pname=postgres and (proc.cmdline startswith "sh -c /controller/manager wal-archive"))
+  condition: >
+    (proc.pname=postgres
+     and (proc.cmdline startswith "sh -c /controller/manager wal-archive "
+          or proc.cmdline startswith "sh -c -- /controller/manager wal-archive ")
+     and not proc.cmdline contains ";"
+     and not proc.cmdline contains "|"
+     and not proc.cmdline contains "&"
+     and not proc.cmdline contains "`"
+     and not proc.cmdline contains "$"
+     and not proc.cmdline contains ">"
+     and not proc.cmdline contains "<"
+     and not proc.cmdline contains "\n")
 
 - macro: redis_running_prepost_scripts
   condition: (proc.aname[2]=redis-server and (proc.cmdline contains "redis-server.post-up.d" or proc.cmdline contains "redis-server.pre-up.d"))
