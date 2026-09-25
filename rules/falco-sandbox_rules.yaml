@@ -1700,6 +1700,23 @@
   priority: WARNING
   tags: [maturity_sandbox, container, filesystem, mitre_initial_access, T1611]
 
+- rule: Container Escape via Kernel Usermode Helper Overwrite
+  desc: >
+    Detect an attempt to escape from a container to the host by overwriting a kernel usermode helper program path,
+    such as /proc/sys/kernel/core_pattern or /proc/sys/kernel/modprobe_path. When one of these files is set to a
+    command, the host kernel later runs it as root, on a process crash for core_pattern or on a module autoload for
+    modprobe_path, which yields code execution on the host outside the container. Writing these files needs a
+    privileged context, so a write from inside a container is a high signal indicator of a container escape attempt.
+  condition: >
+    open_write
+    and container
+    and (fd.name endswith sys/kernel/core_pattern or fd.name endswith sys/kernel/modprobe_path)
+    and (user.uid=0 or thread.cap_effective contains CAP_DAC_OVERRIDE)
+    and thread.cap_effective contains CAP_SYS_ADMIN
+  output: Kernel usermode helper overwritten from container for host escape | file=%fd.name cap_effective=%thread.cap_effective evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty
+  priority: CRITICAL
+  tags: [maturity_sandbox, container, filesystem, mitre_privilege_escalation, T1611]
+
 - list: known_decode_payload_containers
   items: []
 
