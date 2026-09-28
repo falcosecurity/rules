@@ -274,6 +274,63 @@
     WARNING
   tags: [maturity_incubating, host, container, filesystem, mitre_persistence, T1546.004]
 
+# Python's site module only processes .pth files located directly in a site directory
+# (site-packages or dist-packages), not in its subdirectories.
+- macro: python_pth_file
+  condition: >
+    (fd.filename endswith .pth and
+     (fd.directory endswith /site-packages or fd.directory endswith /dist-packages))
+
+- macro: containerd_activities
+  condition: (proc.name=containerd and (fd.name startswith "/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/" or
+                                        fd.name startswith "/var/lib/rancher/k3s/agent/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots" or
+                                        fd.name startswith "/var/lib/containerd/tmpmounts/" or
+                                        fd.name startswith "/var/lib/rancher/k3s/agent/containerd/tmpmounts/"))
+
+# Python installers not already covered by package_mgmt_binaries (pip, pip3, conda).
+- list: python_pth_installer_binaries
+  items: [pipx, uv, virtualenv]
+
+# Versioned pip entry points (e.g. pip3.12) are matched with a glob. Installers that run as the
+# interpreter itself (python -m pip, pip's build-isolation subprocess, get-pip.py, and the pip
+# child spawned by ensurepip / python -m venv) are matched on the argument position rather than
+# on a substring of the command line, so that e.g. `python3 -c <code> -m pip` is not excluded.
+- macro: python_pth_installers
+  condition: >
+    (proc.name in (python_pth_installer_binaries) or
+     proc.name glob "pip[0-9]*" or
+     (proc.name startswith python and
+      (proc.args startswith "-m pip " or
+       proc.args[0] endswith "/pip/__pip-runner__.py" or
+       proc.args[0] endswith "get-pip.py" or
+       (proc.pname startswith python and proc.aargs[1] startswith "-m ensurepip"))))
+
+- macro: user_known_python_pth_modifiers
+  condition: (never_true)
+
+- rule: Modify Python Startup Hook File
+  desc: >
+    Detect attempts to create or modify Python path configuration (.pth) files in a site-packages or dist-packages directory,
+    primarily aimed at establishing persistence. At every interpreter startup, Python's site module executes any line of a .pth
+    file that begins with "import", so a single injected line runs attacker code whenever any Python process starts, with no
+    user interaction. This is the Python counterpart of the shell configuration persistence covered by "Modify Shell
+    Configuration File". Package managers, common Python installers (pip in its various invocation forms, ensurepip/venv,
+    virtualenv, pipx, uv) and container image unpacking legitimately write .pth files and are excluded. These exclusions are
+    based on process name and command line and can therefore be imitated by an attacker, and a malicious package installed
+    through a package manager is out of scope for this rule. Files moved into place with rename are not detected. Use
+    user_known_python_pth_modifiers to tune the rule for your environment.
+  condition: >
+    open_write
+    and python_pth_file
+    and not proc.name in (package_mgmt_binaries)
+    and not python_pth_installers
+    and not containerd_activities
+    and not user_known_python_pth_modifiers
+  output: A Python startup hook (.pth) file has been modified | file=%fd.name pcmdline=%proc.pcmdline evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty
+  priority:
+    WARNING
+  tags: [maturity_incubating, host, container, filesystem, mitre_persistence, T1546.018]
+
 - macro: user_known_cron_jobs
   condition: (never_true)
 
