@@ -311,9 +311,9 @@
 - rule: Modify Python Startup Hook File
   desc: >
     Detect attempts to create or modify Python path configuration (.pth) files in a site-packages or dist-packages directory,
-    primarily aimed at establishing persistence. At every interpreter startup, Python's site module executes any line of a .pth
-    file that begins with "import", so a single injected line runs attacker code whenever any Python process starts, with no
-    user interaction. This is the Python counterpart of the shell configuration persistence covered by "Modify Shell
+    primarily aimed at establishing persistence. When Python's site module processes a .pth file in an active site directory,
+    lines beginning with import followed by a space or tab are executed, allowing attacker code to run at startup for interpreters
+    using that environment. This is the Python counterpart of the shell configuration persistence covered by "Modify Shell
     Configuration File". Package managers, common Python installers (pip in its various invocation forms, ensurepip/venv,
     virtualenv, pipx, uv) and container image unpacking legitimately write .pth files and are excluded. These exclusions are
     based on process name and command line and can therefore be imitated by an attacker, and a malicious package installed
