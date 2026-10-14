@@ -281,6 +281,22 @@
     (fd.filename endswith .pth and
      (fd.directory endswith /site-packages or fd.directory endswith /dist-packages))
 
+# Python's site module imports the first sitecustomize module found on sys.path, then usercustomize
+# if the user site directory is enabled. Only directories on the default sys.path are matched: site
+# directories, the standard library directory (e.g. /usr/lib/python3.12) and Debian's /etc/python3.X,
+# which holds the distro sitecustomize.py behind a symlink. The filename prefix also matches the
+# sourceless (.pyc) and extension module forms, and the package form is matched in site directories.
+# Directories added through PYTHONPATH are not matched, because instrumentation agents (e.g.
+# OpenTelemetry auto-instrumentation) legitimately place a sitecustomize.py in such directories.
+- macro: python_customize_file
+  condition: >
+    (((fd.filename startswith sitecustomize. or fd.filename startswith usercustomize.) and
+      (fd.directory endswith /site-packages or fd.directory endswith /dist-packages or
+       fd.directory glob "*/lib*/python3.[0-9]" or fd.directory glob "*/lib*/python3.[0-9][0-9]" or
+       fd.directory glob "/etc/python3.[0-9]" or fd.directory glob "/etc/python3.[0-9][0-9]")) or
+     fd.directory endswith /site-packages/sitecustomize or fd.directory endswith /site-packages/usercustomize or
+     fd.directory endswith /dist-packages/sitecustomize or fd.directory endswith /dist-packages/usercustomize)
+
 - macro: containerd_activities
   condition: (proc.name=containerd and (fd.name startswith "/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/" or
                                         fd.name startswith "/var/lib/rancher/k3s/agent/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots" or
@@ -310,23 +326,25 @@
 
 - rule: Modify Python Startup Hook File
   desc: >
-    Detect attempts to create or modify Python path configuration (.pth) files in a site-packages or dist-packages directory,
-    primarily aimed at establishing persistence. When Python's site module processes a .pth file in an active site directory,
-    lines beginning with import followed by a space or tab are executed, allowing attacker code to run at startup for interpreters
-    using that environment. This is the Python counterpart of the shell configuration persistence covered by "Modify Shell
-    Configuration File". Package managers, common Python installers (pip in its various invocation forms, ensurepip/venv,
-    virtualenv, pipx, uv) and container image unpacking legitimately write .pth files and are excluded. These exclusions are
-    based on process name and command line and can therefore be imitated by an attacker, and a malicious package installed
-    through a package manager is out of scope for this rule. Files moved into place with rename are not detected. Use
-    user_known_python_pth_modifiers to tune the rule for your environment.
+    Detect attempts to create or modify Python startup hook files, primarily aimed at establishing persistence: path configuration
+    (.pth) files in a site-packages or dist-packages directory, and sitecustomize or usercustomize modules in a directory on the
+    default sys.path. When Python's site module processes a .pth file in an active site directory, lines beginning with import
+    followed by a space or tab are executed. The site module also imports sitecustomize and, if the user site directory is
+    enabled, usercustomize. Both allow attacker code to run at startup for interpreters using that environment. This is the
+    Python counterpart of the shell configuration persistence covered by "Modify Shell Configuration File". Package managers,
+    common Python installers (pip in its various invocation forms, ensurepip/venv, virtualenv, pipx, uv) and container image
+    unpacking legitimately write these files and are excluded. These exclusions are based on process name and command line and
+    can therefore be imitated by an attacker, and a malicious package installed through a package manager is out of scope for
+    this rule. Files moved into place with rename, and sitecustomize modules placed in a directory added through PYTHONPATH, are
+    not detected. Use user_known_python_pth_modifiers to tune the rule for your environment.
   condition: >
     open_write
-    and python_pth_file
+    and (python_pth_file or python_customize_file)
     and not proc.name in (package_mgmt_binaries)
     and not python_pth_installers
     and not containerd_activities
     and not user_known_python_pth_modifiers
-  output: A Python startup hook (.pth) file has been modified | file=%fd.name pcmdline=%proc.pcmdline evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty
+  output: A Python startup hook file has been modified | file=%fd.name pcmdline=%proc.pcmdline evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty
   priority:
     WARNING
   tags: [maturity_incubating, host, container, filesystem, mitre_persistence, T1546.018]
