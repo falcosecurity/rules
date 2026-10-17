@@ -268,6 +268,7 @@
          fd.directory in (shell_config_directories))
     and not proc.name in (shell_binaries)
     and not exe_running_docker_save
+    and not dockerd_activities
     and not user_known_shell_config_modifiers
   output: A shell configuration file has been modified | file=%fd.name pcmdline=%proc.pcmdline evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty
   priority:
@@ -425,6 +426,13 @@
     and (proc.cmdline contains "/var/lib/docker"
     or proc.cmdline contains "/var/run/docker")
     and proc.pname in (dockerd, docker, dockerd-current, docker-current))
+
+# Since Docker Engine 24.0 (moby/moby#44210), dockerd extracts image layers in a chrooted thread of its own process
+# instead of the re-exec'd "exe" process matched by exe_running_docker_save, so Falco sees dockerd writing paths such as
+# /var/log/wtmp or /root/.bashrc on the host. docker cp uses the same code path. proc.exepath and container.id=host
+# restrict the match to the host's dockerd binary.
+- macro: dockerd_activities
+  condition: (proc.name=dockerd and container.id=host and proc.exepath=/usr/bin/dockerd)
 
 - macro: user_ssh_directory
   condition: (fd.name contains '/.ssh/' and fd.name glob '/home/*/.ssh/*')
@@ -1121,6 +1129,7 @@
     and (evt.arg.mode contains "S_ISUID" or evt.arg.mode contains "S_ISGID")
     and not proc.name in (user_known_chmod_applications)
     and not exe_running_docker_save
+    and not dockerd_activities
     and not user_known_set_setuid_or_setgid_bit_conditions
   output: Setuid or setgid bit is set via chmod | fd=%evt.arg.fd filename=%evt.arg.filename mode=%evt.arg.mode evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty
   priority:
