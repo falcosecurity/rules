@@ -1802,6 +1802,48 @@
   priority: WARNING
   tags: [maturity_sandbox, container, network, process, mitre_execution, T1195.002]
 
+- macro: ai_coding_agent_approval_bypass_args
+  condition: >
+    (proc.args contains "--dangerously-skip-permissions" or
+     proc.args contains "bypassPermissions" or
+     proc.args contains "--dangerously-bypass-approvals-and-sandbox" or
+     proc.args contains "--yolo" or
+     proc.args contains "--approval-mode=yolo" or
+     proc.args contains "--approval-mode yolo" or
+     proc.args contains "--trust-all-tools" or
+     proc.args contains "--allow-all")
+
+# npm, yarn, pnpm and bun export npm_lifecycle_event to the scripts they run, and child
+# processes inherit it. This catches install scripts even where the package manager runs as
+# a plain "node" process, so the ancestor name check alone does not see it.
+- macro: npm_install_lifecycle_script
+  condition: (proc.env[npm_lifecycle_event] in (preinstall, install, postinstall, prepare))
+
+- macro: user_known_ai_coding_agent_in_npm_install_activities
+  condition: (never_true)
+
+- rule: AI Coding Agent Launched Without Approvals During NPM Package Install
+  desc: >
+    Detect an AI coding agent command line tool started with its tool approval prompts turned off while an NPM
+    package is being installed. In the August 2025 Nx "s1ngularity" supply chain attack (GHSA-cxm3-wv7p-598c),
+    a malicious postinstall script ran the Claude Code, Gemini and Amazon Q command line tools with flags such as
+    --dangerously-skip-permissions, --yolo and --trust-all-tools and prompted them to inventory files that hold
+    secrets. The rule matches the approval bypass flags of Claude Code, Gemini CLI, Codex CLI, GitHub Copilot CLI
+    and Amazon Q / Kiro CLI when the process runs inside an install lifecycle script (preinstall, install,
+    postinstall or prepare) or has npm, yarn, pnpm or bun as an ancestor. Running one of these
+    agents unattended from an install script is unusual even in environments that use them; if a build legitimately
+    does so, add it to the user_known_ai_coding_agent_in_npm_install_activities macro.
+  condition: >
+    spawned_process
+    and evt.res = SUCCESS
+    and ai_coding_agent_approval_bypass_args
+    and (npm_install_lifecycle_script or npm_package_install_ancestor)
+    and not proc.name in (shell_binaries)
+    and not user_known_ai_coding_agent_in_npm_install_activities
+  output: AI coding agent launched without approvals during NPM package installation | evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] npm_lifecycle_event=%proc.env[npm_lifecycle_event] exe_flags=%evt.arg.flags
+  priority: WARNING
+  tags: [maturity_sandbox, host, container, process, mitre_execution, T1195.002]
+
 
 #############################################################################
 # XPAV-derived Detection Rules
