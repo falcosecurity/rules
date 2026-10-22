@@ -511,6 +511,13 @@
     or proc.cmdline contains "/var/run/docker")
     and proc.pname in (dockerd, docker, dockerd-current, docker-current))
 
+# Since Docker Engine 24.0 (moby/moby#44210), dockerd extracts image layers in a chrooted thread of its own process
+# instead of the re-exec'd "exe" process matched by exe_running_docker_save, so Falco sees dockerd writing paths such as
+# /var/log/wtmp or /root/.bashrc on the host. docker cp uses the same code path. proc.exepath and container.id=host
+# restrict the match to the host's dockerd binary.
+- macro: dockerd_activities
+  condition: (proc.name=dockerd and container.id=host and proc.exepath=/usr/bin/dockerd)
+
 # Ideally we'd have a length check here as well but
 # filterchecks don't have operators like len()
 - macro: sed_temporary_file
@@ -596,6 +603,7 @@
     and not package_mgmt_procs
     and not package_mgmt_ancestor_procs
     and not exe_running_docker_save
+    and not dockerd_activities
     and not user_known_update_package_registry
   output: Repository files get updated | newpath=%evt.arg.newpath file=%fd.name pcmdline=%proc.pcmdline evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty
   priority:
@@ -619,6 +627,7 @@
     and bin_dir
     and not package_mgmt_procs
     and not exe_running_docker_save
+    and not dockerd_activities
     and not python_running_get_pip
     and not python_running_ms_oms
     and not user_known_write_below_binary_dir_activities
@@ -672,6 +681,7 @@
     and not package_mgmt_procs
     and not coreos_write_ssh_dir
     and not exe_running_docker_save
+    and not dockerd_activities
     and not python_running_get_pip
     and not python_running_ms_oms
     and not google_accounts_daemon_writing_ssh
@@ -978,7 +988,7 @@
     Such rules can be noisy and challenging to interpret, particularly if your system frequently undergoes updates. However, careful
     profiling of your environment can transform this rule into an effective rule for detecting unusual behavior associated with system
     changes, including compliance-related cases.
-  condition: write_etc_common
+  condition: write_etc_common and not dockerd_activities
   output: File below /etc opened for writing | file=%fd.name pcmdline=%proc.pcmdline gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty
   priority: ERROR
   tags: [maturity_sandbox, host, container, filesystem, mitre_persistence, T1098]
@@ -1065,6 +1075,7 @@
     and not fd.name in (known_root_files)
     and not fd.directory pmatch (known_root_directories)
     and not exe_running_docker_save
+    and not dockerd_activities
     and not gugent_writing_guestagent_log
     and not dse_writing_tmp
     and not zap_writing_state
@@ -1109,6 +1120,7 @@
     and not ansible_running_python
     and not python_running_chef
     and not exe_running_docker_save
+    and not dockerd_activities
     and not amazon_linux_running_python_yum
     and not user_known_write_rpm_database_activities
   output: rpm database opened for writing by a non-rpm program | file=%fd.name pcmdline=%proc.pcmdline evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty
@@ -1129,6 +1141,7 @@
     and bin_dir_rename
     and not package_mgmt_procs
     and not exe_running_docker_save
+    and not dockerd_activities
     and not user_known_modify_bin_dir_activities
   output: File below known binary directory renamed/removed | file=%fd.name pcmdline=%proc.pcmdline evt_args=%evt.args evt_type=%evt.type evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty
   priority: ERROR
@@ -1149,6 +1162,7 @@
     and not package_mgmt_procs
     and not user_known_mkdir_bin_dir_activities
     and not exe_running_docker_save
+    and not dockerd_activities
   output: Directory below known binary directory created | directory=%evt.arg.path evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty
   priority: ERROR
   tags: [maturity_sandbox, host, container, filesystem, mitre_persistence, T1222.002]
@@ -1369,6 +1383,7 @@
      (open_write and evt.arg.flags contains "O_CREAT" and fd.name contains "/." and not fd.name pmatch (exclude_hidden_directories)))
     and not user_known_create_hidden_file_activities
     and not exe_running_docker_save
+    and not dockerd_activities
   enabled: false
   output: Hidden file or directory created | file=%fd.name newpath=%evt.arg.newpath evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty
   priority:

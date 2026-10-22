@@ -944,6 +944,13 @@
                                         fd.name startswith "/var/lib/containerd/tmpmounts/" or
                                         fd.name startswith "/var/lib/rancher/k3s/agent/containerd/tmpmounts/"))
 
+# Since Docker Engine 24.0 (moby/moby#44210), dockerd extracts image layers in a chrooted thread of its own process
+# instead of a re-exec'd helper process, so Falco sees dockerd writing paths such as /var/log/wtmp or /root/.bashrc on
+# the host. docker cp uses the same code path. proc.exepath and container.id=host restrict the match to the host's
+# dockerd binary.
+- macro: dockerd_activities
+  condition: (proc.name=dockerd and container.id=host and proc.exepath=/usr/bin/dockerd)
+
 - rule: Clear Log Activities
   desc: >
     Detect clearing of critical access log files, typically done to erase evidence that could be attributed to an adversary's
@@ -954,6 +961,7 @@
     and access_log_files
     and evt.arg.flags contains "O_TRUNC"
     and not containerd_activities
+    and not dockerd_activities
     and not trusted_logging_images
     and not allowed_clear_log_files
   output: Log files were tampered | file=%fd.name evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty
