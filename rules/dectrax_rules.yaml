@@ -1,0 +1,105 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Copyright (C) 2026 The Falco Authors & Sadman-TheDentian.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+---
+- required_engine_version: 0.57.0
+
+- required_plugin_versions:
+    - name: container
+      version: 0.4.0
+
+- list: dectrax_honeytoken_paths
+  items: [
+    /etc/dectrax/canary.env,
+    /var/log/dectrax/honeytoken.key,
+    /etc/dectrax/canary_aws_credentials,
+    /etc/dectrax/decoy_database.conf
+  ]
+
+- list: dectrax_decoy_containers
+  items: [
+    dectrax-decoy-ssh,
+    dectrax-decoy-web,
+    dectrax-decoy-db,
+    dectrax-canary-node
+  ]
+
+- list: dectrax_decoy_images
+  items: [
+    dectrax/decoy-ssh,
+    dectrax/decoy-web,
+    dectrax/decoy-db,
+    dectrax/canary
+  ]
+
+- macro: open_write
+  condition: (evt.type in (open, openat, openat2) and evt.is_open_write=true and fd.typechar='f' and fd.num>=0)
+
+- macro: open_read
+  condition: (evt.type in (open, openat, openat2) and evt.is_open_read=true and fd.typechar='f' and fd.num>=0)
+
+- macro: spawned_process
+  condition: (evt.type in (execve, execveat) and evt.dir=<)
+
+- macro: container
+  condition: (container.id != host)
+
+- macro: is_dectrax_container
+  condition: >
+    (container.name in (dectrax_decoy_containers) or
+     container.image.repository in (dectrax_decoy_images) or
+     container.name startswith "dectrax-" or
+     container.image.repository contains "dectrax")
+
+- rule: DECTRAX Honeytoken Credential Access
+  desc: >
+    Detects unauthorized read access to DECTRAX decoy honeytoken credential files or canary tokens.
+    Adversaries discovering canary files on the filesystem attempt to exfiltrate decoy secrets.
+  condition: >
+    open_read
+    and fd.name in (dectrax_honeytoken_paths)
+  output: >
+    DECTRAX honeytoken credential accessed (file=%fd.name user=%user.name user_uid=%user.uid
+    process=%proc.name proc_exepath=%proc.exepath cmdline=%proc.cmdline)
+  priority: WARNING
+  tags: [maturity_sandbox, host, container, filesystem, mitre_credential_access, T1552]
+
+- rule: DECTRAX Decoy Container Shell Execution
+  desc: >
+    Detects process execution or interactive shell activity inside a DECTRAX deception container.
+    DECTRAX decoy containers simulate high-interaction servers; any execution indicates unauthorized interaction.
+  condition: >
+    spawned_process
+    and container
+    and is_dectrax_container
+  output: >
+    Unauthorized process spawned in DECTRAX decoy container (container_id=%container.id container_name=%container.name
+    image=%container.image.repository process=%proc.name cmdline=%proc.cmdline user=%user.name)
+  priority: CRITICAL
+  tags: [maturity_sandbox, container, process, mitre_execution, T1059]
+
+- rule: Tampering with DECTRAX Honeytoken Configuration
+  desc: >
+    Detects attempts to modify, overwrite, or delete DECTRAX decoy honeytoken configuration files.
+    Attackers attempting to erase or tamper with canary configurations generate high-severity alerts.
+  condition: >
+    open_write
+    and fd.name in (dectrax_honeytoken_paths)
+  output: >
+    DECTRAX honeytoken file opened for writing (file=%fd.name user=%user.name user_uid=%user.uid
+    process=%proc.name proc_exepath=%proc.exepath cmdline=%proc.cmdline)
+  priority: CRITICAL
+  tags: [maturity_sandbox, host, container, filesystem, mitre_defense_evasion, T1565]
