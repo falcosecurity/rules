@@ -1802,16 +1802,78 @@
   priority: WARNING
   tags: [maturity_sandbox, container, network, process, mitre_execution, T1195.002]
 
-- macro: ai_coding_agent_approval_bypass_args
+# Each AI coding agent is identified by its own executable, or for agents that run on Node.js by the
+# script that node was started with (proc.args[0]), and is paired only with the approval bypass flags
+# that this agent accepts. The flag alone is not enough: --allow-all is also a Deno permission flag and
+# --yolo can be any argument of any program.
+- macro: ai_agent_node_interpreter
+  condition: (proc.name in (node, nodejs))
+
+# A "#!/usr/bin/env node" launcher or a shell wrapper script runs env or the shell with the launcher
+# name as proc.name. Skip that hop so that a native agent name matches only the agent binary itself.
+- macro: ai_agent_native_exe
   condition: >
-    (proc.args contains "--dangerously-skip-permissions" or
-     proc.args contains "bypassPermissions" or
-     proc.args contains "--dangerously-bypass-approvals-and-sandbox" or
-     proc.args contains "--yolo" or
-     proc.args contains "--approval-mode=yolo" or
-     proc.args contains "--approval-mode yolo" or
-     proc.args contains "--trust-all-tools" or
-     proc.args contains "--allow-all")
+    (not proc.exepath endswith "/env" and
+     not proc.exepath endswith "/sh" and
+     not proc.exepath endswith "/dash" and
+     not proc.exepath endswith "/bash")
+
+# Claude Code: native binary installed as claude (npm package bin/claude.exe), or cli.js run by node
+# in older releases of the npm package.
+- macro: claude_code_approval_bypass
+  condition: >
+    (((proc.name in (claude, claude.exe) and ai_agent_native_exe) or
+      (ai_agent_node_interpreter and
+       (proc.args[0] endswith "/claude" or
+        proc.args[0] endswith "/@anthropic-ai/claude-code/cli.js"))) and
+     (proc.args contains "--dangerously-skip-permissions" or
+      proc.args contains "bypassPermissions"))
+
+# Gemini CLI: Node.js script. It relaunches itself once with extra node memory flags, so the relaunched
+# child has the node flags as proc.args[0] and does not match again.
+- macro: gemini_cli_approval_bypass
+  condition: >
+    (ai_agent_node_interpreter and
+     (proc.args[0] endswith "/gemini" or
+      proc.args[0] endswith "/@google/gemini-cli/bundle/gemini.js" or
+      proc.args[0] endswith "/@google/gemini-cli/dist/index.js") and
+     (proc.args contains "--yolo" or
+      proc.args contains "--approval-mode=yolo" or
+      proc.args contains "--approval-mode yolo" or
+      proc.args contains " -y " or
+      proc.args endswith " -y"))
+
+# Codex CLI and GitHub Copilot CLI: the npm packages ship a small node loader that starts the native
+# binary with the same arguments, so the native binary is the process that is matched.
+- macro: codex_cli_approval_bypass
+  condition: >
+    (proc.name = codex and ai_agent_native_exe and
+     (proc.args contains "--dangerously-bypass-approvals-and-sandbox" or
+      proc.args contains "--yolo"))
+
+- macro: copilot_cli_approval_bypass
+  condition: >
+    (proc.name = copilot and ai_agent_native_exe and
+     (proc.args contains "--allow-all-tools" or
+      proc.args contains "--allow-all " or
+      proc.args endswith "--allow-all" or
+      proc.args contains "--yolo"))
+
+# Amazon Q Developer CLI (q, qchat) and Kiro CLI (kiro-cli, kiro-cli-chat): native binaries.
+- macro: amazon_q_kiro_cli_approval_bypass
+  condition: >
+    (proc.name in (q, qchat, kiro-cli, kiro-cli-chat) and ai_agent_native_exe and
+     (proc.args contains "--trust-all-tools" or
+      proc.args contains " -a " or
+      proc.args endswith " -a"))
+
+- macro: ai_coding_agent_approval_bypass
+  condition: >
+    (claude_code_approval_bypass or
+     gemini_cli_approval_bypass or
+     codex_cli_approval_bypass or
+     copilot_cli_approval_bypass or
+     amazon_q_kiro_cli_approval_bypass)
 
 # npm, yarn, pnpm and bun export npm_lifecycle_event to the scripts they run, and child
 # processes inherit it. This catches install scripts even where the package manager runs as
@@ -1828,17 +1890,17 @@
     package is being installed. In the August 2025 Nx "s1ngularity" supply chain attack (GHSA-cxm3-wv7p-598c),
     a malicious postinstall script ran the Claude Code, Gemini and Amazon Q command line tools with flags such as
     --dangerously-skip-permissions, --yolo and --trust-all-tools and prompted them to inventory files that hold
-    secrets. The rule matches the approval bypass flags of Claude Code, Gemini CLI, Codex CLI, GitHub Copilot CLI
-    and Amazon Q / Kiro CLI when the process runs inside an install lifecycle script (preinstall, install,
-    postinstall or prepare) or has npm, yarn, pnpm or bun as an ancestor. Running one of these
-    agents unattended from an install script is unusual even in environments that use them; if a build legitimately
-    does so, add it to the user_known_ai_coding_agent_in_npm_install_activities macro.
+    secrets. The rule identifies the agent by its executable (Claude Code, Codex CLI, GitHub Copilot CLI,
+    Amazon Q / Kiro CLI) or by the script run by node (Gemini CLI, older Claude Code releases), and checks only
+    the approval bypass flags of that agent, when the process runs inside an install lifecycle script
+    (preinstall, install, postinstall or prepare) or has npm, yarn, pnpm or bun as an ancestor. Running one of
+    these agents unattended from an install script is unusual even in environments that use them; if a build
+    legitimately does so, add it to the user_known_ai_coding_agent_in_npm_install_activities macro.
   condition: >
     spawned_process
     and evt.res = SUCCESS
-    and ai_coding_agent_approval_bypass_args
+    and ai_coding_agent_approval_bypass
     and (npm_install_lifecycle_script or npm_package_install_ancestor)
-    and not proc.name in (shell_binaries)
     and not user_known_ai_coding_agent_in_npm_install_activities
   output: AI coding agent launched without approvals during NPM package installation | evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] npm_lifecycle_event=%proc.env[npm_lifecycle_event] exe_flags=%evt.arg.flags
   priority: WARNING
