@@ -2065,3 +2065,27 @@
   output: GPU management tool run in container | evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags
   priority: CRITICAL
   tags: [maturity_sandbox, container, process, mitre_impact, T1496]
+
+# File capabilities are the quieter sibling of setuid: they grant a specific privilege to a binary
+# without the setuid bit that "Set Setuid or Setgid bit" watches for, and they travel with the
+# binary when it is copied. Legitimate use is almost entirely package post-install scripts, which
+# this rule excludes through the package manager filters.
+- macro: user_known_setcap_conditions
+  condition: (never_true)
+
+- rule: File Capabilities Set on Binary
+  desc: >
+    Detects the assignment of Linux file capabilities with setcap. A file capability grants a
+    binary a specific privilege without setting the setuid bit, so it is invisible to rules that
+    watch chmod, and it stays with the binary when the binary is copied elsewhere. Adversaries use
+    it to keep elevated access to a binary they control. Package managers run setcap during
+    installation and are excluded here; tune user_known_setcap_conditions for image builders.
+  condition: >
+    spawned_process
+    and proc.name = setcap
+    and not package_mgmt_procs
+    and not package_mgmt_ancestor_procs
+    and not user_known_setcap_conditions
+  output: File capabilities set on binary | evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags
+  priority: WARNING
+  tags: [maturity_sandbox, host, container, process, mitre_privilege_escalation, T1548]
