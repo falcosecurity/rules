@@ -2083,7 +2083,6 @@
   condition: >
     spawned_process
     and proc.name = setcap
-    and not package_mgmt_procs
     and not package_mgmt_ancestor_procs
     and not user_known_setcap_conditions
   output: File capabilities set on binary | evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty exe_flags=%evt.arg.flags
