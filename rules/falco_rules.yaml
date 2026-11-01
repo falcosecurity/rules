@@ -552,6 +552,13 @@
 - macro: possibly_parent_java_running_tomcat
   condition: (never_true and proc.pexe endswith java and proc.pcmdline contains org.apache.catalina.startup.Bootstrap)
 
+# PHP-FPM runs PHP outside the web server's process tree, so a shell started
+# through PHP under nginx has php-fpm, not nginx, as its ancestor. Its binary is
+# named after the PHP branch in distro packages (php-fpm8.2 on Debian and Ubuntu,
+# php-fpm83 on Alpine) and php-fpm elsewhere, so it is matched by prefix.
+- macro: php_fpm_ancestor
+  condition: (proc.aname startswith php-fpm)
+
 - macro: protected_shell_spawner
   condition: >
     (proc.aname in (protected_shell_spawning_binaries)
@@ -565,7 +572,8 @@
     or parent_java_running_hadoop
     or parent_java_running_datastax
     or possibly_parent_java_running_tomcat
-    or possibly_node_in_container)
+    or possibly_node_in_container
+    or php_fpm_ancestor)
 
 - list: mesos_shell_binaries
   items: [mesos-docker-ex, mesos-slave, mesos-health-ch]
