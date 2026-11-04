@@ -944,6 +944,21 @@
                                         fd.name startswith "/var/lib/containerd/tmpmounts/" or
                                         fd.name startswith "/var/lib/rancher/k3s/agent/containerd/tmpmounts/"))
 
+# Since Docker Engine 24.0 (moby/moby#44210), dockerd extracts image layers in a chrooted thread of its own process
+# instead of a re-exec'd helper process, so Falco sees dockerd writing paths such as /var/log/wtmp or /root/.bashrc on
+# the host. The chroot makes these paths look like host paths, so unlike containerd_activities this macro cannot be
+# scoped by path. It matches every write made by the host's dockerd, including docker cp into a container, which uses
+# the same code path. As a result, Clear Log Activities does not report a docker cp that truncates a log file inside a
+# container. proc.exepath and container.id=host restrict the match to the host's dockerd binary, installed in a
+# location that only root can write: /usr/bin and /usr/sbin (distribution and Docker packages), /usr/local/bin (static
+# binaries) or the Docker snap. dockerd in other locations is not matched, in particular in user-writable ones such
+# as ~/bin, where Docker's rootless install script puts the static binaries.
+- macro: dockerd_activities
+  condition: >
+    (proc.name=dockerd and container.id=host and
+     (proc.exepath in (/usr/bin/dockerd, /usr/sbin/dockerd, /usr/local/bin/dockerd) or
+      proc.exepath glob "/snap/docker/*/bin/dockerd"))
+
 - rule: Clear Log Activities
   desc: >
     Detect clearing of critical access log files, typically done to erase evidence that could be attributed to an adversary's
@@ -954,6 +969,7 @@
     and access_log_files
     and evt.arg.flags contains "O_TRUNC"
     and not containerd_activities
+    and not dockerd_activities
     and not trusted_logging_images
     and not allowed_clear_log_files
   output: Log files were tampered | file=%fd.name evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty
