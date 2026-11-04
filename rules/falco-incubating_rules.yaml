@@ -431,12 +431,16 @@
 # instead of the re-exec'd "exe" process matched by exe_running_docker_save, so Falco sees dockerd writing paths such as
 # /var/log/wtmp or /root/.bashrc on the host. The chroot makes these paths look like host paths, so unlike
 # containerd_activities this macro cannot be scoped by path. It matches every write made by the host's dockerd,
-# including docker cp into a container, which uses the same code path. proc.exepath (the packaged binary or the Docker
-# snap) and container.id=host restrict the match to the host's dockerd binary.
+# including docker cp into a container, which uses the same code path. proc.exepath and container.id=host restrict the
+# match to the host's dockerd binary, installed in a location that only root can write: /usr/bin and /usr/sbin
+# (distribution and Docker packages), /usr/local/bin (static binaries) or the Docker snap. dockerd in other locations
+# is not matched, in particular in user-writable ones such as ~/bin, where Docker's rootless install script puts the
+# static binaries.
 - macro: dockerd_activities
   condition: >
     (proc.name=dockerd and container.id=host and
-     (proc.exepath=/usr/bin/dockerd or proc.exepath glob "/snap/docker/*/bin/dockerd"))
+     (proc.exepath in (/usr/bin/dockerd, /usr/sbin/dockerd, /usr/local/bin/dockerd) or
+      proc.exepath glob "/snap/docker/*/bin/dockerd"))
 
 - macro: user_ssh_directory
   condition: (fd.name contains '/.ssh/' and fd.name glob '/home/*/.ssh/*')
