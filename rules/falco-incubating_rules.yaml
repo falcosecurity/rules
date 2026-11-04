@@ -429,10 +429,14 @@
 
 # Since Docker Engine 24.0 (moby/moby#44210), dockerd extracts image layers in a chrooted thread of its own process
 # instead of the re-exec'd "exe" process matched by exe_running_docker_save, so Falco sees dockerd writing paths such as
-# /var/log/wtmp or /root/.bashrc on the host. docker cp uses the same code path. proc.exepath and container.id=host
-# restrict the match to the host's dockerd binary.
+# /var/log/wtmp or /root/.bashrc on the host. The chroot makes these paths look like host paths, so unlike
+# containerd_activities this macro cannot be scoped by path. It matches every write made by the host's dockerd,
+# including docker cp into a container, which uses the same code path. proc.exepath (the packaged binary or the Docker
+# snap) and container.id=host restrict the match to the host's dockerd binary.
 - macro: dockerd_activities
-  condition: (proc.name=dockerd and container.id=host and proc.exepath=/usr/bin/dockerd)
+  condition: >
+    (proc.name=dockerd and container.id=host and
+     (proc.exepath=/usr/bin/dockerd or proc.exepath glob "/snap/docker/*/bin/dockerd"))
 
 - macro: user_ssh_directory
   condition: (fd.name contains '/.ssh/' and fd.name glob '/home/*/.ssh/*')
