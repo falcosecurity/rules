@@ -415,7 +415,7 @@
   condition: (proc.name in (GetLinuxOS.sh) and fd.name startswith /etc/opt/microsoft/scx)
 
 - macro: azure_scripts_writing_conf
-  condition: (proc.pname startswith "bash /var/lib/waagent/" and fd.name startswith /etc/azure)
+  condition: (proc.pcmdline startswith "bash /var/lib/waagent/" and fd.name startswith /etc/azure)
 
 - macro: azure_networkwatcher_writing_conf
   condition: (proc.name in (NetworkWatcherA) and fd.name=/etc/init.d/AzureNetworkWatcherAgent)
